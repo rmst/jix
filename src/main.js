@@ -7,6 +7,8 @@ import * as x from './lib.js'
 import {dedent} from './lib.js'
 import {BIN_PATH, CUR_PATH, TMP_PATH, NUX_PATH} from './nux_lib.js'
 
+const NUX_REPO = "~/.g/23b7-nux"
+
 
 console.log_old = console.log
 console.log = (...args) => {
@@ -88,7 +90,7 @@ const update = () => {
 
     git.clone(TMP_PATH, path, oldCommit)
 
-    let out = x.sh`~/.g/23b7-nux/bin/qjs-macos --unhandled-rejection ${path}/main.js uninstall-raw ${TMP_PATH}/nux.js`
+    let out = x.sh`${NUX_REPO}/bin/qjs-macos --unhandled-rejection ${NUX_REPO}/src/main.js uninstall-raw ${TMP_PATH}/nux.js`
 		console.log(out)
     x.sh`rm -rf ${TMP_PATH}`
   }
@@ -96,7 +98,7 @@ const update = () => {
   console.log("install", {commit})
 
   git.clone(TMP_PATH, path, commit)
-  x.sh`~/.g/23b7-nux/bin/qjs-macos --unhandled-rejection ${path}/main.js install-raw ${TMP_PATH}/nux.js`
+  x.sh`${NUX_REPO}/bin/qjs-macos --unhandled-rejection ${NUX_REPO}/src/main.js install-raw ${TMP_PATH}/nux.js`
   x.sh`rm -rf ${TMP_PATH}`
   x.fileWrite(CUR_PATH, commit)
 }
@@ -122,7 +124,7 @@ function processAndExecuteScript(filePath, basePath) {
 const loadNixfile = async (path) => {
   globalThis.nux = nux
   globalThis.dedent = dedent
-  
+
   module = await import(scriptArgs[2])
   return module.default
 }
