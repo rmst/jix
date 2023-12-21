@@ -5,7 +5,6 @@ import * as os from 'os';
 
 // Function to write content to a file
 export const fileWrite = (path, content) => {
-  // std is the standard module in QuickJS that contains the file system functions
   const file = std.open(path, 'w');
   if (!file) {
     throw new Error(`Unable to open file for writing, ${path}`);
@@ -35,12 +34,12 @@ export const fileRead = (path) => {
   }
 }
 
-export const fileDelete = (path) => {
-  try {
-    os.remove(path); // Remove the file at the given path
-  } catch (e) {
-    throw new Error(`Unable to delete file: ${e.message}`);
-  }
+export const fileDelete = (path, ignoreNonexisting=false) => {
+  if(ignoreNonexisting && !exists(path))
+    return
+
+  if(os.remove(path) != 0)
+    throw new Error(`Unable to delete file: ${path}`);
 }
 
 export const exists = (path) => {
