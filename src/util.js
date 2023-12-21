@@ -185,3 +185,46 @@ export const dedent = (templateStrings, ...values) => {
 }
 
 
+
+
+
+function toStr(x) {
+  // Handle null and undefined
+  if (x === null || x === undefined) {
+      return String(x);
+  }
+
+  // Handle primitives (numbers, booleans, strings)
+  if (typeof x !== 'object') {
+      return String(x);
+  }
+
+  // Handle arrays
+  if (Array.isArray(x)) {
+      return '[' + x.map(item => toStr(item)).join(', ') + ']';
+  }
+
+  // Handle objects
+  let result = [];
+  for (let key in x) {
+      try {
+          // Attempt to stringify value, if not possible use placeholder
+          const value = typeof x[key] === 'object' ? toStr(x[key]) : String(x[key]);
+          result.push(`${key}: ${value}`);
+      } catch (e) {
+          result.push(`${key}: [${typeof x[key]}]`);
+      }
+  }
+  return '{' + result.join(', ') + '}';
+}
+
+
+export const monkeyPatchConsoleLog = () => {
+  console.log_old = console.log
+  console.log = (...args) => {
+    args = args.map(x => toStr(x))
+    console.log_old(...args)
+  }
+  
+}
+

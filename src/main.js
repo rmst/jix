@@ -3,28 +3,15 @@
 
 import * as std from 'std';
 import * as os from 'os';
-import * as x from './lib.js'
-import {dedent} from './lib.js'
-import {BIN_PATH, CUR_PATH, TMP_PATH, NUX_PATH} from './nux_lib.js'
+import * as x from './util.js'
+import { dedent } from './util.js'
+import { BIN_PATH, CUR_PATH, TMP_PATH, NUX_PATH } from './nux_lib.js'
+import * as nux from './nux_lib.js'
 
 const NUX_REPO = "~/.g/23b7-nux"
 
 
-console.log_old = console.log
-console.log = (...args) => {
-  args = args.map(x => {
-
-    try {
-      x = (typeof x === 'object') ? JSON.stringify(x) : x
-
-    } catch {}
-
-    return x
-
-  })
-  console.log_old(...args)
-}
-
+x.monkeyPatchConsoleLog()
 
 
 
@@ -125,7 +112,7 @@ const loadNixfile = async (path) => {
   globalThis.nux = nux
   globalThis.dedent = dedent
 
-  module = await import(scriptArgs[2])
+  let module = await import(scriptArgs[2])
   return module.default
 }
 
@@ -139,7 +126,7 @@ const main = async () => {
 		case "uninstall-raw":
 			console.log("uninstall-raw")
       
-      var conf = loadNixfile(scriptArgs[2])
+      var conf = await loadNixfile(scriptArgs[2])
 			conf.map(x => x.uninstall())
 			// console.log("raw-done")
 			break
@@ -147,8 +134,7 @@ const main = async () => {
 		case "install-raw":
 			console.log("install-raw")
 
-			var module = await import(scriptArgs[2])
-			var conf = module.default
+      var conf = await loadNixfile(scriptArgs[2])
 			conf.map(x => x.install())
 			break
 
