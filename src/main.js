@@ -2,180 +2,158 @@
 
 
 import * as std from 'std';
-
-
-// Function to write content to a file
-function fileWrite(path, content) {
-  // std is the standard module in QuickJS that contains the file system functions
-  const file = std.open(path, 'w');
-  if (!file) {
-    throw new Error('Unable to open file for writing');
-  }
-  try {
-    file.puts(content); // Write the content to the file
-  } finally {
-    file.close(); // Always close the file handle
-  }
-}
-
-// Function to read content from a file
-function fileRead(path) {
-  const file = std.open(path, 'r');
-  if (!file) {
-    throw new Error('Unable to open file for reading');
-  }
-  try {
-    return file.readAsString(); // Read the content as a string
-  } finally {
-    file.close(); // Always close the file handle
-  }
-}
-
-function fileDelete(path) {
-  try {
-    std.remove(path); // Remove the file at the given path
-  } catch (e) {
-    throw new Error(`Unable to delete file: ${e.message}`);
-  }
-}
-
-
-function rs(...command) {
-    // Join the command and its arguments into a single string
-    const commandWithArgs = command.join(' ');
-
-    // Open the command for reading
-    let process = std.popen(commandWithArgs, "r");
-
-    // Read the output
-    let output = process.readAsString();
-
-    // Close the process
-    process.close();
-
-    return output;
-}
-
-// Usage
-// let output = rs('ls', '-lh', '~');
-// console.log(output);
-
-let nux = {}
-
-
-let log = str => {
-	console.log(str)
-}
-
-function assert(condition, message) {
-  if (!condition) {
-    throw new Error(message || "Assertion failed");
-  }
-}
-
-// nux.cronAdd = (cronConfig) => {
-// 	let writeConfig = (conf) => {
-
-// 		// Open a process to write to crontab and capture standard error
-// 		let process = std.popen('crontab -', 'w');
-		
-// 		// Write the cron configuration to the crontab
-// 		process.puts(conf);
-		
-// 		// Close the writing end to send EOF to the process
-// 		process.close();
-
-// 		// Read the standard error stream which is redirected to stdout
-// 		let output = process.readAsString();
-
-// 		// Check the exit code. Non-zero indicates an error.
-// 		if (process.exitCode !== 0) {
-// 				throw new Error(`Failed to update crontab. Exit code: ${process.exitCode}, Output: ${output}`);
-// 		}
-
-// 		log(output)
-// 	}
-
-// 	return {
-// 		key: "cronAdd",
-// 		write: (conf) => {
-// 			let newConf = conf ?? "" + "\n" + cronConfig
-// 			writeConfig(newConf)
-// 			return newConf
-// 		},
-// 		check: (conf) => {
-// 			let output = rs("crontab", "-l")
-// 			// TODO: assertEqual(output, conf)
-// 		},
-// 		clean: () => writeConfig("")
-// 	}
-// }
-
-nux.fileAppend = (path, str) => {
-	return {
-		key: "fileAppend:" + path,
-		write: conf => {
-			let newConf = conf ?? "" + str
-			fileWrite(path, newConf)
-			return newConf
-		},
-		check: conf => {
-			let content = fileRead(path)
-			// TODO: assertEqual(content, conf[path])
-		},
-		clean: () => {
-			fileDelete(path)
-		}
-	}
-}
-
-
-
-
-
-const configure = arg => {
-	let c = arg[0]
-	c.conf.map(a => {
-		
-	})
-}
-
-function runc(arg) {
-
-}
-
-
-// configure([
-// 	{
-// 		name: "macbook",
-// 		conf: [
-// 				// nux.cron``,
-
-// 				// nux.zsh(extensions=[]),
-// 				nux.fileAppend("~/test12", "blablabla")
-// 		]
-// 	},
-// ])
-
-
-
-// import * as std from 'std';
 import * as os from 'os';
+import * as x from './lib.js'
+import {dedent} from './lib.js'
+import {BIN_PATH, CUR_PATH, TMP_PATH, NUX_PATH} from './nux_lib.js'
 
-function printHelp() {
-    console.log(`
-Usage: nux [options]
---help     Display this help message
-`)
+
+console.log_old = console.log
+console.log = (...args) => {
+  args = args.map(x => {
+
+    try {
+      x = (typeof x === 'object') ? JSON.stringify(x) : x
+
+    } catch {}
+
+    return x
+
+  })
+  console.log_old(...args)
 }
 
-function main(args) {
-    if (args.includes('--help')) {
-        printHelp();
-    } else {
-        // Your main program logic here
-        std.out.puts("Hello from main.js!\n");
-    }
+
+
+
+// UTILS
+
+const git = {}
+
+git.clone = (path, remote, commit_hash) => {
+  x.sh`
+    set -e
+    mkdir ${path}
+    cd ${path}
+    git init
+    git remote add origin ${remote}
+    git fetch --depth 1 origin ${commit_hash}
+    git checkout ${commit_hash}
+    # rm -rf .git
+  `
+
+  return path
 }
 
-main(scriptArgs);
+git.isClean = (path) => {
+  let status = x.sh`
+    git -C "${path}" status --porcelain
+  `
+  return status == ""
+}
+
+git.latestCommitHash = (path) => {
+  return x.sh`
+    git -C "${path}" rev-parse HEAD
+  `
+}
+
+
+
+// APPLY CONFIGURATION
+
+const update = () => {
+  x.mkdir(NUX_PATH, true)
+  x.mkdir(BIN_PATH, true)
+  x.sh`rm -rf ${TMP_PATH}`
+
+  let path = os.getcwd()[0]
+	
+
+  if(! git.isClean(path)) {
+    // throw Error(`Uncommited changes in ${path}`)
+		x.sh`
+			cd ${path}
+			git add .
+			git commit -m nux_update
+  	`
+	}
+
+  let commit = git.latestCommitHash(path)
+
+  if(x.exists(CUR_PATH)) {
+    let oldCommit = x.fileRead(CUR_PATH)
+
+    console.log("uninstall", {oldCommit})
+
+    git.clone(TMP_PATH, path, oldCommit)
+
+    let out = x.sh`~/.g/23b7-nux/bin/qjs-macos --unhandled-rejection ${path}/main.js uninstall-raw ${TMP_PATH}/nux.js`
+		console.log(out)
+    x.sh`rm -rf ${TMP_PATH}`
+  }
+
+  console.log("install", {commit})
+
+  git.clone(TMP_PATH, path, commit)
+  x.sh`~/.g/23b7-nux/bin/qjs-macos --unhandled-rejection ${path}/main.js install-raw ${TMP_PATH}/nux.js`
+  x.sh`rm -rf ${TMP_PATH}`
+  x.fileWrite(CUR_PATH, commit)
+}
+
+
+function processAndExecuteScript(filePath, basePath) {
+	let scriptContent = readFile(filePath);
+
+	// Simple regex to modify import statements
+	// Adjust the regex as per your requirement
+	scriptContent = scriptContent.replace(/from\s+['"](.+?)['"]/g, (match, moduleName) => {
+			if (moduleName === 'bla') {
+					// Replace with the full path
+					return `from '${basePath + moduleName}'`;
+			}
+			return match;
+	});
+
+	// Dynamically evaluate the modified script
+	eval(scriptContent);
+}
+
+const loadNixfile = async (path) => {
+  globalThis.nux = nux
+  globalThis.dedent = dedent
+  
+  module = await import(scriptArgs[2])
+  return module.default
+}
+
+const main = async () => {
+  if(scriptArgs.length <= 1) {
+    update()
+    return
+  }
+
+	switch(scriptArgs[1]) {
+		case "uninstall-raw":
+			console.log("uninstall-raw")
+      
+      var conf = loadNixfile(scriptArgs[2])
+			conf.map(x => x.uninstall())
+			// console.log("raw-done")
+			break
+		
+		case "install-raw":
+			console.log("install-raw")
+
+			var module = await import(scriptArgs[2])
+			var conf = module.default
+			conf.map(x => x.install())
+			break
+
+		default:
+			throw Error(`Invalid command: ${scriptArgs[1]}`)
+	}
+
+}
+
+main()
