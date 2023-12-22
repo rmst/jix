@@ -17,6 +17,7 @@ export const fileWrite = (path, content) => {
 }
 
 export const fileWriteWithPermissions = (path, content, permissions) => {
+  fileDelete(path, true)
   fileWrite(path, content)
   sh`chmod ${permissions} ${path}`
 }
@@ -147,6 +148,11 @@ export const dedent = (templateStrings, ...values) => {
 
 	let matches = [];
 	let strings = typeof templateStrings === 'string' ? [ templateStrings ] : templateStrings.slice();
+
+
+  // TODO: maybe just do this for shell/bash?
+  strings = strings.map(x => x.replace(String.raw`\$`, "$"))
+
 
 	// 1. Remove trailing whitespace.
 	strings[strings.length - 1] = strings[strings.length - 1].replace(/\r?\n([\t ]*)$/, '');
