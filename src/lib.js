@@ -20,3 +20,19 @@ export const writeConfSudoV1 = (path, content, reloadScript) => {
 	if(reloadScript)
 		sh`${reloadScript}`
 }
+
+export const writeScpV1 = (host, path, content) => {
+	let tmp = sh`mktemp`
+	try {
+		util.fileWrite(tmp, content)
+		sh`scp "${tmp}" "${host}:${path}"`
+	} finally {
+		util.fileDelete(tmp, true)
+	}
+}
+
+export const execShV1 = (script) => {
+	sh(script)
+}
+
+export const noop = () => {}

@@ -5,8 +5,9 @@ import * as std from 'std';
 import * as os from 'os';
 import * as util from './util.js'
 import { dedent, sh } from './util.js'
-import { BIN_PATH, CUR_PATH, TMP_PATH, NUX_PATH } from './nux.js'
+import { BIN_PATH, TMP_PATH, NUX_PATH } from "./const.js";
 import * as nux from './nux.js'
+import * as BIN_PATHJs from "./const.js";
 import { sha256 } from './sha256.js';
 
 import * as lib from './lib.js'
@@ -16,7 +17,6 @@ const NUX_REPO = "~/.g/23b7-nux"
 
 
 util.monkeyPatchConsoleLog()
-
 
 
 // UTILS
@@ -56,12 +56,12 @@ git.latestCommitHash = (path) => {
 // APPLY CONFIGURATION
 
 
-const install_commit = async (repo, commit) => {
+const install_commit = async (repo, commit, name) => {
   sh`rm -rf ${TMP_PATH}`
   git.clone(TMP_PATH, repo, commit)
   // let out = sh`${NUX_REPO}/bin/qjs-macos --unhandled-rejection ${NUX_REPO}/src/main.js install-raw ${TMP_PATH}`
 
-  await install_raw(TMP_PATH)
+  await install_raw(TMP_PATH, name)
 
   // console.log(out)
   sh`rm -rf ${TMP_PATH}`
@@ -69,10 +69,11 @@ const install_commit = async (repo, commit) => {
 }
 
 
-const update = async () => {
+const update = async (name) => {
   util.mkdir(NUX_PATH, true)
   util.mkdir(BIN_PATH, true)
-  util.mkdir(nux.STORE_PATH, true)
+  util.mkdir(BIN_PATHJs.STORE_PATH, true)
+  util.mkdir(`${NUX_PATH}/logs`, true)
 
   let path = os.getcwd()[0]
 	
@@ -87,17 +88,17 @@ const update = async () => {
 
   let commit = git.latestCommitHash(path)
 
-  console.log(`Installing ${path}:${commit}`)
-  await install_commit(path, commit)
+  console.log(`Installing ${name} from ${path}:${commit}`)
+  await install_commit(path, commit, name)
 
 }
 
 
-const loadNixfile = async (path) => {
+const loadActions = async (path, name) => {
   globalThis.nux = nux
 
   let module = await import(path)
-  return module.default
+  return module[name]
 }
 
 
@@ -109,9 +110,12 @@ const setDifference = (a, b) => {
 
 
 const uninstall = (hashes) => {
+  // use reversed hashed since that's the proper way to clean up co-dependent things
+  let reversedHashes = [...hashes]
+  reversedHashes.reverse()
 
-  let stats = hashes.map(h => {
-    let x = util.fileRead(`${nux.STORE_PATH}/${h}`)
+  let stats = reversedHashes.map(h => {
+    let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${h}`)
     let [install, uninstall] = JSON.parse(x)
     let [f, ...args] = uninstall
 
@@ -128,21 +132,17 @@ const uninstall = (hashes) => {
     
   })
 
+  // TODO: we should be returning the failed hashes not just the number
+  
   let numErrors = stats.filter(x => x !== null).length
 
-  if(numErrors) {
-    throw Error(dedent`
-      ${numErrors} out of ${stats.length} uninstalls failed.
-      Uninstall them manually, then delete ${CUR_PATH}.
-    `)
-  }
-
+  return numErrors
 }
 
 
 const install = (hashes) => {
   let stats = hashes.map(h => {
-    let x = util.fileRead(`${nux.STORE_PATH}/${h}`)
+    let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${h}`)
     let [install, uninstall] = JSON.parse(x)
     let [f, ...args] = install
 
@@ -152,16 +152,25 @@ const install = (hashes) => {
 
 
 
-const install_raw = async (path) => {
+const install_raw = async (path, name) => {
   // console.log("install-raw")
+  
+  let current_path = `${NUX_PATH}/cur-${name}`
       
-  var oldHashes = util.exists(CUR_PATH) ? JSON.parse(util.fileRead(CUR_PATH)) : []
+  var oldHashes = util.exists(current_path) ? JSON.parse(util.fileRead(current_path)) : []
 
-  var conf = await loadNixfile(`${path}/nux.js`)
-  var hashes = conf.map(({install, uninstall}) => {
+  var conf = await loadActions(`${path}/setup.nux.js`, name)
+  if(conf === undefined)
+    throw new Error(`setup.nux.js doesn't export "${name}"`)
+
+  conf = conf().flat(Infinity)  // allows for nested conf
+
+  // compute hashes and write actions to disk
+  var hashes = conf.map(({install, uninstall}, i, arr) => {
+    install ?? uninstall ?? (()=>{throw new Error(`action ${i}/${arr.length}: missing install/uninstall attribute`)})()
     let s = JSON.stringify([install, uninstall])
     let h = sha256(s)
-    let p = `${nux.STORE_PATH}/${h}`
+    let p = `${BIN_PATHJs.STORE_PATH}/${h}`
     if(!util.exists(p))
       util.fileWrite(p, s)
     
@@ -172,13 +181,21 @@ const install_raw = async (path) => {
   let addedHashes = setDifference(hashes, oldHashes)
 
   console.log(`Uninstalling ${removedHashes.length} of ${oldHashes.length}`)
-  uninstall(removedHashes)
+
+  let numErrors = uninstall(removedHashes)
+
+  if(numErrors) {
+    throw Error(dedent`
+      ${numErrors} out of ${removedHashes.length} uninstalls failed.
+      Uninstall them manually, then delete ${current_path}.
+    `)
+  }
 
   try {
     console.log(`Installing ${addedHashes.length} of ${hashes.length}`)
     install(addedHashes)
     
-    util.fileWrite(CUR_PATH, JSON.stringify(hashes))
+    util.fileWrite(current_path, JSON.stringify(hashes))
 
   } catch (e) {
 
@@ -215,20 +232,21 @@ const install_raw = async (path) => {
 
 const main = async () => {
 
-  if(scriptArgs.length <= 1) {
-    await update()
+  if(scriptArgs.length == 2) {
+    let name = scriptArgs[1]
+    await update(name)
     return
   }
 
-	switch(scriptArgs[1]) {
-		case "install-raw":
-      await install_raw(scriptArgs[2])
+	// switch(scriptArgs[1]) {
+	// 	case "install-raw":
+  //     await install_raw(scriptArgs[2])
 
-			break
+	// 		break
 
-		default:
-			throw Error(`Invalid command: ${scriptArgs[1]}`)
-	}
+	// 	default:
+	// 		throw Error(`Invalid command: ${scriptArgs[1]}`)
+	// }
 
 }
 

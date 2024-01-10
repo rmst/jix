@@ -35,6 +35,59 @@ export const fileRead = (path) => {
   }
 }
 
+export const dirRead = (path) => {
+  // TODO: is this the correct way to handle errors?
+  let [files, err] = os.readdir(path)
+  if(err)
+    throw new Error(`Unable to read dir ${path}`)
+
+  return files
+}
+
+
+export function traverseFileSystem(rootPath) {
+  // Recursive function to traverse the file system
+
+	let dirs = [];
+	let files = [];
+
+	// Inner function to handle recursion
+	function traverse(currentPath) {
+		let entries = dirRead(currentPath)
+
+		entries.forEach(entry => {
+
+      if([".", "..", ".DS_Store"].includes(entry)) {
+        // TODO: support .gitignore or sth?
+        return
+      }
+        
+			let fullPath = currentPath + "/" + entry
+			let [stat, err] = os.stat(fullPath)  // os.stat follows symlinks (as opposed to os.lstat)
+      if(err)
+        throw new Error(`Unable to stat ${fullPath}`)
+
+			let relativePath = fullPath.substring((rootPath + "/").length);
+
+      let isDir = stat.mode & 0o040000   // directory
+      let isFile = stat.mode & 0o100000  // fegular file
+
+			if (isDir) { 
+				dirs.push(relativePath)
+        // console.log(fullPath)
+				traverse(fullPath)
+			} else if (isFile) {  
+				files.push(relativePath)
+			}
+		});
+	}
+
+	traverse(rootPath);
+	return { dirs, files };
+}
+
+
+
 export const fileDelete = (path, ignoreNonexisting=false) => {
   if(ignoreNonexisting && !exists(path))
     return
@@ -103,7 +156,9 @@ export const setEnv = (env) => {
 // }
 
 
+
 export const sh = (template, ...args) => {
+  // TODO: rename this to execSh
   // TODO: automatically escape the arguments
   let cmd = dedent(template, ...args)
 
@@ -144,7 +199,7 @@ export const dedent = (templateStrings, ...values) => {
   // TODO: simplify
   // TODO: allow for properly indented multiline values
 
-  templateStrings = templateStrings.raw
+  templateStrings = templateStrings.raw ?? templateStrings
 
 	let matches = [];
 	let strings = typeof templateStrings === 'string' ? [ templateStrings ] : templateStrings.slice();
