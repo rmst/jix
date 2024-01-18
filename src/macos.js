@@ -108,7 +108,7 @@ export const launchdJob = (name, config, runscript, root_dir="") => {
   ]
 }
 
-export const nux_macos_defaults = () => {
+export const nux_macos_user_defaults = () => {
   return [
     script("nux_jobs", `launchctl list | grep com.nux.`),
   ]

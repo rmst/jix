@@ -3,6 +3,8 @@ import { BIN_PATH } from './const.js';
 
 // -----
 
+export const HOME = util.getEnv().HOME
+
 export const file = (path, content, permissions = '-w') => {
   path = path.replace('~', util.getEnv().HOME);
 
@@ -21,6 +23,7 @@ export const scripts = (c) => {
 };
 
 export const copy = (origin, path, permissions = '-w') => {
+  // TODO: maybe cache the hash, don't read the file every time
   let content = util.fileRead(origin);
   return file(path, content, permissions);
 };
@@ -36,6 +39,31 @@ export const link = (origin, path) => {
 export const alias = (origin, name) => {
 
   return link(origin, `${BIN_PATH}/${name}`);
+};
+
+
+export const user = (config) => {
+  let { name, home, enabled=true, conf=u=>[] } = config
+
+  if(!enabled)
+    return []
+
+  // TODO: perform checks or install user
+
+  let u = {
+    name,
+    home,
+    
+  }
+  return conf(u)
+  
+}
+
+export const run = (install, uninstall) => {
+  return {
+    install: ["execShV1", install],
+    uninstall: ["execShV1", uninstall]
+  };
 };
 
 
