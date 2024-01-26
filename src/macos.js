@@ -46,17 +46,29 @@ export const launchdJob = (name, config, runscript, root_dir="") => {
   let logpath = `${NUX_PATH}/logs/${name}`
 
 
-  let wpath = `${BIN_PATH}/nix_jobs_logwrapper`
-  let wrapper = script("nix_jobs_logwrapper", dedent`
-    #!/bin/sh
+	// technically _with_logs suffix is kinda misleading since we only add timestamps
+  let wpath = `${BIN_PATH}/${exe}_with_logs`
+  let wrapper = script(`${exe}_with_logs`, dedent`
+    #!/usr/bin/env bash
+
     add_timestamp() {
       while IFS= read -r line; do
         printf "%s\t%s\n" "$(date "+%Y-%m-%d %H:%M:%S")" "$line"
       done
     }
 
+    mkdir -p "${NUX_PATH}/status"
+
+    echo "$(date "+%Y-%m-%d %H:%M:%S"),start" >> "${NUX_PATH}/status/${name}"
+
+
+    set -o pipefail  # if any of the pipe's process fail output a non-zero exit code 
+
     # Run the script and process its output
-    ("$1" 2>&1) | add_timestamp
+    { "${spath}" 2>&1 ; } | add_timestamp
+
+    exitcode=$?
+    echo "$(date "+%Y-%m-%d %H:%M:%S"),stop,$exitcode" >> "${NUX_PATH}/status/${name}"
   `)
 
 
@@ -70,7 +82,6 @@ export const launchdJob = (name, config, runscript, root_dir="") => {
         <key>ProgramArguments</key>
         <array>
           <string>${wpath}</string>
-          <string>${spath}</string>
         </array>
         <key>StandardErrorPath</key>
         <string>${logpath}</string>
@@ -110,6 +121,14 @@ export const launchdJob = (name, config, runscript, root_dir="") => {
 
 export const nux_macos_user_defaults = () => {
   return [
-    script("nux_jobs", `launchctl list | grep com.nux.`),
+    script("nj", `launchctl list | grep com.nux.`),
+    script("njl", dedent`
+      #!/bin/bash
+      less +G ${NUX_PATH}/logs/$1
+    `),
+    script("njs", dedent`
+      #!/bin/bash
+      less +G ${NUX_PATH}/status/$1  # display the end of the log
+    `),
   ]
 }

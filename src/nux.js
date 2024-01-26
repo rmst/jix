@@ -41,7 +41,7 @@ export const nixosConfig = (host, configPath) => {
 
   let installScript = dedent`
     # hash: ${hash} (included to trigger updates if files change)
-    ssh ${host} nixos-rebuild switch --show-trace
+    ssh ${host} nixos-rebuild switch
   `
 
   return [
