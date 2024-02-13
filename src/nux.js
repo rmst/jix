@@ -39,16 +39,12 @@ export const nixosConfig = (host, configPath) => {
     ssh ${host} cp -r /etc/nixos /etc/nixos.backup
   `
 
-  let installScript = dedent`
-    # hash: ${hash} (included to trigger updates if files change)
-    ssh ${host} nixos-rebuild switch
-  `
 
   return [
     {install: ["execShV1", prepareScript], uninstall: ["noop"]},
     ...mkdirActions,
     ...scpActions,
-    {install: ["execShV1", installScript], uninstall: ["noop"]},
+    {install: ["remoteNixosRebuildSwitchV1", host, hash], uninstall: ["noop"]},
   ]
 }
 
@@ -60,7 +56,7 @@ export const bash = (...args) => dedent`
 `
 
 export const python = (...args) => dedent`
-  #!/usr/bin/python3
+  #!/usr/bin/env python3
   ${dedent(...args)}
 `
 

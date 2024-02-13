@@ -7,7 +7,7 @@ import { BIN_PATH, NUX_PATH } from './const.js'
 import { script, file } from './base.js'
 
 
-export const launchdJob = (name, config, runscript, root_dir="") => {
+export const launchdJob = (name, config, runscript, root_dir="", timeout=null) => {
   /* 
     see logs: log show --predicate 'senderImagePath CONTAINS "test"' --info
 
@@ -38,6 +38,9 @@ export const launchdJob = (name, config, runscript, root_dir="") => {
     https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/4a977680-d227-4001-a228-5f4b65a19910
   */
 
+
+  // TODO: the timeout mechanism should be in separate wrapper function
+
   let label = `com.nux.${name}`
 
   let exe = `nux_job_${name}`
@@ -45,11 +48,18 @@ export const launchdJob = (name, config, runscript, root_dir="") => {
   let ppath = `${root_dir}/Library/LaunchAgents/${label}.plist`
   let logpath = `${NUX_PATH}/logs/${name}`
 
+  let timeout_cmd = timeout == null ? "" : `timeout ${timeout}`  
 
 	// technically _with_logs suffix is kinda misleading since we only add timestamps
+  // TODO: add script hash to output and status logs so we can track different versions
+
+  let scriptHash = sha256(runscript)
+
   let wpath = `${BIN_PATH}/${exe}_with_logs`
   let wrapper = script(`${exe}_with_logs`, dedent`
-    #!/usr/bin/env bash
+    #!/usr/bin/env zsh -i
+
+    # scripthash=${scriptHash}
 
     add_timestamp() {
       while IFS= read -r line; do
@@ -59,16 +69,16 @@ export const launchdJob = (name, config, runscript, root_dir="") => {
 
     mkdir -p "${NUX_PATH}/status"
 
-    echo "$(date "+%Y-%m-%d %H:%M:%S"),start" >> "${NUX_PATH}/status/${name}"
+    echo "$(date "+%Y-%m-%d %H:%M:%S"),${scriptHash},start" >> "${NUX_PATH}/status/${name}"
 
 
     set -o pipefail  # if any of the pipe's process fail output a non-zero exit code 
 
     # Run the script and process its output
-    { "${spath}" 2>&1 ; } | add_timestamp
+    { ${timeout_cmd} "${spath}" 2>&1 ; } | add_timestamp
 
     exitcode=$?
-    echo "$(date "+%Y-%m-%d %H:%M:%S"),stop,$exitcode" >> "${NUX_PATH}/status/${name}"
+    echo "$(date "+%Y-%m-%d %H:%M:%S"),${scriptHash},stop,$exitcode" >> "${NUX_PATH}/status/${name}"
   `)
 
 
@@ -95,9 +105,10 @@ export const launchdJob = (name, config, runscript, root_dir="") => {
   `
 
 
-  let hash = sha256(JSON.stringify([name, plist, runscript, root_dir]))
+  let hash = sha256(JSON.stringify([name, wrapper, plist, runscript, root_dir]))
 
   let load_unload = {
+    // TODO: maybe switch to launchctl bootout? i.e. launchctl bootout gui/501/com.nux.$1 (this also exits with proper error codes)
     install: ["execShV1", dedent`
       # hash: ${hash}  (included to trigger load/unload if inputs change)
       output=$(launchctl load "${ppath}" 2>&1)
@@ -126,9 +137,20 @@ export const nux_macos_user_defaults = () => {
       #!/bin/bash
       less +G ${NUX_PATH}/logs/$1
     `),
+    // TODO: verify that the path is always gui/501
+    script("nji", dedent`
+      #!/bin/bash
+      launchctl print gui/501/com.nux.$1
+    `),
     script("njs", dedent`
       #!/bin/bash
       less +G ${NUX_PATH}/status/$1  # display the end of the log
     `),
+    script("timeout", dedent`
+      #!/usr/bin/env perl
+      alarm shift; exec @ARGV';
+    `),
+
   ]
 }
+

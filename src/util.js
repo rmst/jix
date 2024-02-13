@@ -157,22 +157,41 @@ export const setEnv = (env) => {
 
 
 
-export const sh = (template, ...args) => {
+export const execShFunction = ({verbose=false, env={}}) => (template, ...args) => {
   // TODO: rename this to execSh
   // TODO: automatically escape the arguments
   let cmd = dedent(template, ...args)
 
   // make everything fail if one command fails, TODO: is this a good default?
   // redirect stderr to stdout
+
+  // TODO: this is a hack, we don't escape env values properly
+  let env_setup = Object.entries(env).map(([k, v]) => `export ${k}="${v}"`).join("\n")
+
   let wrappedCmd = dedent`
     {
       set -e
+      ${env_setup}
       ${cmd}
     } 2>&1
   `
 
   let process = std.popen(wrappedCmd, "r")
-  let output = process.readAsString().trim()
+  // let output = process.readAsString().trim()
+  let output = ""
+
+  while (true) {
+    let line = process.getline()
+    if (line === null) {
+      break;
+    }
+    output = output + line + '\n'
+    // Print the line, getline() does not include the trailing line feed
+    if (verbose)
+      console.log(line)
+  }
+
+
   let code = process.close()
 
   if(code != 0) {
@@ -180,12 +199,15 @@ export const sh = (template, ...args) => {
       Command:
       ${cmd}
       failed with error code ${code}. Output:
-      ${output}
+      ${verbose ? "see above" : output}
     `)
   }
 
   return output
 }
+
+export const sh = execShFunction({verbose: false})
+export const shVerbose = execShFunction({verbose: true})
 
 
 export const time = () => {
@@ -247,7 +269,7 @@ export const dedent = (templateStrings, ...values) => {
 
 
 
-
+  
 function toStr(x) {
   // Handle null and undefined
   if (x === null || x === undefined) {

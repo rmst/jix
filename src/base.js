@@ -1,5 +1,6 @@
 import * as util from './util.js';
 import { BIN_PATH } from './const.js';
+import { sha256 } from './sha256.js';
 
 // -----
 
@@ -80,3 +81,42 @@ export const globalConfigFile = (path, content, original, reloadScript = null) =
     uninstall: ["writeConfSudoV1", path, original, reloadScript],
   };
 };
+
+
+export const mkscript = (templateStrings, ...values) => {
+  let dependencies = []
+  values = values.map(v => {
+    if(v.install && v.uninstall) {
+      dependencies.push(v)
+      let h = sha256([v.install, v.uninstall])  // TODO: make function for hash computation
+      return h
+    }
+    else
+      return v
+  })
+
+  let script = util.dedent(templateStrings, ...values)
+  
+}
+
+// export const build = (templateStrings, ...values) => {
+
+//   let dependencies = []
+//   values = values.map(v => {
+//     if(v.install && v.uninstall) {
+//       dependencies.push(v)
+//       let h = sha256([v.install, v.uninstall])  // TODO: make function for hash computation
+//       return h
+//     }
+//     else
+//       return v
+//   })
+//   let script = util.dedent(templateStrings, ...values)
+
+
+//   return {
+//     install: ["buildV2", script],
+//     uninstall: ["noop"],
+//     dependencies,
+//   }
+// }

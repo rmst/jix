@@ -4,7 +4,7 @@
 import * as std from 'std';
 import * as os from 'os';
 import * as util from './util.js'
-import { dedent, sh } from './util.js'
+import { dedent, sh, shVerbose } from './util.js'
 import { BIN_PATH, TMP_PATH, NUX_PATH } from "./const.js";
 import * as nux from './nux.js'
 import * as BIN_PATHJs from "./const.js";
@@ -103,6 +103,7 @@ const loadActions = async (path, name) => {
 
 
 const setDifference = (a, b) => {
+  a = [...new Set(a)]  // deduplicate
   b = new Set(b)
   return a.filter(x => ! b.has(x))
 }
@@ -116,37 +117,41 @@ const uninstall = (hashes) => {
 
   let stats = reversedHashes.map(h => {
     let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${h}`)
-    let [install, uninstall] = JSON.parse(x)
+    // let [install, uninstall] = JSON.parse(x)
+    let {install, uninstall} = JSON.parse(x)
     let [f, ...args] = uninstall
 
     try {
       lib[f](...args)
-      return null
+      return [h, null]
 
     } catch (e) {
       console.log(`Error: ${e.message}`)
       console.log(e.stack)
       console.log("\n...uninstall continuing...\n")
-      return e
+      return [h, e]
     }
     
   })
 
   // TODO: we should be returning the failed hashes not just the number
   
-  let numErrors = stats.filter(x => x !== null).length
+  let errors = stats.filter(([h, e]) => e !== null)
+  let failedHashes = errors.map(([h, e]) => h)
 
-  return numErrors
+  return failedHashes
 }
 
 
 const install = (hashes) => {
   let stats = hashes.map(h => {
     let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${h}`)
-    let [install, uninstall] = JSON.parse(x)
+    // let [install, uninstall] = JSON.parse(x)
+    let {install, uninstall} = JSON.parse(x)
+    
     let [f, ...args] = install
 
-    lib[f](...args)
+    lib[f](...args, h)
   })
 }
 
@@ -166,10 +171,14 @@ const install_raw = async (path, name) => {
   conf = conf().flat(Infinity)  // allows for nested conf
 
   // compute hashes and write actions to disk
-  var hashes = conf.map(({install, uninstall}, i, arr) => {
-    install ?? uninstall ?? (()=>{throw new Error(`action ${i}/${arr.length}: missing install/uninstall attribute`)})()
-    let s = JSON.stringify([install, uninstall])
+  var hashes = conf.map((c, i, arr) => {
+    // let {install, uninstall} = c
+    // install ?? uninstall ?? (()=>{throw new Error(`action ${i}/${arr.length}: missing install/uninstall attribute`)})()
+    // let s = JSON.stringify([install, uninstall])
+    // let h = sha256(s)
+    let s = JSON.stringify(c)
     let h = sha256(s)
+
     let p = `${BIN_PATHJs.STORE_PATH}/${h}`
     if(!util.exists(p))
       util.fileWrite(p, s)
@@ -177,17 +186,21 @@ const install_raw = async (path, name) => {
     return h
   })
 
+  hashes = [...new Set(hashes)]  // deduplicate
+
   let removedHashes = setDifference(oldHashes, hashes)
   let addedHashes = setDifference(hashes, oldHashes)
 
   console.log(`Uninstalling ${removedHashes.length} of ${oldHashes.length}`)
 
-  let numErrors = uninstall(removedHashes)
+  let failedHashes = uninstall(removedHashes)
 
-  if(numErrors) {
+  if(failedHashes.length > 0) {
     throw Error(dedent`
-      ${numErrors} out of ${removedHashes.length} uninstalls failed.
-      Uninstall them manually, then delete ${current_path}.
+      ${failedHashes.length} out of ${removedHashes.length} uninstalls failed:
+        ${failedHashes.join('\n  ')}
+      
+      Uninstall them manually, then delete them from ${current_path}.
     `)
   }
 

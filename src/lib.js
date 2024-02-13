@@ -1,17 +1,27 @@
 import * as std from 'std';
 import * as os from 'os';
 import * as util from './util.js'
-import { dedent, sh } from './util.js'
-
+import { dedent, sh, shVerbose, execShFunction } from './util.js'
+import { NUX_PATH } from './const.js';
 
 
 export const deleteFileV1 = path => util.fileDelete(path, true)
 
+
+/* TODO: this should be (like all actions) environment agnostic as much as possible. It shouldn't yield different results if it is run by different users. This means that
+	1. the permissions are the same for owner+group+all_users (i.e. enforce that each permission byte is the same)
+or otherwise
+	2. the owner and group need to be specified explicitly
+*/
 export const writeFileV1 = (path, content, permissions) => util.fileWriteWithPermissions(path, content, permissions)
 
+
+// FIXME: if the target is an existing directory it will create a link inside that dir, this needs to be fixed
 export const symlinkV1 = (origin, path) => sh`ln -sf ${origin} ${path}`
 
+// TODO: this is terrible, it's not properly escaping the file contents
 export const writeFileSudoV1 = (path, content) => {
+	console.log(`writeFileSudoV1: ${path}`)
   sh`echo '${content}' | sudo tee ${path} > /dev/null`
 }
 
@@ -35,4 +45,26 @@ export const execShV1 = (script) => {
 	sh(script)
 }
 
+
+export const remoteNixosRebuildSwitchV1 = (host, hash) => {
+	// hash is just a dummy variable to force the action
+	shVerbose`
+		start=$(date +%s)
+		ssh ${host} nixos-rebuild switch
+		echo nixos-rebuild switch ran for $(($(date +%s)-start)) seconds
+	`
+}
+
 export const noop = () => {}
+
+
+export const buildV1 = (script, hash) => {
+	sh`mkdir -p ${NUX_PATH}/out`
+	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
+}
+
+
+export const buildV2 = (script, dependencies, hash) => {
+	sh`mkdir -p ${NUX_PATH}/out`
+	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
+}
