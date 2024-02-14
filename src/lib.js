@@ -2,6 +2,7 @@ import * as std from 'std';
 import * as os from 'os';
 import * as util from './util.js'
 import { dedent, sh, shVerbose, execShFunction } from './util.js'
+import * as fs from './node/fs.js'   // mimicking node:fs
 import { NUX_PATH } from './const.js';
 
 
@@ -58,13 +59,20 @@ export const remoteNixosRebuildSwitchV1 = (host, hash) => {
 export const noop = () => {}
 
 
-export const buildV1 = (script, hash) => {
-	sh`mkdir -p ${NUX_PATH}/out`
-	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
-}
+// export const buildV1 = (script, hash) => {
+// 	sh`mkdir -p ${NUX_PATH}/out`
+// 	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
+// }
 
 
-export const buildV2 = (script, dependencies, hash) => {
+// export const buildV2 = (script, dependencies, hash) => {
+// 	sh`mkdir -p ${NUX_PATH}/out`
+// 	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
+// }
+
+export const writeOutFileV1 = (content, mode, hash) => {
 	sh`mkdir -p ${NUX_PATH}/out`
-	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
+	let path = `${NUX_PATH}/out/${hash}`
+	fs.writeFileSync(path, content)
+	fs.chmodSync(path, mode)
 }

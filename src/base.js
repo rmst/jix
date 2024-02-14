@@ -1,5 +1,5 @@
 import * as util from './util.js';
-import { BIN_PATH } from './const.js';
+import { BIN_PATH, NUX_PATH } from './const.js';
 import { sha256 } from './sha256.js';
 
 // -----
@@ -31,9 +31,13 @@ export const copy = (origin, path, permissions = '-w') => {
 
 export const link = (origin, path) => {
   // TODO: use builtin link functions
+  let { values, dependencies } = computeOutPaths([origin])
+  var [ origin ] = values
+
   return {
     install: ["symlinkV1", origin, path],
     uninstall: ["deleteFileV1", path],
+    dependencies,
   };
 };
 
@@ -83,21 +87,40 @@ export const globalConfigFile = (path, content, original, reloadScript = null) =
 };
 
 
-export const mkscript = (templateStrings, ...values) => {
+const computeOutPaths = (values) => {
   let dependencies = []
   values = values.map(v => {
-    if(v.install && v.uninstall) {
+    if(v.build) {
+      // v is a derivation object
+      // add it to the dependencies array
+      // and replace the object with it's out path
       dependencies.push(v)
-      let h = sha256([v.install, v.uninstall])  // TODO: make function for hash computation
-      return h
+      v = util.serializeDrvs([v])
+      v = v[v.length - 1]  // last element is the actual derivation, because it's [...deps, drv]
+      let h = sha256(v)
+      let outPath = `${NUX_PATH}/out/${h}`
+      return outPath
     }
     else
       return v
   })
 
-  let script = util.dedent(templateStrings, ...values)
-  
+  return {values, dependencies}
 }
+
+
+export const textfile = (mode='-w') => (templateStrings, ...values) => {
+
+  var { values, dependencies } = computeOutPaths(values)
+  let text = util.dedent(templateStrings, ...values)
+
+  return {
+    build: ["writeOutFileV1", text, mode],
+    dependencies,
+  }
+}
+
+export const mkScript = (templateStrings, ...values) => textfile('-w+x')(templateStrings, ...values)
 
 // export const build = (templateStrings, ...values) => {
 

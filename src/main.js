@@ -118,20 +118,22 @@ const uninstall = (hashes) => {
   let stats = reversedHashes.map(h => {
     let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${h}`)
     // let [install, uninstall] = JSON.parse(x)
-    let {install, uninstall} = JSON.parse(x)
-    let [f, ...args] = uninstall
+    let {uninstall = null} = JSON.parse(x)
+    if(uninstall) {
+      let [f, ...args] = uninstall
 
-    try {
-      lib[f](...args)
-      return [h, null]
+      try {
+        lib[f](...args)
 
-    } catch (e) {
-      console.log(`Error: ${e.message}`)
-      console.log(e.stack)
-      console.log("\n...uninstall continuing...\n")
-      return [h, e]
+      } catch (e) {
+        console.log(`Error: ${e.message}`)
+        console.log(e.stack)
+        console.log("\n...uninstall continuing...\n")
+        return [h, e]
+      }
     }
     
+    return [h, null]
   })
 
   // TODO: we should be returning the failed hashes not just the number
@@ -144,17 +146,23 @@ const uninstall = (hashes) => {
 
 
 const install = (hashes) => {
-  let stats = hashes.map(h => {
-    let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${h}`)
+  let stats = hashes.map(hash => {
+    let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${hash}`)
     // let [install, uninstall] = JSON.parse(x)
-    let {install, uninstall} = JSON.parse(x)
+    var {install = null, build = null} = JSON.parse(x)
     
-    let [f, ...args] = install
-
-    lib[f](...args, h)
+    let outPath = `${NUX_PATH}/out/${hash}`
+    if(build && !util.exists(outPath)) {
+      var [f, ...args] = build
+      lib[f](...args, hash)
+    }
+    
+    if(install) {
+      var [f, ...args] = install
+      lib[f](...args, hash)
+    }
   })
 }
-
 
 
 const install_raw = async (path, name) => {
@@ -168,22 +176,25 @@ const install_raw = async (path, name) => {
   if(conf === undefined)
     throw new Error(`setup.nux.js doesn't export "${name}"`)
 
-  conf = conf().flat(Infinity)  // allows for nested conf
+  conf = conf()  // compute the derivations
+  conf = conf.flat(Infinity)  // allows for nested derivations for convenience
 
-  // compute hashes and write actions to disk
-  var hashes = conf.map((c, i, arr) => {
+  let serializedDrvs = util.serializeDrvs(conf)
+
+  // compute hashes and write derivations to disk
+  var hashes = serializedDrvs.map((s, i, arr) => {
     // let {install, uninstall} = c
     // install ?? uninstall ?? (()=>{throw new Error(`action ${i}/${arr.length}: missing install/uninstall attribute`)})()
     // let s = JSON.stringify([install, uninstall])
     // let h = sha256(s)
-    let s = JSON.stringify(c)
-    let h = sha256(s)
+    // let s = JSON.stringify(c)
+    let hash = sha256(s)
 
-    let p = `${BIN_PATHJs.STORE_PATH}/${h}`
+    let p = `${BIN_PATHJs.STORE_PATH}/${hash}`
     if(!util.exists(p))
       util.fileWrite(p, s)
     
-    return h
+    return hash
   })
 
   hashes = [...new Set(hashes)]  // deduplicate
