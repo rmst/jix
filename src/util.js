@@ -3,24 +3,7 @@ import * as os from 'os';
 import { sha256 } from './sha256.js';
 
 
-
-// TODO: settle one one name for derivations/actions/config
-export function serializeDrvs (drvs) {
-
-  let result = drvs.map(drv => {
-    let deps = drv.dependencies ?? []
-    deps = serializeDrvs(deps)
-    let hashes = deps.map(d => sha256(d))
-
-    // TODO: update quickjs to ecmascript 2018 and use object spread syntax, i.e. {...drv, dependencies: hashes}
-    drv = JSON.stringify({...drv, dependencies: hashes})
-
-    return [...deps, drv]
-  })
-
-  return result.flat(Infinity)  // flatten the nested list
-
-}
+// TODO: move away from these functions towards the node/fs functions
 
 
 // Function to write content to a file
@@ -117,7 +100,7 @@ export const fileDelete = (path, ignoreNonexisting=false) => {
 }
 
 export const exists = (path) => {
-	return os.stat(path)[0] != null
+	return os.lstat(path)[0] != null
 }
 
 
@@ -327,6 +310,6 @@ export const monkeyPatchConsoleLog = () => {
     args = args.map(x => toStr(x))
     console.log_old(...args)
   }
-  
+  return console
 }
 

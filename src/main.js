@@ -4,6 +4,7 @@
 import * as std from 'std';
 import * as os from 'os';
 import * as util from './util.js'
+import * as drv from './drv.js'
 import { dedent, sh, shVerbose } from './util.js'
 import { BIN_PATH, TMP_PATH, NUX_PATH } from "./const.js";
 import * as nux from './nux.js'
@@ -95,7 +96,7 @@ const update = async (name) => {
 
 
 const loadActions = async (path, name) => {
-  globalThis.nux = nux
+  // globalThis.nux = nux
 
   let module = await import(path)
   return module[name]
@@ -110,6 +111,7 @@ const setDifference = (a, b) => {
 
 
 
+
 const uninstall = (hashes) => {
   // use reversed hashed since that's the proper way to clean up co-dependent things
   let reversedHashes = [...hashes]
@@ -119,6 +121,8 @@ const uninstall = (hashes) => {
     let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${h}`)
     // let [install, uninstall] = JSON.parse(x)
     let {uninstall = null} = JSON.parse(x)
+
+
     if(uninstall) {
       let [f, ...args] = uninstall
 
@@ -126,17 +130,15 @@ const uninstall = (hashes) => {
         lib[f](...args)
 
       } catch (e) {
-        console.log(`Error: ${e.message}`)
+        console.log(`Error with ${h}:\n${e.message}`)
         console.log(e.stack)
         console.log("\n...uninstall continuing...\n")
         return [h, e]
       }
     }
-    
+
     return [h, null]
   })
-
-  // TODO: we should be returning the failed hashes not just the number
   
   let errors = stats.filter(([h, e]) => e !== null)
   let failedHashes = errors.map(([h, e]) => h)
@@ -145,41 +147,63 @@ const uninstall = (hashes) => {
 }
 
 
-const install = (hashes) => {
-  let stats = hashes.map(hash => {
-    let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${hash}`)
-    // let [install, uninstall] = JSON.parse(x)
-    var {install = null, build = null} = JSON.parse(x)
+const install = (hashes, ignoreErrors=false) => {
+  let successfulHashes = []
+
+
+  for (const hash of hashes) {
+    try {
+      let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${hash}`)
     
-    let outPath = `${NUX_PATH}/out/${hash}`
-    if(build && !util.exists(outPath)) {
-      var [f, ...args] = build
-      lib[f](...args, hash)
+      // let [install, uninstall] = JSON.parse(x)
+      var {install = null, build = null} = JSON.parse(x)
+
+      let outPath = `${NUX_PATH}/out/${hash}`
+      if(build && !util.exists(outPath)) {
+        var [f, ...args] = build
+        lib[f](...args, hash)
+      }
+      
+      if(install) {
+        var [f, ...args] = install
+        lib[f](...args, hash)
+      }
+
+      successfulHashes.push(hash)
+
+    } catch (e) {
+      // TODO: return don't print errors
+      console.log(`Error: ${e.message}`)
+      console.log(e.stack)
+
+      if(!ignoreErrors)
+        break
     }
-    
-    if(install) {
-      var [f, ...args] = install
-      lib[f](...args, hash)
-    }
-  })
+  }
+
+  return successfulHashes
 }
 
 
-const install_raw = async (path, name) => {
+const install_raw = async (sourcePath, name) => {
   // console.log("install-raw")
   
   let current_path = `${NUX_PATH}/cur-${name}`
       
   var oldHashes = util.exists(current_path) ? JSON.parse(util.fileRead(current_path)) : []
 
-  var conf = await loadActions(`${path}/setup.nux.js`, name)
-  if(conf === undefined)
-    throw new Error(`setup.nux.js doesn't export "${name}"`)
+  let conf = () => []
+
+  if(sourcePath) {
+    conf = await loadActions(`${sourcePath}/setup.nux.js`, name)
+    if(conf === undefined)
+      throw new Error(`setup.nux.js doesn't export "${name}"`)
+  }
 
   conf = conf()  // compute the derivations
   conf = conf.flat(Infinity)  // allows for nested derivations for convenience
 
-  let serializedDrvs = util.serializeDrvs(conf)
+  let serializedDrvs = drv.serializeDrvs(conf)
 
   // compute hashes and write derivations to disk
   var hashes = serializedDrvs.map((s, i, arr) => {
@@ -215,36 +239,43 @@ const install_raw = async (path, name) => {
     `)
   }
 
-  try {
-    console.log(`Installing ${addedHashes.length} of ${hashes.length}`)
-    install(addedHashes)
-    
+  console.log(`Installing ${addedHashes.length} of ${hashes.length}`)
+
+  let successfulHashes = install(addedHashes)
+  
+  if(successfulHashes.length == addedHashes.length) {
+
     util.fileWrite(current_path, JSON.stringify(hashes))
 
-  } catch (e) {
+  } else {
+    // failed to install completely
+    console.log(`Partial install ${successfulHashes.length}/${hashes.length}`)
+    console.log(`Trying to remove partial install...`)
 
-    console.log(`Error: ${e.message}`)
-    console.log(e.stack)
+    // try to undo what we've done so far
+    let uninstallFails = uninstall(successfulHashes)
+    console.log(`Cleaned up ${successfulHashes.length-uninstallFails.length}/${successfulHashes.length}`)
 
-    try {
-      uninstall(addedHashes)  // TODO: remove the proper subset of addedHashes
-      console.log(`Cleaned up`)
-
-    } catch (e) {
-
-      console.log(`ATTEMPTED to clean up`)
-      console.log(`Error: ${e.message}`)
-      console.log(e.stack)
-    }
+    if(uninstallFails.length != 0)
+      console.log(`Leftover installed hashes: ${uninstallFails}`)
     
-    try {
-      install(removedHashes)
-      console.log(`RESTORED previous config`)
+    console.log(`Trying to restore old install...`)
 
-    } catch (e) {
-      console.log(`ATTEMPTED to RESTORE previous config`)
-      console.log(`Error: ${e.message}`)
-      console.log(e.stack)
+    let reinstalledHashes = install(removedHashes, true)
+
+    if(reinstalledHashes.length == removedHashes.length) {
+
+      console.log(`Successfully restored previous install`)
+    
+    } else {
+    
+      let missingHashes = removedHashes.filter(h => !reinstalledHashes.includes(h))
+
+      console.log(`Error: Only partially restored previous install (missing ${missingHashes.length}):`)
+      console.log(missingHashes)
+
+      let remainingHashes = hashes.filter(h => !missingHashes.includes(h))
+      util.fileWrite(current_path, JSON.stringify(remainingHashes))
     }
 
     std.exit(1)  // exit with error
@@ -259,6 +290,16 @@ const main = async () => {
   if(scriptArgs.length == 2) {
     let name = scriptArgs[1]
     await update(name)
+    return
+  }
+
+  else if(scriptArgs.length == 3) {
+    let name = scriptArgs[1]
+    let operator = scriptArgs[2]
+    if(operator != "--uninstall")
+      throw Error("second argument must be --uninstall")
+    
+    install_raw(null, name)
     return
   }
 

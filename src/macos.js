@@ -4,7 +4,7 @@ import * as util from './util.js'
 import { dedent, sh } from './util.js'
 import { sha256 } from './sha256.js';
 import { BIN_PATH, NUX_PATH } from './const.js'
-import { script, file } from './base.js'
+import * as base from './base.js'
 
 
 export const launchdJob = (name, config, runscript, root_dir="", timeout=null) => {
@@ -42,9 +42,7 @@ export const launchdJob = (name, config, runscript, root_dir="", timeout=null) =
   // TODO: the timeout mechanism should be in separate wrapper function
 
   let label = `com.nux.${name}`
-
-  let exe = `nux_job_${name}`
-  let spath = `${BIN_PATH}/${exe}`
+  let wpath = `${BIN_PATH}/nux_job_${name}`
   let ppath = `${root_dir}/Library/LaunchAgents/${label}.plist`
   let logpath = `${NUX_PATH}/logs/${name}`
 
@@ -53,13 +51,10 @@ export const launchdJob = (name, config, runscript, root_dir="", timeout=null) =
 	// technically _with_logs suffix is kinda misleading since we only add timestamps
   // TODO: add script hash to output and status logs so we can track different versions
 
-  let scriptHash = sha256(runscript)
-
-  let wpath = `${BIN_PATH}/${exe}_with_logs`
-  let wrapper = script(`${exe}_with_logs`, dedent`
+  let wrapper = base.script`
     #!/usr/bin/env zsh -i
 
-    # scripthash=${scriptHash}
+    scripthash=$(basename ${runscript})
 
     add_timestamp() {
       while IFS= read -r line; do
@@ -69,20 +64,21 @@ export const launchdJob = (name, config, runscript, root_dir="", timeout=null) =
 
     mkdir -p "${NUX_PATH}/status"
 
-    echo "$(date "+%Y-%m-%d %H:%M:%S"),${scriptHash},start" >> "${NUX_PATH}/status/${name}"
+    echo "$(date "+%Y-%m-%d %H:%M:%S"),$scriptHash,start" >> "${NUX_PATH}/status/${name}"
 
 
     set -o pipefail  # if any of the pipe's process fail output a non-zero exit code 
 
     # Run the script and process its output
-    { ${timeout_cmd} "${spath}" 2>&1 ; } | add_timestamp
+    { ${timeout_cmd} "${runscript}" 2>&1 ; } | add_timestamp
 
     exitcode=$?
-    echo "$(date "+%Y-%m-%d %H:%M:%S"),${scriptHash},stop,$exitcode" >> "${NUX_PATH}/status/${name}"
-  `)
+    echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,stop,$exitcode" >> "${NUX_PATH}/status/${name}"
+  `
 
+  wrapper = base.symlink(wrapper, wpath)
 
-  let plist = dedent`
+  let plist = base.textfile`
     <?xml version="1.0" encoding="UTF-8"?>
     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
     <plist version="1.0">
@@ -91,7 +87,7 @@ export const launchdJob = (name, config, runscript, root_dir="", timeout=null) =
         <string>${label}</string>
         <key>ProgramArguments</key>
         <array>
-          <string>${wpath}</string>
+          <string>${wrapper}</string>
         </array>
         <key>StandardErrorPath</key>
         <string>${logpath}</string>
@@ -104,49 +100,47 @@ export const launchdJob = (name, config, runscript, root_dir="", timeout=null) =
     </plist>
   `
 
-
-  let hash = sha256(JSON.stringify([name, wrapper, plist, runscript, root_dir]))
-
   let load_unload = {
+    // https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/2c6eb981-9987-4ac6-8cb3-48877d315b48
     // TODO: maybe switch to launchctl bootout? i.e. launchctl bootout gui/501/com.nux.$1 (this also exits with proper error codes)
+
     install: ["execShV1", dedent`
-      # hash: ${hash}  (included to trigger load/unload if inputs change)
-      output=$(launchctl load "${ppath}" 2>&1)
-      echo "$output"
-      [[ "$output" != *"Load failed"* ]]  # actually produces an error if it says load failed
+      launchctl bootstrap gui/$(id -u) "${ppath}"
+      # output=$(launchctl load "${ppath}" 2>&1)
+      # echo "$output"
+      # [[ "$output" != *"Load failed"* ]]  # actually produces an error if it says load failed
     `],
     uninstall: ["execShV1", dedent`
-      output=$(launchctl unload "${ppath}" 2>&1)
-      echo "$output"
-      [[ "$output" != *"Unload failed"* ]]  # actually produces an error if it says unload failed
+      launchctl list | grep -q ${label} && launchctl bootout user/$(id -u) "${label}" || true
+      # output=$(launchctl unload "${ppath}" 2>&1)
+      # echo "$output"
+      # [[ "$output" != *"Unload failed"* ]]  # actually produces an error if it says unload failed
     `],
+    dependencies: [ base.symlink(plist, ppath) ]
   }
 
   return [
-    wrapper,
-    script(exe, runscript),  // TODO: do we really always need this in path?
-    file(ppath, plist),
     load_unload,
   ]
 }
 
 export const nux_macos_user_defaults = () => {
   return [
-    script("nj", `launchctl list | grep com.nux.`),
-    script("njl", dedent`
+    base.script_old("nj", `launchctl list | grep com.nux.`),
+    base.script_old("njl", dedent`
       #!/bin/bash
       less +G ${NUX_PATH}/logs/$1
     `),
     // TODO: verify that the path is always gui/501
-    script("nji", dedent`
+    base.script_old("nji", dedent`
       #!/bin/bash
       launchctl print gui/501/com.nux.$1
     `),
-    script("njs", dedent`
+    base.script_old("njs", dedent`
       #!/bin/bash
       less +G ${NUX_PATH}/status/$1  # display the end of the log
     `),
-    script("timeout", dedent`
+    base.script_old("timeout", dedent`
       #!/usr/bin/env perl
       alarm shift; exec @ARGV';
     `),

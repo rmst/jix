@@ -1,10 +1,15 @@
 import * as util from './util.js';
-import { BIN_PATH, NUX_PATH } from './const.js';
-import { sha256 } from './sha256.js';
+import { BIN_PATH } from './const.js';
+import { parseDrvValues, derivation } from './drv.js';
 
 // -----
 
 export const HOME = util.getEnv().HOME
+
+
+// ----- OLD SYSTEM ----
+// TODO: get rid of this at some point
+
 
 export const file = (path, content, permissions = '-w') => {
   path = path.replace('~', util.getEnv().HOME);
@@ -15,12 +20,12 @@ export const file = (path, content, permissions = '-w') => {
   };
 };
 
-export const script = (name, contents) => {
+export const script_old = (name, contents) => {
   return file(`${BIN_PATH}/${name}`, contents, "+x-w");
 };
 
 export const scripts = (c) => {
-  return Object.keys(c).map(k => script(k, c[k]));
+  return Object.keys(c).map(k => script_old(k, c[k]));
 };
 
 export const copy = (origin, path, permissions = '-w') => {
@@ -29,22 +34,27 @@ export const copy = (origin, path, permissions = '-w') => {
   return file(path, content, permissions);
 };
 
-export const link = (origin, path) => {
+
+export const link = (origin, path, symbolic=false) => {
   // TODO: use builtin link functions
-  let { values, dependencies } = computeOutPaths([origin])
+  let { values, dependencies } = parseDrvValues([origin])
   var [ origin ] = values
 
-  return {
-    install: ["symlinkV1", origin, path],
+  return derivation({
+    install: [symbolic ? "symlinkV2": "hardlinkV0", origin, path],
     uninstall: ["deleteFileV1", path],
     dependencies,
-  };
+    str: path,
+  })
 };
 
-export const alias = (origin, name) => {
+// ------ NEW SYSTEM ----
+export const symlink = (origin, path) => link(origin, path, true)
 
-  return link(origin, `${BIN_PATH}/${name}`);
-};
+
+export const alias = (mapping) => {
+  return Object.entries(mapping).map(([k, v]) => symlink(v, `${BIN_PATH}/${k}`))
+}
 
 
 export const user = (config) => {
@@ -87,59 +97,31 @@ export const globalConfigFile = (path, content, original, reloadScript = null) =
 };
 
 
-const computeOutPaths = (values) => {
-  let dependencies = []
-  values = values.map(v => {
-    if(v.build) {
-      // v is a derivation object
-      // add it to the dependencies array
-      // and replace the object with it's out path
-      dependencies.push(v)
-      v = util.serializeDrvs([v])
-      v = v[v.length - 1]  // last element is the actual derivation, because it's [...deps, drv]
-      let h = sha256(v)
-      let outPath = `${NUX_PATH}/out/${h}`
-      return outPath
-    }
-    else
-      return v
-  })
 
-  return {values, dependencies}
-}
+export const writeFile = (mode='-w') => (templateStrings, ...values) => {
 
-
-export const textfile = (mode='-w') => (templateStrings, ...values) => {
-
-  var { values, dependencies } = computeOutPaths(values)
+  var { values, dependencies } = parseDrvValues(values)
   let text = util.dedent(templateStrings, ...values)
 
-  return {
+  return derivation({
     build: ["writeOutFileV1", text, mode],
     dependencies,
-  }
+  })
 }
 
-export const mkScript = (templateStrings, ...values) => textfile('-w+x')(templateStrings, ...values)
 
-// export const build = (templateStrings, ...values) => {
-
-//   let dependencies = []
-//   values = values.map(v => {
-//     if(v.install && v.uninstall) {
-//       dependencies.push(v)
-//       let h = sha256([v.install, v.uninstall])  // TODO: make function for hash computation
-//       return h
-//     }
-//     else
-//       return v
-//   })
-//   let script = util.dedent(templateStrings, ...values)
+export const textfile = writeFile()
 
 
-//   return {
-//     install: ["buildV2", script],
-//     uninstall: ["noop"],
-//     dependencies,
-//   }
-// }
+export const script = (templateStrings, ...values) => writeFile('-w+x')(templateStrings, ...values)
+
+
+export const build = (templateStrings, ...values) => {
+
+  let buildScript = script(templateStrings, ...values)
+
+  return {
+    build: ["buildV2", buildScript],
+    dependencies: [buildScript],
+  }
+}

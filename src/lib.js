@@ -18,7 +18,9 @@ export const writeFileV1 = (path, content, permissions) => util.fileWriteWithPer
 
 
 // FIXME: if the target is an existing directory it will create a link inside that dir, this needs to be fixed
-export const symlinkV1 = (origin, path) => sh`ln -sf ${origin} ${path}`
+export const symlinkV2 = (origin, path) => sh`ln -s ${origin} ${path}`
+
+export const hardlinkV0 = (origin, path) => sh`ln ${origin} ${path}`
 
 // TODO: this is terrible, it's not properly escaping the file contents
 export const writeFileSudoV1 = (path, content) => {
@@ -65,10 +67,10 @@ export const noop = () => {}
 // }
 
 
-// export const buildV2 = (script, dependencies, hash) => {
-// 	sh`mkdir -p ${NUX_PATH}/out`
-// 	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
-// }
+export const buildV3 = (script, hash) => {
+	sh`mkdir -p ${NUX_PATH}/out`
+	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
+}
 
 export const writeOutFileV1 = (content, mode, hash) => {
 	sh`mkdir -p ${NUX_PATH}/out`
