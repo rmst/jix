@@ -4,7 +4,7 @@ import { parseDrvValues, derivation } from './drv.js';
 
 // -----
 
-export const HOME = util.getEnv().HOME
+export const HOME = util.getEnv().HOME  // TODO: switch to node API
 
 
 // ----- OLD SYSTEM ----
@@ -28,17 +28,22 @@ export const scripts = (c) => {
   return Object.keys(c).map(k => script_old(k, c[k]));
 };
 
-export const copy = (origin, path, permissions = '-w') => {
+export const copy = (origin, path, mode = '-w') => {
   // TODO: maybe cache the hash, don't read the file every time
+  // TODO: make permissions work
   let content = util.fileRead(origin);
-  return file(path, content, permissions);
+  return symlink(writeFile(mode)(content), path)
 };
+
+
+
+
+// ------ NEW SYSTEM ----
 
 
 export const link = (origin, path, symbolic=false) => {
   // TODO: use builtin link functions
-  let { values, dependencies } = parseDrvValues([origin])
-  var [ origin ] = values
+  var { values: [ origin, path ], dependencies } = parseDrvValues([origin, path])
 
   return derivation({
     install: [symbolic ? "symlinkV2": "hardlinkV0", origin, path],
@@ -48,7 +53,6 @@ export const link = (origin, path, symbolic=false) => {
   })
 };
 
-// ------ NEW SYSTEM ----
 export const symlink = (origin, path) => link(origin, path, true)
 
 
@@ -83,11 +87,13 @@ export const run = (install, uninstall) => {
 
 
 export const mkdir = (path) => {
-  return {
+  // TODO: use lib.js not shell functions to do this
+  return derivation({
     install: ["execShV1", `mkdir -p "${path}"`],
-    uninstall: ["execShV1", `rm -r "${path}"`]
-  };
-};
+    uninstall: ["execShV1", `[ ! -e "${path}" ] || rmdir "${path}"`],
+    str: path,
+  })
+}
 
 export const globalConfigFile = (path, content, original, reloadScript = null) => {
   return {
@@ -97,6 +103,16 @@ export const globalConfigFile = (path, content, original, reloadScript = null) =
 };
 
 
+export const str = (templateStrings, ...values) => {
+
+  var { values, dependencies } = parseDrvValues(values)
+  let text = util.dedent(templateStrings, ...values)
+
+  return derivation({
+    str: text,
+    dependencies,
+  })
+}
 
 export const writeFile = (mode='-w') => (templateStrings, ...values) => {
 

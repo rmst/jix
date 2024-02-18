@@ -5,9 +5,39 @@ import { dedent, sh } from './util.js'
 import { sha256 } from './sha256.js';
 import { BIN_PATH, NUX_PATH } from './const.js'
 import * as base from './base.js'
+import { HOME } from './base.js'
+import { derivation, drvMap } from './drv.js';
 
 
-export const launchdJob = (name, config, runscript, root_dir="", timeout=null) => {
+
+const timeout_script = base.script`
+  #!/usr/bin/env perl
+  alarm shift; exec @ARGV;
+`
+
+export const nux_macos_user_defaults = () => base.alias({
+  timeout: timeout_script,
+  nj: base.script`launchctl list | grep com.nux.`,
+  njl: base.script`
+    #!/bin/bash
+    less +G ${NUX_PATH}/logs/$1
+  `,
+  // TODO: verify that the path is always gui/501
+  nji: base.script`
+    #!/bin/bash
+    launchctl print gui/501/com.nux.$1
+  `,
+  njs: base.script`
+    #!/bin/bash
+    less +G ${NUX_PATH}/status/$1  # display the end of the log
+  `,
+  njopen: base.script`
+    open ${HOME}/Library/LaunchAgents
+  `
+})
+
+
+export const launchdJob = ({name, config, runscript, timeout=null}) => {
   /* 
     see logs: log show --predicate 'senderImagePath CONTAINS "test"' --info
 
@@ -38,21 +68,21 @@ export const launchdJob = (name, config, runscript, root_dir="", timeout=null) =
     https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/4a977680-d227-4001-a228-5f4b65a19910
   */
 
+  name ?? (()=>{throw Error()})()
+  config ?? (()=>{throw Error()})()
+  runscript ?? (()=>{throw Error()})()
 
   // TODO: the timeout mechanism should be in separate wrapper function
 
   let label = `com.nux.${name}`
   let wpath = `${BIN_PATH}/nux_job_${name}`
-  let ppath = `${root_dir}/Library/LaunchAgents/${label}.plist`
+  let ppath = `${HOME}/Library/LaunchAgents/${label}.plist`
   let logpath = `${NUX_PATH}/logs/${name}`
 
-  let timeout_cmd = timeout == null ? "" : `timeout ${timeout}`  
-
-	// technically _with_logs suffix is kinda misleading since we only add timestamps
-  // TODO: add script hash to output and status logs so we can track different versions
+  let timeout_cmd = timeout == null ? "" : `${timeout_script} ${timeout}`  
 
   let wrapper = base.script`
-    #!/usr/bin/env zsh -i
+    #!/usr/bin/env zsh
 
     scripthash=$(basename ${runscript})
 
@@ -64,7 +94,7 @@ export const launchdJob = (name, config, runscript, root_dir="", timeout=null) =
 
     mkdir -p "${NUX_PATH}/status"
 
-    echo "$(date "+%Y-%m-%d %H:%M:%S"),$scriptHash,start" >> "${NUX_PATH}/status/${name}"
+    echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,start" >> "${NUX_PATH}/status/${name}"
 
 
     set -o pipefail  # if any of the pipe's process fail output a non-zero exit code 
@@ -75,8 +105,7 @@ export const launchdJob = (name, config, runscript, root_dir="", timeout=null) =
     exitcode=$?
     echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,stop,$exitcode" >> "${NUX_PATH}/status/${name}"
   `
-
-  wrapper = base.symlink(wrapper, wpath)
+    .symlinkTo(wpath)
 
   let plist = base.textfile`
     <?xml version="1.0" encoding="UTF-8"?>
@@ -99,52 +128,28 @@ export const launchdJob = (name, config, runscript, root_dir="", timeout=null) =
     </dict>
     </plist>
   `
+    .symlinkTo(ppath)
 
-  let load_unload = {
+  let TARGET = "gui/$(id -u)"
+  // let TARGET = "user/$(id -u)"
+
+  let load_unload = derivation({
     // https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/2c6eb981-9987-4ac6-8cb3-48877d315b48
-    // TODO: maybe switch to launchctl bootout? i.e. launchctl bootout gui/501/com.nux.$1 (this also exits with proper error codes)
 
     install: ["execShV1", dedent`
-      launchctl bootstrap gui/$(id -u) "${ppath}"
-      # output=$(launchctl load "${ppath}" 2>&1)
-      # echo "$output"
-      # [[ "$output" != *"Load failed"* ]]  # actually produces an error if it says load failed
+      # uninstall if launch agent already exists (to increase robustness)
+      launchctl list | grep -q ${label} && launchctl bootout ${TARGET}/${label} || true
+      launchctl bootstrap ${TARGET} "${plist}"
     `],
     uninstall: ["execShV1", dedent`
-      launchctl list | grep -q ${label} && launchctl bootout user/$(id -u) "${label}" || true
-      # output=$(launchctl unload "${ppath}" 2>&1)
-      # echo "$output"
-      # [[ "$output" != *"Unload failed"* ]]  # actually produces an error if it says unload failed
+      # do nothing if launch agent doesn't exist (to increase robustness)
+      launchctl list | grep -q ${label} || exit 0  
+      launchctl bootout ${TARGET}/${label}
     `],
-    dependencies: [ base.symlink(plist, ppath) ]
-  }
+    dependencies: [ plist ]
+  })
 
   return [
     load_unload,
   ]
 }
-
-export const nux_macos_user_defaults = () => {
-  return [
-    base.script_old("nj", `launchctl list | grep com.nux.`),
-    base.script_old("njl", dedent`
-      #!/bin/bash
-      less +G ${NUX_PATH}/logs/$1
-    `),
-    // TODO: verify that the path is always gui/501
-    base.script_old("nji", dedent`
-      #!/bin/bash
-      launchctl print gui/501/com.nux.$1
-    `),
-    base.script_old("njs", dedent`
-      #!/bin/bash
-      less +G ${NUX_PATH}/status/$1  # display the end of the log
-    `),
-    base.script_old("timeout", dedent`
-      #!/usr/bin/env perl
-      alarm shift; exec @ARGV';
-    `),
-
-  ]
-}
-

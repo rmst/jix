@@ -3,12 +3,14 @@
 
 import * as std from 'std';
 import * as os from 'os';
+
+util.monkeyPatchConsoleLog()
+
 import * as util from './util.js'
 import * as drv from './drv.js'
 import { dedent, sh, shVerbose } from './util.js'
-import { BIN_PATH, TMP_PATH, NUX_PATH } from "./const.js";
+import { BIN_PATH, TMP_PATH, NUX_PATH, STORE_PATH } from "./const.js";
 import * as nux from './nux.js'
-import * as BIN_PATHJs from "./const.js";
 import { sha256 } from './sha256.js';
 
 import * as lib from './lib.js'
@@ -17,7 +19,6 @@ import * as lib from './lib.js'
 const NUX_REPO = "~/.g/23b7-nux"
 
 
-util.monkeyPatchConsoleLog()
 
 
 // UTILS
@@ -73,7 +74,7 @@ const install_commit = async (repo, commit, name) => {
 const update = async (name) => {
   util.mkdir(NUX_PATH, true)
   util.mkdir(BIN_PATH, true)
-  util.mkdir(BIN_PATHJs.STORE_PATH, true)
+  util.mkdir(STORE_PATH, true)
   util.mkdir(`${NUX_PATH}/logs`, true)
 
   let path = os.getcwd()[0]
@@ -118,7 +119,7 @@ const uninstall = (hashes) => {
   reversedHashes.reverse()
 
   let stats = reversedHashes.map(h => {
-    let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${h}`)
+    let x = util.fileRead(`${STORE_PATH}/${h}`)
     // let [install, uninstall] = JSON.parse(x)
     let {uninstall = null} = JSON.parse(x)
 
@@ -153,7 +154,7 @@ const install = (hashes, ignoreErrors=false) => {
 
   for (const hash of hashes) {
     try {
-      let x = util.fileRead(`${BIN_PATHJs.STORE_PATH}/${hash}`)
+      let x = util.fileRead(`${STORE_PATH}/${hash}`)
     
       // let [install, uninstall] = JSON.parse(x)
       var {install = null, build = null} = JSON.parse(x)
@@ -192,90 +193,97 @@ const install_raw = async (sourcePath, name) => {
       
   var oldHashes = util.exists(current_path) ? JSON.parse(util.fileRead(current_path)) : []
 
-  let conf = () => []
+  // TODO: instead of processing a list of drvs use a single top level drv
+  let drvs = []
 
   if(sourcePath) {
-    conf = await loadActions(`${sourcePath}/setup.nux.js`, name)
-    if(conf === undefined)
+    let f = await loadActions(`${sourcePath}/setup.nux.js`, name)
+    if(f === undefined)
       throw new Error(`setup.nux.js doesn't export "${name}"`)
+
+    drvs = f()  // compute the derivations
   }
 
-  conf = conf()  // compute the derivations
-  conf = conf.flat(Infinity)  // allows for nested derivations for convenience
+  drvs = drvs.flat(Infinity)  // allows for nested derivations for convenience
 
-  let serializedDrvs = drv.serializeDrvs(conf)
+  drvs = drvs.map(d => {
+    d = d.hash ? d : drv.derivation(d)
+    return d.flatten()
+  })
+  drvs = drvs.flat()
 
-  // compute hashes and write derivations to disk
-  var hashes = serializedDrvs.map((s, i, arr) => {
-    // let {install, uninstall} = c
-    // install ?? uninstall ?? (()=>{throw new Error(`action ${i}/${arr.length}: missing install/uninstall attribute`)})()
-    // let s = JSON.stringify([install, uninstall])
-    // let h = sha256(s)
-    // let s = JSON.stringify(c)
-    let hash = sha256(s)
 
-    let p = `${BIN_PATHJs.STORE_PATH}/${hash}`
+  // write derivations to disk
+  drvs.map(d => {
+    let p = `${STORE_PATH}/${d.hash}`
     if(!util.exists(p))
-      util.fileWrite(p, s)
-    
-    return hash
+      util.fileWrite(p, d.serialize())
   })
 
-  hashes = [...new Set(hashes)]  // deduplicate
+  let hashes = [...new Set(drvs.map(d => d.hash))]  // deduplicated hashes
 
-  let removedHashes = setDifference(oldHashes, hashes)
-  let addedHashes = setDifference(hashes, oldHashes)
 
-  console.log(`Uninstalling ${removedHashes.length} of ${oldHashes.length}`)
+  let hashesToUninstall = setDifference(oldHashes, hashes)
+  let hashesToInstall = setDifference(hashes, oldHashes)
 
-  let failedHashes = uninstall(removedHashes)
 
-  if(failedHashes.length > 0) {
+  console.log(dedent`
+    Uninstalling ${hashesToUninstall.length} of ${oldHashes.length}:
+      ${hashesToUninstall.join('\n  ')}
+  `)
+  
+  var failedUninstalls = uninstall(hashesToUninstall)
+
+  if(failedUninstalls.length > 0) {
     throw Error(dedent`
-      ${failedHashes.length} out of ${removedHashes.length} uninstalls failed:
-        ${failedHashes.join('\n  ')}
+      ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed:
+        ${failedUninstalls.join('\n  ')}
       
       Uninstall them manually, then delete them from ${current_path}.
     `)
   }
 
-  console.log(`Installing ${addedHashes.length} of ${hashes.length}`)
+  console.log(`Installing ${hashesToInstall.length} of ${hashes.length}`)
 
-  let successfulHashes = install(addedHashes)
+  let installedHashes = install(hashesToInstall)
   
-  if(successfulHashes.length == addedHashes.length) {
+  if(installedHashes.length == hashesToInstall.length) {
 
     util.fileWrite(current_path, JSON.stringify(hashes))
 
   } else {
     // failed to install completely
-    console.log(`Partial install ${successfulHashes.length}/${hashes.length}`)
+    console.log(`Partial install ${installedHashes.length}/${hashes.length}`)
     console.log(`Trying to remove partial install...`)
 
+    // TODO: maybe we should call uninstalled on the hash that failed too in case there is anything that needs to be cleaned up?
     // try to undo what we've done so far
-    let uninstallFails = uninstall(successfulHashes)
-    console.log(`Cleaned up ${successfulHashes.length-uninstallFails.length}/${successfulHashes.length}`)
+    var failedUninstalls = uninstall(installedHashes)
+    console.log(`Cleaned up ${installedHashes.length-failedUninstalls.length}/${installedHashes.length}`)
 
-    if(uninstallFails.length != 0)
-      console.log(`Leftover installed hashes: ${uninstallFails}`)
+    if(failedUninstalls.length != 0)
+      console.log(`Leftover installed hashes: ${failedUninstalls}`)
     
     console.log(`Trying to restore old install...`)
 
-    let reinstalledHashes = install(removedHashes, true)
+    let reinstalledHashes = install(hashesToUninstall, true)
 
-    if(reinstalledHashes.length == removedHashes.length) {
+    if(reinstalledHashes.length == hashesToUninstall.length) {
 
       console.log(`Successfully restored previous install`)
     
     } else {
     
-      let missingHashes = removedHashes.filter(h => !reinstalledHashes.includes(h))
+      let missingHashes = hashesToUninstall.filter(h => !reinstalledHashes.includes(h))
 
-      console.log(`Error: Only partially restored previous install (missing ${missingHashes.length}):`)
-      console.log(missingHashes)
+      console.log(dedent`
+        Error: Only partially restored previous install (missing ${missingHashes.length}):
+          ${missingHashes.join('\n  ')}
+      `)
 
       let remainingHashes = hashes.filter(h => !missingHashes.includes(h))
-      util.fileWrite(current_path, JSON.stringify(remainingHashes))
+
+      util.fileWrite(current_path, JSON.stringify(remainingHashes))  // update db
     }
 
     std.exit(1)  // exit with error
