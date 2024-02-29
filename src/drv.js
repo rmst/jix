@@ -14,28 +14,10 @@ let drv = {
 }
 ```
 
-Base derivations are defined under nux.js
+Base derivation functions are defined under nux.js
 */
 
 export const drvMap = new Map()
-
-// export const derivation_old = (drv) => {
-//   let hash = drvhash(drv)
-//   let str = `${NUX_PATH}/out/${hash}`;
-//   drv = {
-//     hash,
-//     str: drv.build ? str : undefined,
-//     toString: () => {
-//       let key = drv.build ? str : hash
-//       drvMap.set(key, drv)
-//       return key
-//     },
-//     ...drv,
-//   }
-
-//   drv.symlinkTo = path => symlink(drv, path)
-//   return drv
-// };
 
 
 export function derivation (drv) {

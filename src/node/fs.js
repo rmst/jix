@@ -26,13 +26,34 @@ export const chmodSync = (path, mode) => {
 
 
 // Mimic fs.readFileSync in Node.js
-export const readFileSync = (path, options) => {
+export const readFileSync = (path, options=null) => {
+  let encoding = options;  // Assuming options can be directly the encoding string
+
   const file = std.open(path, 'r');
   if (!file) {
     throw new Error(`Failed to open file: ${path}`);
   }
+
   try {
-    return file.readAsString(); // Assuming the default encoding is 'utf-8'
+    // If the encoding is explicitly set to 'utf8', read the file as a UTF-8 string
+    if (encoding === "utf8") {
+      return file.readAsString()
+    } else {
+      // Determine the total file size to allocate a buffer of appropriate size
+      file.seek(0, std.SEEK_END); // Move to the end of the file
+      let fileSize = Number(file.tello()); // Get the file size
+      file.seek(0, std.SEEK_SET); // Reset position to the beginning of the file for reading
+
+      // Initialize a buffer for reading the entire file content
+      let buffer = new ArrayBuffer(fileSize);
+      let bytesRead = file.read(buffer, 0, fileSize);
+
+      if (bytesRead !== fileSize) {
+        throw new Error("Failed to read the entire file");
+      }
+
+      return new Uint8Array(buffer); // Returning Uint8Array for consistency
+    }
   } finally {
     file.close();
   }

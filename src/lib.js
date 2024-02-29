@@ -4,6 +4,7 @@ import * as util from './util.js'
 import { dedent, sh, shVerbose, execShFunction } from './util.js'
 import * as fs from './node/fs.js'   // mimicking node:fs
 import { NUX_PATH } from './const.js';
+import { createHash } from './shaNext.js';
 
 
 export const deleteFileV1 = path => util.fileDelete(path, true)
@@ -77,4 +78,15 @@ export const writeOutFileV1 = (content, mode, hash) => {
 	let path = `${NUX_PATH}/out/${hash}`
 	fs.writeFileSync(path, content)
 	fs.chmodSync(path, mode)
+}
+
+
+export const copyV1 = (path, fileHash, hash) => {
+
+	// TODO: check path against file hash!!
+	// TODO: make it work with MacOS' copy on write
+
+	// TODO: maybe make it work for directories?
+	
+	sh`cp "${path}" "${NUX_PATH}/out/${hash}"`
 }

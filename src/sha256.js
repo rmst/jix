@@ -1,4 +1,7 @@
 
+// TODO: replace all usages of this with ./shaNext.js
+
+
 const module = { exports: true }
 
 ;(function(){

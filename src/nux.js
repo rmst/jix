@@ -6,6 +6,17 @@ import { sha256 } from './sha256.js';
 export * from './base.js'
 export * from './macos.js'
 
+
+export const nuxRemote = (host, derivations) => {
+  // TODO: implement
+}
+
+
+const copy = (path, remote, destination) => {
+
+}
+
+
 export const nixosConfig = (host, configPath) => {
   // TODO: this should be root protected
 	// TODO: dependency on scp

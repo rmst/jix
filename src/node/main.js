@@ -1,7 +1,8 @@
 
 // import * as fs from "./fs.js"
 import * as std from "std"
-import { monkeyPatchConsoleLog } from "../util.js"
+import { monkeyPatchConsoleLog } from "../util.js"  // TODO: move this into node/
+import { monkeyPatchProcess } from "./util.js"
 // import * as os from "os"
 
 let qjspath = std.getenviron()['QJSPATH']
@@ -12,15 +13,14 @@ let qjsinteractive = std.getenviron()['QJSINTERACTIVE']
 // })()
 
 
-globalThis.process = {
-	argv: [...scriptArgs],
-	env: std.getenviron(),  // TODO: make this function call (via getter / setter / proxy)
-}
+monkeyPatchProcess()
 
 globalThis.console = monkeyPatchConsoleLog()
 
-globalThis.fs = await import(`${qjspath}/src/node/fs.js`)
 
+// TODO: instead of this make node:fs, etc imports work properly!! 
+globalThis.fs = await import(`${qjspath}/src/node/fs.js`)
+globalThis.child_process = await import(`${qjspath}/src/node/child_process.js`)
 
 // console.log(scriptArgs)
 
@@ -35,4 +35,6 @@ if(process.argv[1] == "-e") {
 	process.argv.shift()
 	await import(process.argv.shift())
 }
+
+
 

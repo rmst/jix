@@ -160,9 +160,8 @@ export const setEnv = (env) => {
 
 
 
+// TODO: this code has been moved to node/child_process.js execSync, replace this function with a call to that
 export const execShFunction = ({verbose=false, env={}}) => (template, ...args) => {
-  // TODO: rename this to execSh
-  // TODO: automatically escape the arguments
   let cmd = dedent(template, ...args)
 
   // make everything fail if one command fails, TODO: is this a good default?
@@ -305,6 +304,7 @@ function toStr(x) {
 
 
 export const monkeyPatchConsoleLog = () => {
+  // TODO: maybe patch globalThis.console ?
   console.log_old = console.log
   console.log = (...args) => {
     args = args.map(x => toStr(x))

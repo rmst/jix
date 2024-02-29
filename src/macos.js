@@ -15,7 +15,7 @@ const timeout_script = base.script`
   alarm shift; exec @ARGV;
 `
 
-export const nux_macos_user_defaults = () => base.alias({
+export const macosUtilScripts = base.alias({
   timeout: timeout_script,
   nj: base.script`launchctl list | grep com.nux.`,
   njl: base.script`

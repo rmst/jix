@@ -1,7 +1,8 @@
 import * as util from './util.js';
 import { BIN_PATH } from './const.js';
 import { parseDrvValues, derivation } from './drv.js';
-
+import * as fs from './node/fs.js'
+import { createHash } from './shaNext.js';
 // -----
 
 export const HOME = util.getEnv().HOME  // TODO: switch to node API
@@ -11,31 +12,14 @@ export const HOME = util.getEnv().HOME  // TODO: switch to node API
 // TODO: get rid of this at some point
 
 
-export const file = (path, content, permissions = '-w') => {
-  path = path.replace('~', util.getEnv().HOME);
 
-  return {
-    install: ["writeFileV1", path, content, permissions],
-    uninstall: ["deleteFileV1", path],
-  };
-};
-
-export const script_old = (name, contents) => {
-  return file(`${BIN_PATH}/${name}`, contents, "+x-w");
-};
-
-export const scripts = (c) => {
-  return Object.keys(c).map(k => script_old(k, c[k]));
-};
 
 export const copy = (origin, path, mode = '-w') => {
   // TODO: maybe cache the hash, don't read the file every time
   // TODO: make permissions work
   let content = util.fileRead(origin);
-  return symlink(writeFile(mode)(content), path)
+  return link(writeFile(mode)(content), path)
 };
-
-
 
 
 // ------ NEW SYSTEM ----
@@ -125,6 +109,18 @@ export const writeFile = (mode='-w') => (templateStrings, ...values) => {
   })
 }
 
+export const file = (path) => {
+  path = path.replace('~', util.getEnv().HOME)
+  let data = fs.readFileSync(path)
+  console.log("data", data.length)
+
+  const fileHash = createHash().update(data).digest("hex");
+  console.log("hash", fileHash)
+
+  return derivation({
+    build: ["copyV1", path, fileHash],
+  })
+};
 
 export const textfile = writeFile()
 
@@ -137,7 +133,7 @@ export const build = (templateStrings, ...values) => {
   let buildScript = script(templateStrings, ...values)
 
   return {
-    build: ["buildV2", buildScript],
+    build: ["buildV3", buildScript],
     dependencies: [buildScript],
   }
 }
