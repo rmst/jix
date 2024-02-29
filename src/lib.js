@@ -88,5 +88,5 @@ export const copyV1 = (path, fileHash, hash) => {
 
 	// TODO: maybe make it work for directories?
 	
-	sh`cp "${path}" "${NUX_PATH}/out/${hash}"`
+	sh`cp '${path}' '${NUX_PATH}/out/${hash}'`
 }

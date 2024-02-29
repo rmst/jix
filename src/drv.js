@@ -89,14 +89,16 @@ export const parseDrvValues = (values) => {
           let drv = drvMap.get(k)
           // console.log(`Found drv in string ${v}`)
           // console.log(`${k} will be replaced by ${drv.str}`)
-          dependencies.push(...(drv.dependencies ?? []))
+          dependencies.push(drv)
           v = v.replaceAll(k, drv.str)
         }
       })
       
       return v
 
-    } else if (v?.str) {
+    } else if (v?.dependencies && v?.serialize) {
+      // TODO: do proper object check
+
       // v is a derivation object
       // add it to the dependencies array
       // and replace the object with it's out path

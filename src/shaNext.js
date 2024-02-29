@@ -4,6 +4,7 @@
  * sha256-uint8array.ts
  */
 
+// TODO: maybe put this under ./node/ ?
 
 
 // first 32 bits of the fractional parts of the cube roots of the first 64 primes 2..311

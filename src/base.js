@@ -112,11 +112,7 @@ export const writeFile = (mode='-w') => (templateStrings, ...values) => {
 export const file = (path) => {
   path = path.replace('~', util.getEnv().HOME)
   let data = fs.readFileSync(path)
-  console.log("data", data.length)
-
   const fileHash = createHash().update(data).digest("hex");
-  console.log("hash", fileHash)
-
   return derivation({
     build: ["copyV1", path, fileHash],
   })
