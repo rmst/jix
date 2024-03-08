@@ -48,8 +48,10 @@ export const dirRead = (path) => {
 }
 
 
-export function traverseFileSystem(rootPath) {
+export function traverseFileSystem(rootPath, ignore='') {
   // Recursive function to traverse the file system
+
+  ignore = dedent(ignore).split('\n')
 
 	let dirs = [];
 	let files = [];
@@ -59,11 +61,6 @@ export function traverseFileSystem(rootPath) {
 		let entries = dirRead(currentPath)
 
 		entries.forEach(entry => {
-
-      if([".", "..", ".DS_Store"].includes(entry)) {
-        // TODO: support .gitignore or sth?
-        return
-      }
         
 			let fullPath = currentPath + "/" + entry
 			let [stat, err] = os.stat(fullPath)  // os.stat follows symlinks (as opposed to os.lstat)
@@ -74,6 +71,12 @@ export function traverseFileSystem(rootPath) {
 
       let isDir = stat.mode & 0o040000   // directory
       let isFile = stat.mode & 0o100000  // fegular file
+
+      if([".", "..", ".DS_Store"].includes(entry) || ignore.includes(relativePath)) {
+        // console.log("ignoring", relativePath)
+        // TODO: maybe support .gitignore directly?
+        return
+      }
 
 			if (isDir) { 
 				dirs.push(relativePath)
@@ -161,19 +164,21 @@ export const setEnv = (env) => {
 
 
 // TODO: this code has been moved to node/child_process.js execSync, replace this function with a call to that
-export const execShFunction = ({verbose=false, env={}}) => (template, ...args) => {
+export const execShFunction = ({verbose=false, env={}, cwd=null}) => (template, ...args) => {
   let cmd = dedent(template, ...args)
 
   // make everything fail if one command fails, TODO: is this a good default?
   // redirect stderr to stdout
 
   // TODO: this is a hack, we don't escape env values properly
-  let env_setup = Object.entries(env).map(([k, v]) => `export ${k}="${v}"`).join("\n")
+  let envSetup = Object.entries(env).map(([k, v]) => `export ${k}="${v}"`).join("\n")
+  let cwdSetup = cwd ? `cd '${cwd}'` : ""
 
   let wrappedCmd = dedent`
     {
       set -e
-      ${env_setup}
+      ${envSetup}
+      ${cwdSetup}
       ${cmd}
     } 2>&1
   `

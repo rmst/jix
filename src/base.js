@@ -1,12 +1,15 @@
 import * as util from './util.js';
-import { BIN_PATH } from './const.js';
+import { BIN_PATH, NUX_PATH } from './const.js';
 import { parseDrvValues, derivation } from './drv.js';
 import * as fs from './node/fs.js'
 import { createHash } from './shaNext.js';
+
+
+export { derivation } from './drv.js';
 // -----
 
 export const HOME = util.getEnv().HOME  // TODO: switch to node API
-
+export const NUX_PATH = NUX_PATH
 
 // ----- OLD SYSTEM ----
 // TODO: get rid of this at some point
@@ -125,11 +128,13 @@ export const script = (templateStrings, ...values) => writeFile('-w+x')(template
 
 
 export const build = (templateStrings, ...values) => {
+  // TODO: dependencies in the build script should be separated from runtime dependencies
+  
 
   let buildScript = script(templateStrings, ...values)
 
-  return {
+  return derivation({
     build: ["buildV3", buildScript],
     dependencies: [buildScript],
-  }
+  })
 }

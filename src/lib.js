@@ -1,5 +1,3 @@
-import * as std from 'std';
-import * as os from 'os';
 import * as util from './util.js'
 import { dedent, sh, shVerbose, execShFunction } from './util.js'
 import * as fs from './node/fs.js'   // mimicking node:fs
@@ -69,8 +67,17 @@ export const noop = () => {}
 
 
 export const buildV3 = (script, hash) => {
+	// TODO: make output files read only
 	sh`mkdir -p ${NUX_PATH}/out`
-	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
+	let tmp = `${NUX_PATH}/tmp_drv/${hash}`
+	console.log('BUILD', tmp)
+	sh`mkdir -p '${tmp}'`
+	try {
+		execShFunction({verbose: true, cwd: tmp, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
+
+	} finally {
+		sh`rm -rf '${tmp}'`
+	}
 }
 
 export const writeOutFileV1 = (content, mode, hash) => {

@@ -1,6 +1,6 @@
 import { NUX_PATH } from './const.js';
 import { sha256 } from './sha256.js';
-import { symlink } from './base.js';
+import { symlink, link } from './base.js';
 /*
 A derivation is a basic recipie to take actions, i.e. build, install and uninstall
 
@@ -72,7 +72,8 @@ export function derivation (drv) {
   }
 
   obj.symlinkTo = path => symlink(obj, path)
-
+  obj.linkTo = (path, symbolic=false) => link(obj, path, symbolic)
+  
   return obj
 }
 

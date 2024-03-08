@@ -6,19 +6,51 @@ import * as fs from './node/fs.js';
 import { createHash } from './shaNext.js';
 import { derivation } from './drv.js';
 import * as base from './base.js'
+import { NUX_PATH } from './const.js';
 
 export * from './base.js'
 export * from './macos.js'
 
 
-export const nuxRemote = (host, derivations) => {
-  // TODO: implement
+export const nuxRemote = (host, configDir) => {
+  // TODO: this doesn't work yet
+  
+  // TODO: maybe don't rely on .nux/bootstrap/qjs binary
+
+  let REMOTE_NUX_PATH = '~/.nux'
+  let ensureNuxDir = {
+    install: ["execShV1", `ssh '${host}' mkdir -p '${REMOTE_NUX_PATH}/bootstrap'`],
+  }
+
+  let qjsBin = base.file(`${NUX_PATH}/bootstrap/qjs`)
+
+  let ensureQjsBin = {
+    install: ["execShV1", `scp '${qjsBin}' '${host}:${REMOTE_NUX_PATH}/bootstrap/qjs'`], 
+  }
+
+  return derivation({
+    dependencies: [ensureNuxDir, ensureQjsBin]
+  }) 
 }
 
+const mkdirRemote = (host, path) => ({
+  install: ["execShV1", `ssh '${host}' mkdir '${path}'`],
+  uninstall: ["execShV1", `ssh '${host}' rm -rf '${path}'`],  // this looks pretty dangerous but it's acceptable because it should only be called if mkdir succeeds (i.e. not if the dir already exists)
+})
 
-export const sshSyncDir = (root, host, destination) => {
+export const sshSyncDir = (root, host, destination, ignore="") => {
+  /*
+  This makes a lot of separate ssh and scp calls. They will be greatly sped up if we reuse connections, i.e. make a dir `~/.ssh/master-socket` and then put this in your ~/.ssh/config:
 
-  let { dirs, files } = util.traverseFileSystem(root)  // TODO: replace with a function from node/fs
+  	Host *
+  	ControlMaster auto
+		ControlPersist 3s
+		ControlPath ~/.ssh/master-socket/%r@%h:%p
+
+  */
+
+    
+  let { dirs, files } = util.traverseFileSystem(root, ignore)
 
   // dirs and files are paths relative to root
   dirs.sort()
@@ -32,11 +64,9 @@ export const sshSyncDir = (root, host, destination) => {
   // TODO: replace with createHash
   // let hash = sha256(JSON.stringify([dirs, files, fileHashes]))
 
+  let mkRoot = mkdirRemote(host, destination)
 
-  let mkdirActions = dirs.map(path => ({
-    install: ["execShV1", `ssh '${host}' mkdir -p '${destination}/${path}'`],
-    uninstall: ["execShV1", `ssh '${host}' rm -rf '${destination}/${path}'`],  // TODO: could this be dangerous?
-  }))
+  let mkdirActions = dirs.map(path => mkdirRemote(host, destination + '/' + path))
 
   let scpActions = files.map(path => {
     let hashPath = base.file(root + '/'  + path)
@@ -46,23 +76,21 @@ export const sshSyncDir = (root, host, destination) => {
       uninstall: ["execShV1", `ssh '${host}' rm -f '${destination}/${path}'`],
     })
 
-    console.log(`DEPS ${hashPath}`)
-    console.log("DEPS", drv.dependencies)
-    console.log("DEPS", drv)
-
     return drv
   })
   
   return derivation({
-    dependencies: [...mkdirActions, ...scpActions]
+    dependencies: [mkRoot, ...mkdirActions, ...scpActions]
   }) 
 }
 
 
 export const nixosConfig = (host, configPath) => {
-  // TODO: this should be root protected
-	// TODO: dependency on scp
-  
+  // TODO: use sshSyncDir instead
+
+  // TODO: should this be root protected?
+
+
   let { dirs, files } = util.traverseFileSystem(configPath)
 
   dirs.sort()
