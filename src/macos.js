@@ -37,9 +37,8 @@ export const macosUtilScripts = base.alias({
 })
 
 
-export const launchdJob = ({name, config, runscript, timeout=null}) => {
-  /* 
-    see logs: log show --predicate 'senderImagePath CONTAINS "test"' --info
+/**
+    to see the logs: log show --predicate 'senderImagePath CONTAINS "test"' --info
 
     let name = sha256(JSON.stringify([config, script]))
 
@@ -64,7 +63,9 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
       HOME
     ),
     ```
-
+ */
+export const launchdJob = ({name, config, runscript, timeout=null}) => {
+  /* 
     https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/4a977680-d227-4001-a228-5f4b65a19910
   */
 

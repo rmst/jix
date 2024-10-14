@@ -73,7 +73,7 @@ export const buildV3 = (script, hash) => {
 	console.log('BUILD', tmp)
 	sh`mkdir -p '${tmp}'`
 	try {
-		execShFunction({verbose: true, cwd: tmp, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
+		execShFunction({verbose: true, cwd: tmp, env: {out: `${NUX_PATH}/out/${hash}`, NUX_HASH: hash}})(script)
 
 	} finally {
 		sh`rm -rf '${tmp}'`

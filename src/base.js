@@ -124,9 +124,18 @@ export const file = (path) => {
 export const textfile = writeFile()
 
 
+/**
+ * Creates a runnable script.
+ * TODO: what behaviour of we don't include shebang, e.g. #!/bin/bash)?
+ * @returns the derivation / out path of the script
+ */
 export const script = (templateStrings, ...values) => writeFile('-w+x')(templateStrings, ...values)
 
 
+/**
+ * define a build script writing to $out (environment variable named "out")
+ * @returns the derivation / out path of the built artefact
+ */
 export const build = (templateStrings, ...values) => {
   // TODO: dependencies in the build script should be separated from runtime dependencies
   

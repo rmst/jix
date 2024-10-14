@@ -228,6 +228,7 @@ export const dedent = (templateStrings, ...values) => {
   // TODO: simplify
   // TODO: allow for properly indented multiline values
 
+  // TODO: we have to be careful with raw because it doesn't seem to escape anything, e.g. \` will be \` and not `, I don't remember why we're even doing this...
   templateStrings = templateStrings.raw ?? templateStrings
 
 	let matches = [];
@@ -235,7 +236,8 @@ export const dedent = (templateStrings, ...values) => {
 
 
   // TODO: maybe just do this for shell/bash?
-  strings = strings.map(x => x.replace(String.raw`\$`, "$"))
+  strings = strings.map(x => x.replaceAll(String.raw`\$`, "$"))
+  strings = strings.map(x => x.replaceAll(String.raw`\``, "`"))
 
 
 	// 1. Remove trailing whitespace.
