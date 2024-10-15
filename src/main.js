@@ -8,14 +8,17 @@ import * as os from 'os';
 util.monkeyPatchConsoleLog()
 
 import * as util from './util.js'
+import { monkeyPatchProcess } from './node/util.js'
+monkeyPatchProcess()
+
 import { dedent, sh, shVerbose } from './util.js'
 import { BIN_PATH, TMP_PATH, NUX_PATH, STORE_PATH } from "./const.js";
 
 
-const NUX_REPO = "~/.g/23b7-nux"
-
 import { install_raw } from './install.js';
 
+
+import * as fs from './node/fs.js';
 
 
 // UTILS
@@ -74,8 +77,8 @@ const update = async (name) => {
   util.mkdir(STORE_PATH, true)
   util.mkdir(`${NUX_PATH}/logs`, true)
 
-  let path = os.getcwd()[0]
-	
+  let path = process.env.NUX_REPO || os.getcwd()[0]
+
   if(! git.isClean(path)) {
     // throw Error(`Uncommited changes in ${path}`)
 		sh`
@@ -96,20 +99,37 @@ const update = async (name) => {
 
 const main = async () => {
 
-  if(scriptArgs.length == 2) {
-    let name = scriptArgs[1]
-    await update(name)
-    return
-  }
+  if(true) {
+    let operator = scriptArgs[1]
 
-  else if(scriptArgs.length == 3) {
-    let name = scriptArgs[1]
-    let operator = scriptArgs[2]
-    if(operator != "--uninstall")
-      throw Error("second argument must be --uninstall")
-    
-    install_raw(null, null, name)
-    return
+    if(operator === "update"){
+      let name = scriptArgs[2]
+      await update(name)
+      return
+
+    } else if (operator === "uninstall") {
+      let name = scriptArgs[2]
+      install_raw(null, null, name)
+      return
+
+    } else if (operator === "force-remove") {
+      let name = scriptArgs[2]
+      let drvs = scriptArgs[3]
+      // Split and trim the input string into lines
+      const lines = drvs.split('\n').map(line => line.trim()).filter(line => line !== '');
+      // console.log(lines)
+      // Load the existing JSON file
+      const jsonPath = `${NUX_PATH}/cur-${name}`;
+      let jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      console.log('Before:', jsonData.length, "derivations")
+
+      // Remove each line from the JSON list
+      jsonData = jsonData.filter(item => !lines.includes(item));
+      console.log('After:', jsonData.length, "derivations")
+      // Save the updated list back to the JSON file
+      fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2), 'utf8');
+    }
+
   }
 
 	// switch(scriptArgs[1]) {
@@ -123,6 +143,7 @@ const main = async () => {
 	// }
 
 }
+
 
 
 main().then(null, e => {

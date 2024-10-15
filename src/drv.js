@@ -1,25 +1,33 @@
 import { NUX_PATH } from './const.js';
 import { sha256 } from './sha256.js';
 import { symlink, link } from './base.js';
+
 /*
-A derivation is a basic recipie to take actions, i.e. build, install and uninstall
-
-Basic form:
-```js
-let drv = {
-  install: ["installActionV2", installArg0, installArg2],
-  uninstall: ["uninstallActionV0", uninstallArg0],
-  build: ["buildActionV1", buildArg0],
-  dependencies: [otherDrv0, otherDrv1],
-}
-```
-
-Base derivation functions are defined under nux.js
+TODO: split into two types of derivation:
+- effect (side effects, install and uninstall functions)
+- build (no side effects all outputs in ~/nux/out/${hash}, build function)
 */
+
+
 
 export const drvMap = new Map()
 
+/**
 
+  A derivation is a basic recipie to take actions, i.e. build, install and uninstall
+
+  Basic form:
+  ```js
+  let drv = {
+    install: ["installActionV2", installArg0, installArg2],
+    uninstall: ["uninstallActionV0", uninstallArg0],
+    build: ["buildActionV1", buildArg0],
+    dependencies: [otherDrv0, otherDrv1],
+  }
+  ```
+
+  Base derivation functions are defined under nux.js
+*/
 export function derivation (drv) {
   
   let obj = {}

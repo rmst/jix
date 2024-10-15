@@ -12,27 +12,6 @@ export * from './base.js'
 export * from './macos.js'
 
 
-export const nuxRemote = (host, configDir) => {
-  // TODO: this doesn't work yet
-  
-  // TODO: maybe don't rely on .nux/bootstrap/qjs binary
-
-  let REMOTE_NUX_PATH = '~/.nux'
-  let ensureNuxDir = {
-    install: ["execShV1", `ssh '${host}' mkdir -p '${REMOTE_NUX_PATH}/bootstrap'`],
-  }
-
-  let qjsBin = base.file(`${NUX_PATH}/bootstrap/qjs`)
-
-  let ensureQjsBin = {
-    install: ["execShV1", `scp '${qjsBin}' '${host}:${REMOTE_NUX_PATH}/bootstrap/qjs'`], 
-  }
-
-  return derivation({
-    dependencies: [ensureNuxDir, ensureQjsBin]
-  }) 
-}
-
 const mkdirRemote = (host, path) => ({
   install: ["execShV1", `ssh '${host}' mkdir '${path}'`],
   uninstall: ["execShV1", `ssh '${host}' rm -rf '${path}'`],  // this looks pretty dangerous but it's acceptable because it should only be called if mkdir succeeds (i.e. not if the dir already exists)
@@ -109,7 +88,7 @@ export const nixosConfig = (host, configPath) => {
   }))
 
   let scpActions = contents.map(([path, content]) => ({
-    install:  ["writeScpV1", host, "/etc/nixos/" + path, content], 
+    install:  ["writeScpV2", host, "/etc/nixos/" + path, content], 
     uninstall: ["execShV1", `ssh ${host} rm -f /etc/nixos/${path}`]
   }))
 

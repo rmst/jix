@@ -3,11 +3,26 @@ import { dedent, sh, shVerbose, execShFunction } from './util.js'
 import * as fs from './node/fs.js'   // mimicking node:fs
 import { NUX_PATH } from './const.js';
 import { createHash } from './shaNext.js';
+import { execFileSync } from './node/child_process.js'
 
+const exx = (cmd, ...args) => {
+	execFileSync(cmd, args)
+}
 
 export const deleteFileV1 = path => util.fileDelete(path, true)
+export const deleteFileV2 = path => {
+	return exx("rm", "-f", path)
+}
+
+export const execV1 = (cmd, ...args) => {
+	let argv = args.slice(0, -1)
+	// let hash = args[args.length - 1]
+	return execFileSync(cmd, argv)
+}
+export const shV1 = execV1
 
 
+// TODO: this is unused, delete this
 /* TODO: this should be (like all actions) environment agnostic as much as possible. It shouldn't yield different results if it is run by different users. This means that
 	1. the permissions are the same for owner+group+all_users (i.e. enforce that each permission byte is the same)
 or otherwise
@@ -16,17 +31,21 @@ or otherwise
 export const writeFileV1 = (path, content, permissions) => util.fileWriteWithPermissions(path, content, permissions)
 
 
-// FIXME: if the target is an existing directory it will create a link inside that dir, this needs to be fixed
 export const symlinkV2 = (origin, path) => sh`ln -s ${origin} ${path}`
+export const symlinkV3 = (origin, path) => {
+	// FIXME: if the target is an existing directory it will create a link inside that dir, this needs to be fixed
+	return exx('ln', '-s', origin, path)
+}
 
 export const hardlinkV0 = (origin, path) => sh`ln ${origin} ${path}`
+export const hardlinkV1 = (origin, path) => exx('ln', origin, path)
 
+// TODO: delete
 // TODO: this is terrible, it's not properly escaping the file contents
 export const writeFileSudoV1 = (path, content) => {
 	console.log(`writeFileSudoV1: ${path}`)
   sh`echo '${content}' | sudo tee ${path} > /dev/null`
 }
-
 export const writeConfSudoV1 = (path, content, reloadScript) => {
 	writeFileSudoV1(path, content)
 	if(reloadScript)
@@ -42,12 +61,16 @@ export const writeScpV1 = (host, path, content) => {
 		util.fileDelete(tmp, true)
 	}
 }
-
-export const execShV1 = (script) => {
-	sh(script)
+export const writeScpV2 = (host, path, content) => {
+	return exx("ssh", host, "sh", "-c", 'printf "%s" "$1" > "$2"', "--", path, content)
 }
 
+export const execShV1 = (script) => {
+	// sh(script)
+	return exx("/bin/sh", "-c", script)
+}
 
+// TODO: this is unnecessary, it should be a regular script action instead using sth like execShVerbose (needs ot be created)
 export const remoteNixosRebuildSwitchV1 = (host, hash) => {
 	// hash is just a dummy variable to force the action
 	shVerbose`

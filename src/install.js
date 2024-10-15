@@ -50,7 +50,7 @@ const uninstall = (hashes) => {
         lib[f](...args)
 
       } catch (e) {
-        console.log(`Error with ${h}:\n${e.message}`)
+        console.log(`Error with ${h}, ${f}, ${args}:\n${e.message}`)
         console.log(e.stack)
         console.log("\n...uninstall continuing...\n")
         return [h, e]
@@ -160,7 +160,7 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
       ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed:
         ${failedUninstalls.join('\n  ')}
       
-      Uninstall them manually, then delete them from ${current_path}.
+      Uninstall them manually, then delete them from ${current_path} manually or run nux force-remove ${name} '<paste the newline separated hashes here>'
     `)
   }
 

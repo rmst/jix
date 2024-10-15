@@ -32,9 +32,12 @@ export const link = (origin, path, symbolic=false) => {
   // TODO: use builtin link functions
   var { values: [ origin, path ], dependencies } = parseDrvValues([origin, path])
 
+  // console.log("link", origin, path)
+
   return derivation({
-    install: [symbolic ? "symlinkV2": "hardlinkV0", origin, path],
-    uninstall: ["deleteFileV1", path],
+    install: [symbolic ? "symlinkV3" : "hardlinkV1", origin, path],
+    // uninstall: ["deleteFileV1", path],
+    uninstall: ["deleteFileV2", path],  // TODO: don't remove if the file is sth else than our symlink to prevent accidental data loss, i.e. create deleteSpecificFile
     dependencies,
     str: path,
   })
@@ -48,22 +51,23 @@ export const alias = (mapping) => {
 }
 
 
-export const user = (config) => {
-  let { name, home, enabled=true, conf=u=>[] } = config
+// TODO: delete this
+// export const user = (config) => {
+//   let { name, home, enabled=true, conf=u=>[] } = config
 
-  if(!enabled)
-    return []
+//   if(!enabled)
+//     return []
 
-  // TODO: perform checks or install user
+//   // TODO: perform checks or install user
 
-  let u = {
-    name,
-    home,
+//   let u = {
+//     name,
+//     home,
     
-  }
-  return conf(u)
+//   }
+//   return conf(u)
   
-}
+// }
 
 export const run = (install, uninstall) => {
   return {
@@ -74,20 +78,19 @@ export const run = (install, uninstall) => {
 
 
 export const mkdir = (path) => {
-  // TODO: use lib.js not shell functions to do this
   return derivation({
-    install: ["execShV1", `mkdir -p "${path}"`],
+    install: ["execV1", "mkdir", "-p", path],
     uninstall: ["execShV1", `[ ! -e "${path}" ] || rmdir "${path}"`],
     str: path,
   })
 }
 
-export const globalConfigFile = (path, content, original, reloadScript = null) => {
-  return {
-    install: ["writeConfSudoV1", path, content, reloadScript],
-    uninstall: ["writeConfSudoV1", path, original, reloadScript],
-  };
-};
+// export const globalConfigFile = (path, content, original, reloadScript = null) => {
+//   return {
+//     install: ["writeConfSudoV1", path, content, reloadScript],
+//     uninstall: ["writeConfSudoV1", path, original, reloadScript],
+//   };
+// };
 
 
 export const str = (templateStrings, ...values) => {
@@ -112,6 +115,10 @@ export const writeFile = (mode='-w') => (templateStrings, ...values) => {
   })
 }
 
+export const textfile = writeFile()
+
+
+// TODO: this is dumb, instead users should be able to import non js files and reference them like any other built file
 export const file = (path) => {
   path = path.replace('~', util.getEnv().HOME)
   let data = fs.readFileSync(path)
@@ -121,7 +128,6 @@ export const file = (path) => {
   })
 };
 
-export const textfile = writeFile()
 
 
 /**
