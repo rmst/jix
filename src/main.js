@@ -78,6 +78,7 @@ const update = async (name) => {
   util.mkdir(`${NUX_PATH}/logs`, true)
 
   let path = process.env.NUX_REPO || os.getcwd()[0]
+  console.log("FDJFKDJFKKDKF", path)
 
   if(! git.isClean(path)) {
     // throw Error(`Uncommited changes in ${path}`)
