@@ -12,8 +12,10 @@ import { monkeyPatchProcess } from './node/util.js'
 monkeyPatchProcess()
 
 import { dedent, sh, shVerbose } from './util.js'
-import { BIN_PATH, TMP_PATH, NUX_PATH, STORE_PATH } from "./const.js";
+import { BIN_PATH, TMP_PATH, NUX_PATH, STORE_PATH } from "./context.js";
+import context from "./context.js"
 
+import nux from './nux.js'
 
 import { install_raw } from './install.js';
 
@@ -63,6 +65,7 @@ const install_commit = async (repo, commit, name) => {
   git.clone(TMP_PATH, repo, commit)
   // let out = sh`${NUX_REPO}/bin/qjs-macos --unhandled-rejection ${NUX_REPO}/src/main.js install-raw ${TMP_PATH}`
   
+  context.repo = TMP_PATH
   await install_raw(`${TMP_PATH}/setup.nux.js`, name, name)
 
   // console.log(out)
@@ -78,7 +81,7 @@ const update = async (name) => {
   util.mkdir(`${NUX_PATH}/logs`, true)
 
   let path = process.env.NUX_REPO || os.getcwd()[0]
-  console.log("FDJFKDJFKKDKF", path)
+
 
   if(! git.isClean(path)) {
     // throw Error(`Uncommited changes in ${path}`)

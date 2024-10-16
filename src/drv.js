@@ -1,4 +1,4 @@
-import { NUX_PATH } from './const.js';
+import { NUX_PATH } from './context.js';
 import { sha256 } from './sha256.js';
 import { symlink, link } from './base.js';
 

@@ -7,8 +7,8 @@ import * as os from 'os';
 import * as util from './util.js'
 import * as drv from './drv.js'
 import { dedent, sh, shVerbose } from './util.js'
-import { BIN_PATH, TMP_PATH, NUX_PATH, STORE_PATH } from "./const.js";
-import * as nux from './nux.js'
+import { BIN_PATH, TMP_PATH, NUX_PATH, STORE_PATH } from "./context.js";
+import nux from './nux.js'
 import { sha256 } from './sha256.js';
 
 import * as lib from './lib.js'
@@ -17,7 +17,7 @@ import * as lib from './lib.js'
 
 const loadActions = async (path, name) => {
   // globalThis.nux = nux
-
+  
   let module = await import(path)
   return module[name]
 }

@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as util from './util.js'
 import { dedent, sh } from './util.js'
 import { sha256 } from './sha256.js';
-import { BIN_PATH, NUX_PATH } from './const.js'
+import { BIN_PATH, NUX_PATH } from './context.js'
 import * as base from './base.js'
 import { HOME } from './base.js'
 import { derivation, drvMap } from './drv.js';
@@ -153,4 +153,11 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
   return [
     load_unload,
   ]
+}
+
+
+
+export default {
+  macosUtilScripts,
+  launchdJob,
 }

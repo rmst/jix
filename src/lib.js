@@ -1,12 +1,27 @@
 import * as util from './util.js'
 import { dedent, sh, shVerbose, execShFunction } from './util.js'
 import * as fs from './node/fs.js'   // mimicking node:fs
-import { NUX_PATH } from './const.js';
+import { NUX_PATH } from './context.js';
 import { createHash } from './shaNext.js';
 import { execFileSync } from './node/child_process.js'
 
+
 const exx = (cmd, ...args) => {
 	execFileSync(cmd, args)
+	return {cmd: [cmd, ...args]}
+}
+
+const exxVerbose = (cmd, ...args) => {
+	let options = { stdout: 'inherit' }
+	execFileSync(cmd, args, options)
+	return {cmd: [cmd, ...args], verbose: true}
+}
+
+
+const exxSsh = (host, ...cmd) => {
+	// we need to escape our command and args because ssh can't actually execute commands without first passing the through a shell
+	cmd = cmd.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)
+	return exx("ssh", `${host}`, "--", ...cmd)
 }
 
 export const deleteFileV1 = path => util.fileDelete(path, true)
@@ -14,10 +29,10 @@ export const deleteFileV2 = path => {
 	return exx("rm", "-f", path)
 }
 
-export const execV1 = (cmd, ...args) => {
-	let argv = args.slice(0, -1)
+export const execV1 = (...args) => {
+	let cmd = args.slice(0, -1)
 	// let hash = args[args.length - 1]
-	return execFileSync(cmd, argv)
+	return exx(...cmd)
 }
 export const shV1 = execV1
 
@@ -28,41 +43,41 @@ export const shV1 = execV1
 or otherwise
 	2. the owner and group need to be specified explicitly
 */
-export const writeFileV1 = (path, content, permissions) => util.fileWriteWithPermissions(path, content, permissions)
+// export const writeFileV1 = (path, content, permissions) => util.fileWriteWithPermissions(path, content, permissions)
 
 
-export const symlinkV2 = (origin, path) => sh`ln -s ${origin} ${path}`
+// export const symlinkV2 = (origin, path) => sh`ln -s ${origin} ${path}`
 export const symlinkV3 = (origin, path) => {
 	// FIXME: if the target is an existing directory it will create a link inside that dir, this needs to be fixed
 	return exx('ln', '-s', origin, path)
 }
 
-export const hardlinkV0 = (origin, path) => sh`ln ${origin} ${path}`
+// export const hardlinkV0 = (origin, path) => sh`ln ${origin} ${path}`
 export const hardlinkV1 = (origin, path) => exx('ln', origin, path)
 
 // TODO: delete
 // TODO: this is terrible, it's not properly escaping the file contents
-export const writeFileSudoV1 = (path, content) => {
-	console.log(`writeFileSudoV1: ${path}`)
-  sh`echo '${content}' | sudo tee ${path} > /dev/null`
-}
-export const writeConfSudoV1 = (path, content, reloadScript) => {
-	writeFileSudoV1(path, content)
-	if(reloadScript)
-		sh`${reloadScript}`
-}
+// export const writeFileSudoV1 = (path, content) => {
+// 	console.log(`writeFileSudoV1: ${path}`)
+//   sh`echo '${content}' | sudo tee ${path} > /dev/null`
+// }
+// export const writeConfSudoV1 = (path, content, reloadScript) => {
+// 	writeFileSudoV1(path, content)
+// 	if(reloadScript)
+// 		sh`${reloadScript}`
+// }
 
-export const writeScpV1 = (host, path, content) => {
-	let tmp = sh`mktemp`
-	try {
-		util.fileWrite(tmp, content)
-		sh`scp "${tmp}" "${host}:${path}"`
-	} finally {
-		util.fileDelete(tmp, true)
-	}
-}
+// export const writeScpV1 = (host, path, content) => {
+// 	let tmp = sh`mktemp`
+// 	try {
+// 		util.fileWrite(tmp, content)
+// 		sh`scp "${tmp}" "${host}:${path}"`
+// 	} finally {
+// 		util.fileDelete(tmp, true)
+// 	}
+// }
 export const writeScpV2 = (host, path, content) => {
-	return exx("ssh", host, "sh", "-c", 'printf "%s" "$1" > "$2"', "--", path, content)
+	return exxSsh(host, "sh", "-c", 'printf "%s" "$2" > "$1"', "--", path, content)
 }
 
 export const execShV1 = (script) => {
@@ -70,37 +85,38 @@ export const execShV1 = (script) => {
 	return exx("/bin/sh", "-c", script)
 }
 
-// TODO: this is unnecessary, it should be a regular script action instead using sth like execShVerbose (needs ot be created)
-export const remoteNixosRebuildSwitchV1 = (host, hash) => {
-	// hash is just a dummy variable to force the action
-	shVerbose`
-		start=$(date +%s)
-		ssh ${host} nixos-rebuild switch
-		echo nixos-rebuild switch ran for $(($(date +%s)-start)) seconds
-	`
+export const execShVerboseV1 = (script) => {
+	return exxVerbose("/bin/sh", "-c", script)
 }
 
-export const noop = () => {}
+export const noop = () => null
 
 
-// export const buildV1 = (script, hash) => {
-// 	sh`mkdir -p ${NUX_PATH}/out`
-// 	execShFunction({verbose: true, env: {out: `${NUX_PATH}/out/${hash}`}})(script)
-// }
-
-
-export const buildV3 = (script, hash) => {
+export const buildV4 = (script, hash) => {
 	// TODO: make output files read only
-	sh`mkdir -p ${NUX_PATH}/out`
-	let tmp = `${NUX_PATH}/tmp_drv/${hash}`
-	console.log('BUILD', tmp)
-	sh`mkdir -p '${tmp}'`
-	try {
-		execShFunction({verbose: true, cwd: tmp, env: {out: `${NUX_PATH}/out/${hash}`, NUX_HASH: hash}})(script)
+	return exxVerbose(
+		"/bin/sh", 
+		"-c", 
+		dedent`
+			echo BUILDV4 "$1"
+			tmp="$HOME"/.nux/tmp_drv/${hash}
 
-	} finally {
-		sh`rm -rf '${tmp}'`
-	}
+			mkdir -p "$HOME"/.nux/out
+			mkdir -p "$tmp"
+
+			export out="$HOME"/.nux/${hash}
+			export NUX_HASH=${hash}
+			# /bin/sh -c "$1"  # for build script string
+			"$1"  # for build script path
+			exitcode=$?
+
+			rm -rf "$tmp"
+
+			exit $exitcode
+		`,
+		"--",
+		script,
+	)
 }
 
 export const writeOutFileV1 = (content, mode, hash) => {

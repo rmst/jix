@@ -1,5 +1,5 @@
 import * as util from './util.js';
-import { BIN_PATH, NUX_PATH } from './const.js';
+import { BIN_PATH, NUX_PATH } from './context.js';
 import { parseDrvValues, derivation } from './drv.js';
 import * as fs from './node/fs.js'
 import { createHash } from './shaNext.js';
@@ -120,7 +120,7 @@ export const textfile = writeFile()
 
 // TODO: this is dumb, instead users should be able to import non js files and reference them like any other built file
 export const file = (path) => {
-  path = path.replace('~', util.getEnv().HOME)
+  path = path.replace('~', util.getEnv().HOME)  // TODO: use context home
   let data = fs.readFileSync(path)
   const fileHash = createHash().update(data).digest("hex");
   return derivation({
@@ -145,11 +145,31 @@ export const script = (templateStrings, ...values) => writeFile('-w+x')(template
 export const build = (templateStrings, ...values) => {
   // TODO: dependencies in the build script should be separated from runtime dependencies
   
-
   let buildScript = script(templateStrings, ...values)
 
   return derivation({
-    build: ["buildV3", buildScript],
+    build: ["buildV4", buildScript],
     dependencies: [buildScript],
   })
+}
+
+
+
+export default {
+  derivation,
+  HOME,
+  NUX_PATH,
+  
+  copy,
+  link,
+  symlink,
+  alias,
+  run,
+  mkdir,
+  str,
+  writeFile,
+  textfile,
+  file,
+  script,
+  build,
 }

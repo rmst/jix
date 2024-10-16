@@ -5,11 +5,12 @@ import { sha256 } from './sha256.js';
 import * as fs from './node/fs.js';
 import { createHash } from './shaNext.js';
 import { derivation } from './drv.js';
-import * as base from './base.js'
-import { NUX_PATH } from './const.js';
+import { NUX_PATH } from './context.js';
 
-export * from './base.js'
-export * from './macos.js'
+import context from './context.js';
+import base from './base.js'
+import macos from './macos.js'
+
 
 
 const mkdirRemote = (host, path) => ({
@@ -17,6 +18,8 @@ const mkdirRemote = (host, path) => ({
   uninstall: ["execShV1", `ssh '${host}' rm -rf '${path}'`],  // this looks pretty dangerous but it's acceptable because it should only be called if mkdir succeeds (i.e. not if the dir already exists)
 })
 
+
+// TODO: is this used???
 export const sshSyncDir = (root, host, destination, ignore="") => {
   /*
   This makes a lot of separate ssh and scp calls. They will be greatly sped up if we reuse connections, i.e. make a dir `~/.ssh/master-socket` and then put this in your ~/.ssh/config:
@@ -94,33 +97,47 @@ export const nixosConfig = (host, configPath) => {
 
 
   let prepareScript = dedent`
-    # hash: ${hash} (included to trigger updates if files change)
+    # hash: ${hash} (included to force update if files change)
     ssh ${host} rm -rf /etc/nixos.backup
     ssh ${host} cp -r /etc/nixos /etc/nixos.backup
   `
 
+  let installScript = dedent`
+    # hash: ${hash} (included to force update if files change)
+    start=$(date +%s)
+    ssh ${host} nixos-rebuild switch
+    echo nixos-rebuild switch ran for $(($(date +%s)-start)) seconds
+  `
 
   return [
     {install: ["execShV1", prepareScript], uninstall: ["noop"]},
     ...mkdirActions,
     ...scpActions,
-    {install: ["remoteNixosRebuildSwitchV1", host, hash], uninstall: ["noop"]},
+    {install: ["execShVerboseV1", installScript], uninstall: ["noop"]},
   ]
 }
 
 // -----
 
-export const bash = (...args) => dedent`
-  #!/usr/bin/env bash
-  ${dedent(...args)}
-`
+// export const bash = (...args) => dedent`
+//   #!/usr/bin/env bash
+//   ${dedent(...args)}
+// `
 
-export const python = (...args) => dedent`
-  #!/usr/bin/env python3
-  ${dedent(...args)}
-`
+// export const python = (...args) => dedent`
+//   #!/usr/bin/env python3
+//   ${dedent(...args)}
+// `
 
-export {
+export default {
   dedent,
   sh,
+
+  nixosConfig,
+
+  ...base,
+  ...macos,
+
+  get REPO() { return context.repo },
+  scope: context.scope,
 }

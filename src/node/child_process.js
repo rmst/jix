@@ -16,6 +16,25 @@ import * as os from 'os';
  * @returns {string} - The stdout output of the command (if not forwarded).
  *
  * @throws {Error} - Throws an error if the command exits with a non-zero status.
+ *
+ * Example usage:
+ *
+ * 1. Basic call:
+ * ```js
+ * const output = execFileSync('echo', ['Hello, World!']);
+ * console.log(output);  // Outputs: Hello, World!
+ * ```
+ *
+ * 2. Call with custom environment and working directory:
+ * ```js
+ * const output = execFileSync('printenv', [], { env: { CUSTOM_ENV: 'myvalue' }, cwd: '/tmp' });
+ * console.log(output);  // Outputs: CUSTOM_ENV=myvalue
+ * ```
+ *
+ * 3. Call with stdout and stderr forwarded (no capture, direct display):
+ * ```js
+ * execFileSync('your_command', ['arg1', 'arg2'], { stdout: 'inherit', stderr: 'inherit' });
+ * ```
  */
 export const execFileSync = (file, args = [], options = {}) => {
 	let env = options.env || std.getenv();  // Use the provided environment or current one
@@ -56,7 +75,7 @@ export const execFileSync = (file, args = [], options = {}) => {
 
 	// Handle error case if exit code is non-zero
 	if (exitCode !== 0) {
-		let errorMsg = `CMD: ${file} ${args.join(' ')}\nCOD: ${exitCode}\n`;
+		let errorMsg = `CMD: [${file}, ${args.join(', ')}]\nCOD: ${exitCode}\n`;
 
 		// Add environment variables to the error message if any non-standard environment was provided
 		if (options.env) {
