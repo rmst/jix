@@ -6,6 +6,8 @@ export const TMP_PATH = `${std.getenv('HOME')}/.nux/tmp`;
 export const BIN_PATH = `${std.getenv('HOME')}/.nux/bin`;
 export const STORE_PATH = `${std.getenv('HOME')}/.nux/store`;
 
+export const NUX_DIR = '.nux'  // relative to the user home
+
 // if(!globalThis.nuxContext) {
 
 // }

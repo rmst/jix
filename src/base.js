@@ -148,7 +148,7 @@ export const build = (templateStrings, ...values) => {
   let buildScript = script(templateStrings, ...values)
 
   return derivation({
-    build: ["buildV4", buildScript],
+    build: ["buildV5", buildScript],
     dependencies: [buildScript],
   })
 }

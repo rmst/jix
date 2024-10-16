@@ -1,7 +1,7 @@
 import * as util from './util.js'
 import { dedent, sh, shVerbose, execShFunction } from './util.js'
 import * as fs from './node/fs.js'   // mimicking node:fs
-import { NUX_PATH } from './context.js';
+import { NUX_PATH, NUX_DIR } from './context.js';
 import { createHash } from './shaNext.js';
 import { execFileSync } from './node/child_process.js'
 
@@ -37,16 +37,6 @@ export const execV1 = (...args) => {
 export const shV1 = execV1
 
 
-// TODO: this is unused, delete this
-/* TODO: this should be (like all actions) environment agnostic as much as possible. It shouldn't yield different results if it is run by different users. This means that
-	1. the permissions are the same for owner+group+all_users (i.e. enforce that each permission byte is the same)
-or otherwise
-	2. the owner and group need to be specified explicitly
-*/
-// export const writeFileV1 = (path, content, permissions) => util.fileWriteWithPermissions(path, content, permissions)
-
-
-// export const symlinkV2 = (origin, path) => sh`ln -s ${origin} ${path}`
 export const symlinkV3 = (origin, path) => {
 	// FIXME: if the target is an existing directory it will create a link inside that dir, this needs to be fixed
 	return exx('ln', '-s', origin, path)
@@ -55,33 +45,11 @@ export const symlinkV3 = (origin, path) => {
 // export const hardlinkV0 = (origin, path) => sh`ln ${origin} ${path}`
 export const hardlinkV1 = (origin, path) => exx('ln', origin, path)
 
-// TODO: delete
-// TODO: this is terrible, it's not properly escaping the file contents
-// export const writeFileSudoV1 = (path, content) => {
-// 	console.log(`writeFileSudoV1: ${path}`)
-//   sh`echo '${content}' | sudo tee ${path} > /dev/null`
-// }
-// export const writeConfSudoV1 = (path, content, reloadScript) => {
-// 	writeFileSudoV1(path, content)
-// 	if(reloadScript)
-// 		sh`${reloadScript}`
-// }
-
-// export const writeScpV1 = (host, path, content) => {
-// 	let tmp = sh`mktemp`
-// 	try {
-// 		util.fileWrite(tmp, content)
-// 		sh`scp "${tmp}" "${host}:${path}"`
-// 	} finally {
-// 		util.fileDelete(tmp, true)
-// 	}
-// }
 export const writeScpV2 = (host, path, content) => {
 	return exxSsh(host, "sh", "-c", 'printf "%s" "$2" > "$1"', "--", path, content)
 }
 
 export const execShV1 = (script) => {
-	// sh(script)
 	return exx("/bin/sh", "-c", script)
 }
 
@@ -92,19 +60,19 @@ export const execShVerboseV1 = (script) => {
 export const noop = () => null
 
 
-export const buildV4 = (script, hash) => {
+export const buildV5 = (script, hash) => {
 	// TODO: make output files read only
 	return exxVerbose(
 		"/bin/sh", 
 		"-c", 
 		dedent`
-			echo BUILDV4 "$1"
-			tmp="$HOME"/.nux/tmp_drv/${hash}
+			# echo buildV5  "$1"
+			tmp="$HOME"/${NUX_DIR}/tmp_drv/${hash}
 
-			mkdir -p "$HOME"/.nux/out
+			mkdir -p "$HOME"/${NUX_DIR}/out
 			mkdir -p "$tmp"
 
-			export out="$HOME"/.nux/${hash}
+			export out="$HOME"/${NUX_DIR}/out/${hash}
 			export NUX_HASH=${hash}
 			# /bin/sh -c "$1"  # for build script string
 			"$1"  # for build script path
@@ -119,13 +87,27 @@ export const buildV4 = (script, hash) => {
 	)
 }
 
+
 export const writeOutFileV1 = (content, mode, hash) => {
 	sh`mkdir -p ${NUX_PATH}/out`
 	let path = `${NUX_PATH}/out/${hash}`
 	fs.writeFileSync(path, content)
 	fs.chmodSync(path, mode)
 }
-
+export const writeOutFileV2 = (content, mode, hash) => {
+	exx(
+		"sh", 
+		"-c", 
+		dedent`
+			mkdir -p "$HOME/${NUX_DIR}/out"
+			path="$HOME/${NUX_DIR}/out/${hash}"
+			printf "%s" "$1" > "$path" &&
+			chmod ${mode} "$path"
+		`, 
+		"--", 
+		content,
+	)
+}
 
 export const copyV1 = (path, fileHash, hash) => {
 
