@@ -7,19 +7,24 @@ import * as os from 'os';
 import * as util from './util.js'
 import * as drv from './drv.js'
 import { dedent, sh, shVerbose } from './util.js'
-import { BIN_PATH, TMP_PATH, NUX_PATH, STORE_PATH } from "./context.js";
+import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "./context.js";
 import nux from './nux.js'
 import { sha256 } from './sha256.js';
 
 import * as lib from './lib.js'
+import { execFileSync } from './node/child_process.js';
+import context from './context.js';
+import * as fs from './node/fs.js';
 
 
+const updateHosts = (hosts) => {
+  fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8')
+  loadHosts()
+}
 
-const loadActions = async (path, name) => {
-  // globalThis.nux = nux
-  
-  let module = await import(path)
-  return module[name]
+const loadHosts = () => {
+  let hosts = JSON.parse(fs.readFileSync(`${LOCAL_NUX_PATH}/hosts.json`, 'utf8'));
+  context.hosts = hosts
 }
 
 
@@ -30,6 +35,21 @@ const setDifference = (a, b) => {
 }
 
 
+const executeCmd = (c, host, user) => {
+  
+  let options = c.verbose ? { stdout: 'inherit' } : {}
+  let { cmd, args } = c
+  if(host !== null) {
+    // TODO: add a check here on first ssh connection whether the user home matches context.hosts
+    host = context.hosts?.[host]?.address ?? host
+    args = [cmd, ...args]
+    args = args.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)  // escape all args
+    cmd = "ssh"
+    args = [`${user}@${host}`, "--", ...args]
+  }
+
+  return execFileSync(cmd, args, options)
+}
 
 
 const uninstall = (hashes) => {
@@ -38,16 +58,16 @@ const uninstall = (hashes) => {
   reversedHashes.reverse()
 
   let stats = reversedHashes.map(h => {
-    let x = util.fileRead(`${STORE_PATH}/${h}`)
+    let x = util.fileRead(`${LOCAL_STORE_PATH}/${h}`)
     // let [install, uninstall] = JSON.parse(x)
-    let {uninstall = null} = JSON.parse(x)
-
+    let {uninstall=null, host, user} = JSON.parse(x)
 
     if(uninstall) {
       let [f, ...args] = uninstall
 
       try {
-        lib[f](...args)
+        let cmd = lib[f](...args)
+        executeCmd(cmd, host, user)
 
       } catch (e) {
         console.log(`Error with ${h}, ${f}, ${args}:\n${e.message}`)
@@ -73,20 +93,34 @@ const install = (hashes, ignoreErrors=false) => {
 
   for (const hash of hashes) {
     try {
-      let x = util.fileRead(`${STORE_PATH}/${hash}`)
+      let x = util.fileRead(`${LOCAL_STORE_PATH}/${hash}`)
     
       // let [install, uninstall] = JSON.parse(x)
-      var {install = null, build = null} = JSON.parse(x)
+      var {install = null, build = null, host, user} = JSON.parse(x)
 
-      let outPath = `${NUX_PATH}/out/${hash}`
-      if(build && !util.exists(outPath)) {
-        var [f, ...args] = build
-        lib[f](...args, hash)
+
+      if(build) {
+        // check if the out file exists (works both locally and over ssh)
+        let exists = executeCmd({
+          cmd: "/bin/sh", 
+          args: ["-c", `[ -e "$HOME/${NUX_DIR}/out/${hash}" ] && echo "y" || echo "n"`],
+        }, host, user)
+      
+        exists = (exists === "y")
+
+        // let outPath = `${NUX_PATH}/out/${hash}`  // get rid of NUX_PATH
+        // let exists = util.exists(outPath)  // maybe keep for local check is prob much faster
+        if(!exists) {
+          var [f, ...args] = build
+          let cmd = lib[f](...args, hash)
+          executeCmd(cmd, host, user)
+        }
       }
       
       if(install) {
         var [f, ...args] = install
-        lib[f](...args, hash)
+        let cmd = lib[f](...args, hash)
+        executeCmd(cmd, host, user)
       }
 
       successfulHashes.push(hash)
@@ -110,7 +144,7 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
 
   nuxId = nuxId ?? name
   
-  let current_path = `${NUX_PATH}/cur-${nuxId}`
+  let current_path = `${LOCAL_NUX_PATH}/cur-${nuxId}`
       
   var oldHashes = util.exists(current_path) ? JSON.parse(util.fileRead(current_path)) : []
 
@@ -118,11 +152,18 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
   let drvs = []
 
   if(sourcePath) {
-    let f = await loadActions(sourcePath, name)
+    let module = await import(sourcePath)
+
+    if(module?.hosts)
+      updateHosts(module.hosts)
+  
+    let f = module[name]
+
     if(f === undefined)
       throw new Error(`setup.nux.js doesn't export "${name}"`)
 
-    drvs = f()  // compute the derivations
+    loadHosts()
+    drvs = await f()  // compute the derivations
   }
 
   drvs = drvs.flat(Infinity)  // allows for nested derivations for convenience
@@ -136,7 +177,7 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
 
   // write derivations to disk
   drvs.map(d => {
-    let p = `${STORE_PATH}/${d.hash}`
+    let p = `${LOCAL_STORE_PATH}/${d.hash}`
     if(!util.exists(p))
       util.fileWrite(p, d.serialize())
   })

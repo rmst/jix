@@ -1,13 +1,10 @@
-import * as std from 'std';
-import * as os from 'os';
-import * as util from './util.js'
-import { dedent, sh } from './util.js'
-import { sha256 } from './sha256.js';
-import { BIN_PATH, NUX_PATH } from './context.js'
+// import * as std from 'std';
+// import * as os from 'os';
+// import * as util from './util.js'
+import { dedent } from './util.js'
 import * as base from './base.js'
-import { HOME } from './base.js'
-import { derivation, drvMap } from './drv.js';
-
+import { derivation } from './drv.js';
+import context from './context.js';
 
 
 const timeout_script = base.script`
@@ -20,7 +17,7 @@ export const macosUtilScripts = base.alias({
   nj: base.script`launchctl list | grep com.nux.`,
   njl: base.script`
     #!/bin/bash
-    less +G ${NUX_PATH}/logs/$1
+    less +G ${context.NUX_PATH}/logs/$1
   `,
   // TODO: verify that the path is always gui/501
   nji: base.script`
@@ -29,10 +26,10 @@ export const macosUtilScripts = base.alias({
   `,
   njs: base.script`
     #!/bin/bash
-    less +G ${NUX_PATH}/status/$1  # display the end of the log
+    less +G ${context.NUX_PATH}/status/$1  # display the end of the log
   `,
   njopen: base.script`
-    open ${HOME}/Library/LaunchAgents
+    open ${context.HOME}/Library/LaunchAgents
   `
 })
 
@@ -76,9 +73,9 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
   // TODO: the timeout mechanism should be in separate wrapper function
 
   let label = `com.nux.${name}`
-  let wpath = `${BIN_PATH}/nux_job_${name}`
-  let ppath = `${HOME}/Library/LaunchAgents/${label}.plist`
-  let logpath = `${NUX_PATH}/logs/${name}`
+  let wpath = `${context.BIN_PATH}/nux_job_${name}`
+  let ppath = `${context.HOME}/Library/LaunchAgents/${label}.plist`
+  let logpath = `${context.NUX_PATH}/logs/${name}`
 
   let timeout_cmd = timeout == null ? "" : `${timeout_script} ${timeout}`  
 
@@ -93,9 +90,9 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
       done
     }
 
-    mkdir -p "${NUX_PATH}/status"
+    mkdir -p "${context.NUX_PATH}/status"
 
-    echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,start" >> "${NUX_PATH}/status/${name}"
+    echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,start" >> "${context.NUX_PATH}/status/${name}"
 
 
     set -o pipefail  # if any of the pipe's process fail output a non-zero exit code 
@@ -104,7 +101,7 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
     { ${timeout_cmd} "${runscript}" 2>&1 ; } | add_timestamp
 
     exitcode=$?
-    echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,stop,$exitcode" >> "${NUX_PATH}/status/${name}"
+    echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,stop,$exitcode" >> "${context.NUX_PATH}/status/${name}"
   `
     .symlinkTo(wpath)
 

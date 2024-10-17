@@ -5,14 +5,15 @@
 import * as std from 'std';
 import * as os from 'os';
 
-util.monkeyPatchConsoleLog()
 
 import * as util from './util.js'
 import { monkeyPatchProcess } from './node/util.js'
+util.monkeyPatchConsoleLog()
+
 monkeyPatchProcess()
 
 import { dedent, sh, shVerbose } from './util.js'
-import { BIN_PATH, TMP_PATH, NUX_PATH, STORE_PATH } from "./context.js";
+import { LOCAL_BIN_PATH, TMP_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH } from "./context.js";
 import context from "./context.js"
 
 import nux from './nux.js'
@@ -66,6 +67,7 @@ const install_commit = async (repo, commit, name) => {
   // let out = sh`${NUX_REPO}/bin/qjs-macos --unhandled-rejection ${NUX_REPO}/src/main.js install-raw ${TMP_PATH}`
   
   context.repo = TMP_PATH
+
   await install_raw(`${TMP_PATH}/setup.nux.js`, name, name)
 
   // console.log(out)
@@ -75,10 +77,10 @@ const install_commit = async (repo, commit, name) => {
 
 
 const update = async (name) => {
-  util.mkdir(NUX_PATH, true)
-  util.mkdir(BIN_PATH, true)
-  util.mkdir(STORE_PATH, true)
-  util.mkdir(`${NUX_PATH}/logs`, true)
+  util.mkdir(LOCAL_NUX_PATH, true)
+  util.mkdir(LOCAL_BIN_PATH, true)
+  util.mkdir(LOCAL_STORE_PATH, true)
+  util.mkdir(`${LOCAL_NUX_PATH}/logs`, true)
 
   let path = process.env.NUX_REPO || os.getcwd()[0]
 
@@ -123,7 +125,7 @@ const main = async () => {
       const lines = drvs.split('\n').map(line => line.trim()).filter(line => line !== '');
       // console.log(lines)
       // Load the existing JSON file
-      const jsonPath = `${NUX_PATH}/cur-${name}`;
+      const jsonPath = `${LOCAL_NUX_PATH}/cur-${name}`;
       let jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
       console.log('Before:', jsonData.length, "derivations")
 

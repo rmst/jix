@@ -1,5 +1,6 @@
 
 import * as std from "std"
+import * as os from "os"
 
 
 export const monkeyPatchProcess = () => {
@@ -12,3 +13,4 @@ export const monkeyPatchProcess = () => {
 		env: std.getenviron(),  // TODO: make this function call (via getter / setter / proxy)
 	}
 }
+

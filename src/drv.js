@@ -1,6 +1,8 @@
-import { NUX_PATH } from './context.js';
+import { LOCAL_NUX_PATH } from './context.js';
 import { sha256 } from './sha256.js';
 import { symlink, link } from './base.js';
+import context from './context.js';
+
 
 /*
 TODO: split into two types of derivation:
@@ -46,10 +48,13 @@ export function derivation (drv) {
     return values
   })
 
+  
   Object.assign(obj, {
     install,
     uninstall,
-    build
+    build,
+    host: context.host,
+    user: context.user,
   })
 
   
@@ -58,13 +63,15 @@ export function derivation (drv) {
       install: obj.install,
       uninstall: obj.uninstall,
       build: obj.build,
-      dependencies: obj.dependencies.map(d => d.hash)
+      dependencies: obj.dependencies.map(d => d.hash),
+      host: obj.host,
+      user: obj.user,
     })
   }
 
   obj.hash = sha256(obj.serialize())
 
-  let str = `${NUX_PATH}/out/${obj.hash}`;
+  let str = `${context.NUX_PATH}/out/${obj.hash}`;
 
   obj.str = drv.str ? drv.str : (obj.build ? str : undefined)
 

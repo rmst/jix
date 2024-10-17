@@ -5,7 +5,6 @@ import { sha256 } from './sha256.js';
 import * as fs from './node/fs.js';
 import { createHash } from './shaNext.js';
 import { derivation } from './drv.js';
-import { NUX_PATH } from './context.js';
 
 import context from './context.js';
 import base from './base.js'
@@ -138,6 +137,10 @@ export default {
   ...base,
   ...macos,
 
-  get REPO() { return context.repo },
-  scope: context.scope,
+  // get REPO() { return context.repo },
+  get HOME() { return context.HOME },
+  get NUX_PATH() { return context.NUX_PATH },
+  // scope: context.scope,
+  remote: context.remote,
+  context,
 }

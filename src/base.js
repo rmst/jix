@@ -1,15 +1,16 @@
 import * as util from './util.js';
-import { BIN_PATH, NUX_PATH } from './context.js';
+import { LOCAL_NUX_PATH } from './context.js';
 import { parseDrvValues, derivation } from './drv.js';
 import * as fs from './node/fs.js'
 import { createHash } from './shaNext.js';
-
+import { dedent } from './util.js';
+import context from './context.js';
 
 export { derivation } from './drv.js';
 // -----
 
-export const HOME = util.getEnv().HOME  // TODO: switch to node API
-export const NUX_PATH = NUX_PATH
+// export const HOME = util.getEnv().HOME  // TODO: switch to node API
+// export const NUX_PATH = NUX_PATH
 
 // ----- OLD SYSTEM ----
 // TODO: get rid of this at some point
@@ -47,33 +48,14 @@ export const symlink = (origin, path) => link(origin, path, true)
 
 
 export const alias = (mapping) => {
-  return Object.entries(mapping).map(([k, v]) => symlink(v, `${BIN_PATH}/${k}`))
+  return Object.entries(mapping).map(([k, v]) => symlink(v, `${context.BIN_PATH}/${k}`))
 }
 
-
-// TODO: delete this
-// export const user = (config) => {
-//   let { name, home, enabled=true, conf=u=>[] } = config
-
-//   if(!enabled)
-//     return []
-
-//   // TODO: perform checks or install user
-
-//   let u = {
-//     name,
-//     home,
-    
-//   }
-//   return conf(u)
-  
-// }
-
 export const run = (install, uninstall) => {
-  return {
+  return derivation({
     install: ["execShV1", install],
     uninstall: ["execShV1", uninstall]
-  };
+  });
 };
 
 
@@ -92,7 +74,6 @@ export const mkdir = (path) => {
 //   };
 // };
 
-
 export const str = (templateStrings, ...values) => {
 
   var { values, dependencies } = parseDrvValues(values)
@@ -110,7 +91,7 @@ export const writeFile = (mode='-w') => (templateStrings, ...values) => {
   let text = util.dedent(templateStrings, ...values)
 
   return derivation({
-    build: ["writeOutFileV1", text, mode],
+    build: ["writeOutFileV2", text, mode],
     dependencies,
   })
 }
@@ -119,14 +100,14 @@ export const textfile = writeFile()
 
 
 // TODO: this is dumb, instead users should be able to import non js files and reference them like any other built file
-export const file = (path) => {
-  path = path.replace('~', util.getEnv().HOME)  // TODO: use context home
-  let data = fs.readFileSync(path)
-  const fileHash = createHash().update(data).digest("hex");
-  return derivation({
-    build: ["copyV1", path, fileHash],
-  })
-};
+// export const file = (path) => {
+//   path = path.replace('~', util.getEnv().HOME)  // TODO: use context home
+//   let data = fs.readFileSync(path)
+//   const fileHash = createHash().update(data).digest("hex");
+//   return derivation({
+//     build: ["copyV1", path, fileHash],
+//   })
+// };
 
 
 
@@ -142,23 +123,33 @@ export const script = (templateStrings, ...values) => writeFile('-w+x')(template
  * define a build script writing to $out (environment variable named "out")
  * @returns the derivation / out path of the built artefact
  */
+// export const build2 = (templateStrings, ...values) => {
+//   // TODO: dependencies in the build script should be separated from runtime dependencies
+  
+//   let buildScript = script(templateStrings, ...values)
+
+//   return derivation({
+//     build: ["buildV5", buildScript],
+//     dependencies: [buildScript],
+//   })
+// }
+
 export const build = (templateStrings, ...values) => {
   // TODO: dependencies in the build script should be separated from runtime dependencies
   
-  let buildScript = script(templateStrings, ...values)
+  let buildScript = dedent(templateStrings, ...values)
 
   return derivation({
-    build: ["buildV5", buildScript],
+    build: ["buildV6", buildScript],
     dependencies: [buildScript],
   })
 }
 
 
-
 export default {
   derivation,
-  HOME,
-  NUX_PATH,
+  // HOME,
+  // NUX_PATH,
   
   copy,
   link,
@@ -169,7 +160,6 @@ export default {
   str,
   writeFile,
   textfile,
-  file,
   script,
   build,
 }

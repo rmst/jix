@@ -1,20 +1,20 @@
 import * as util from './util.js'
 import { dedent, sh, shVerbose, execShFunction } from './util.js'
 import * as fs from './node/fs.js'   // mimicking node:fs
-import { NUX_PATH, NUX_DIR } from './context.js';
+import { NUX_DIR } from './context.js';
 import { createHash } from './shaNext.js';
 import { execFileSync } from './node/child_process.js'
 
 
 const exx = (cmd, ...args) => {
-	execFileSync(cmd, args)
-	return {cmd: [cmd, ...args]}
+	// execFileSync(cmd, args)
+	return {cmd, args}  // this output is used in install.js
 }
 
 const exxVerbose = (cmd, ...args) => {
-	let options = { stdout: 'inherit' }
-	execFileSync(cmd, args, options)
-	return {cmd: [cmd, ...args], verbose: true}
+	// let options = { stdout: 'inherit' }
+	// execFileSync(cmd, args, options)
+	return {cmd, args, verbose: true}  // this output is used in install.js
 }
 
 
@@ -24,7 +24,7 @@ const exxSsh = (host, ...cmd) => {
 	return exx("ssh", `${host}`, "--", ...cmd)
 }
 
-export const deleteFileV1 = path => util.fileDelete(path, true)
+// export const deleteFileV1 = path => util.fileDelete(path, true)
 export const deleteFileV2 = path => {
 	return exx("rm", "-f", path)
 }
@@ -87,15 +87,42 @@ export const buildV5 = (script, hash) => {
 	)
 }
 
+export const buildV6 = (script, hash) => {
+	// TODO: make output files read only
+	return exxVerbose(
+		"/bin/sh", 
+		"-c", 
+		dedent`
+			# echo buildV5  "$1"
+			tmp="$HOME"/${NUX_DIR}/tmp_drv/${hash}
 
-export const writeOutFileV1 = (content, mode, hash) => {
-	sh`mkdir -p ${NUX_PATH}/out`
-	let path = `${NUX_PATH}/out/${hash}`
-	fs.writeFileSync(path, content)
-	fs.chmodSync(path, mode)
+			mkdir -p "$HOME"/${NUX_DIR}/out
+			mkdir -p "$tmp"
+
+			export out="$HOME"/${NUX_DIR}/out/${hash}
+			export NUX_HASH=${hash}
+			/bin/sh -c "$1"  # for build script string
+			# "$1"  # for build script path
+			exitcode=$?
+
+			rm -rf "$tmp"
+
+			exit $exitcode
+		`,
+		"--",
+		script,
+	)
 }
+
+
+// export const writeOutFileV1 = (content, mode, hash) => {
+// 	sh`mkdir -p ${NUX_PATH}/out`
+// 	let path = `${NUX_PATH}/out/${hash}`
+// 	fs.writeFileSync(path, content)
+// 	fs.chmodSync(path, mode)
+// }
 export const writeOutFileV2 = (content, mode, hash) => {
-	exx(
+	return exx(
 		"sh", 
 		"-c", 
 		dedent`
@@ -108,13 +135,14 @@ export const writeOutFileV2 = (content, mode, hash) => {
 		content,
 	)
 }
+export const writeOutFileV3 = writeOutFileV2
 
-export const copyV1 = (path, fileHash, hash) => {
+// export const copyV1 = (path, fileHash, hash) => {
 
-	// TODO: check path against file hash!!
-	// TODO: make it work with MacOS' copy on write
+// 	// TODO: check path against file hash!!
+// 	// TODO: make it work with MacOS' copy on write
 
-	// TODO: maybe make it work for directories?
+// 	// TODO: maybe make it work for directories?
 	
-	sh`cp '${path}' '${NUX_PATH}/out/${hash}'`
-}
+// 	sh`cp '${path}' '${NUX_PATH}/out/${hash}'`
+// }
