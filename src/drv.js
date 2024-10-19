@@ -1,6 +1,6 @@
 import { LOCAL_NUX_PATH } from './context.js';
 import { sha256 } from './sha256.js';
-import { symlink, link } from './base.js';
+import { symlink, link, copyFile } from './base.js';
 import context from './context.js';
 
 
@@ -88,7 +88,7 @@ export function derivation (drv) {
 
   obj.symlinkTo = path => symlink(obj, path)
   obj.linkTo = (path, symbolic=false) => link(obj, path, symbolic)
-  
+  obj.copyTo = path => copyFile(obj, path)
   return obj
 }
 

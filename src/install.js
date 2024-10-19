@@ -37,9 +37,13 @@ const setDifference = (a, b) => {
 
 const executeCmd = (c, host, user) => {
   
-  let options = c.verbose ? { stdout: 'inherit' } : {}
+  if(c === null)  // noop
+    return
+
+  let options = c.verbose ? { stdout: 'inherit', stderr: 'inherit' } : {}
   let { cmd, args } = c
   if(host !== null) {
+    // console.log("RC", host, user)
     // TODO: add a check here on first ssh connection whether the user home matches context.hosts
     host = context.hosts?.[host]?.address ?? host
     args = [cmd, ...args]
@@ -169,7 +173,11 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
   drvs = drvs.flat(Infinity)  // allows for nested derivations for convenience
 
   drvs = drvs.map(d => {
-    d = d.hash ? d : drv.derivation(d)
+    // d = d.hash ? d : drv.derivation(d)
+    if(!d.hash) {
+      console.log(d) // TODO: i guess we should have patched Object.toString rather than console.log to produce better outputs then we could have put this into the error message
+      throw Error(`Not a proper derivation`)
+    }
     return d.flatten()
   })
   drvs = drvs.flat()

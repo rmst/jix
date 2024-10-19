@@ -26,7 +26,7 @@ const remote = (host, user, fn) => {
 	Object.assign(globalThis.nuxContext, {host, user})
 	let result = fn()
 	Object.assign(globalThis.nuxContext, original)
-	return result
+	return result ?? []
 }
 
 const home = () => {

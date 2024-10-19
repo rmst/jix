@@ -84,12 +84,12 @@ export const nixosConfig = (host, configPath) => {
   // console.log(dirs)
   // console.log(files)
 
-  let mkdirActions = dirs.map(path => ({
+  let mkdirActions = dirs.map(path => derivation({
     install: ["execShV1", `ssh ${host} mkdir -p /etc/nixos/${path}`],
     uninstall: ["execShV1", `ssh ${host} rm -rf /etc/nixos/${path}`]
   }))
 
-  let scpActions = contents.map(([path, content]) => ({
+  let scpActions = contents.map(([path, content]) => derivation({
     install:  ["writeScpV2", host, "/etc/nixos/" + path, content], 
     uninstall: ["execShV1", `ssh ${host} rm -f /etc/nixos/${path}`]
   }))
@@ -109,10 +109,13 @@ export const nixosConfig = (host, configPath) => {
   `
 
   return [
-    {install: ["execShV1", prepareScript], uninstall: ["noop"]},
+    derivation({
+      install: ["execShV1", prepareScript], 
+      uninstall: ["noop"]
+    }),
     ...mkdirActions,
     ...scpActions,
-    {install: ["execShVerboseV1", installScript], uninstall: ["noop"]},
+    derivation({install: ["execShVerboseV1", installScript], uninstall: ["noop"]}),
   ]
 }
 
@@ -137,7 +140,7 @@ export default {
   ...base,
   ...macos,
 
-  // get REPO() { return context.repo },
+  get REPO() { return context.repo },
   get HOME() { return context.HOME },
   get NUX_PATH() { return context.NUX_PATH },
   // scope: context.scope,

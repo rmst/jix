@@ -48,16 +48,23 @@ export const symlink = (origin, path) => link(origin, path, true)
 
 
 export const alias = (mapping) => {
-  return Object.entries(mapping).map(([k, v]) => symlink(v, `${context.BIN_PATH}/${k}`))
+  let binDir = ensureDir(context.BIN_PATH)
+  let links = Object.entries(mapping).map(([k, v]) => symlink(v, `${binDir}/${k}`))
+
+  return links
 }
 
-export const run = (install, uninstall) => {
+export const run = ({install, uninstall=null}) => {
   return derivation({
     install: ["execShV1", install],
-    uninstall: ["execShV1", uninstall]
+    uninstall: uninstall === null ? ["noop"] : ["execShV1", uninstall]
   });
 };
 
+export const ensureDir = path => derivation({
+  install: ["execV1", "mkdir", "-p", path],
+  str: path,
+})
 
 export const mkdir = (path) => {
   return derivation({
@@ -95,6 +102,12 @@ export const writeFile = (mode='-w') => (templateStrings, ...values) => {
     dependencies,
   })
 }
+
+export const copyFile = (from, to) => derivation({
+  install: ["copyV2", from, to],
+  uninstall: ["deleteFileV2", to],
+})
+
 
 export const textfile = writeFile()
 
@@ -157,9 +170,11 @@ export default {
   alias,
   run,
   mkdir,
+  ensureDir,
   str,
   writeFile,
   textfile,
   script,
   build,
+  copyFile,
 }

@@ -60,45 +60,26 @@ export const execShVerboseV1 = (script) => {
 export const noop = () => null
 
 
-export const buildV5 = (script, hash) => {
-	// TODO: make output files read only
-	return exxVerbose(
-		"/bin/sh", 
-		"-c", 
-		dedent`
-			# echo buildV5  "$1"
-			tmp="$HOME"/${NUX_DIR}/tmp_drv/${hash}
-
-			mkdir -p "$HOME"/${NUX_DIR}/out
-			mkdir -p "$tmp"
-
-			export out="$HOME"/${NUX_DIR}/out/${hash}
-			export NUX_HASH=${hash}
-			# /bin/sh -c "$1"  # for build script string
-			"$1"  # for build script path
-			exitcode=$?
-
-			rm -rf "$tmp"
-
-			exit $exitcode
-		`,
-		"--",
-		script,
-	)
-}
-
 export const buildV6 = (script, hash) => {
 	// TODO: make output files read only
+
+	let extraLines = util.dedent`
+		set -e  # error script if single command fails
+		set -o pipefail  # error on piped command fails
+		set -u  # error on unset variables
+	`
+	script = extraLines + '\n' + script
+
 	return exxVerbose(
 		"/bin/sh", 
 		"-c", 
 		dedent`
-			# echo buildV5  "$1"
 			tmp="$HOME"/${NUX_DIR}/tmp_drv/${hash}
 
 			mkdir -p "$HOME"/${NUX_DIR}/out
 			mkdir -p "$tmp"
-
+			cd "$tmp"
+			
 			export out="$HOME"/${NUX_DIR}/out/${hash}
 			export NUX_HASH=${hash}
 			/bin/sh -c "$1"  # for build script string
@@ -137,12 +118,12 @@ export const writeOutFileV2 = (content, mode, hash) => {
 }
 export const writeOutFileV3 = writeOutFileV2
 
-// export const copyV1 = (path, fileHash, hash) => {
+export const copyV2 = (from, to, hash) => {
 
-// 	// TODO: check path against file hash!!
-// 	// TODO: make it work with MacOS' copy on write
+	// TODO: check path against file hash!!
+	// TODO: make it work with MacOS' copy on write
 
-// 	// TODO: maybe make it work for directories?
+	// TODO: maybe make it work for directories?
 	
-// 	sh`cp '${path}' '${NUX_PATH}/out/${hash}'`
-// }
+return exx("cp", from, to)
+}
