@@ -2,6 +2,8 @@ import * as std from 'std';
 import * as os from 'os';
 import { sh } from '../util.js'
 
+// TODO: replace sh with the proper node api that we implmented
+
 // https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/ad71352b-e93f-4fe0-9e92-05e3b7d25622
 
 // Mimic fs.writeFileSync in Node.js

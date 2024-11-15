@@ -19,11 +19,11 @@ export const fileWrite = (path, content) => {
   }
 }
 
-export const fileWriteWithPermissions = (path, content, permissions) => {
-  fileDelete(path, true)
-  fileWrite(path, content)
-  sh`chmod ${permissions} ${path}`
-}
+// export const fileWriteWithPermissions = (path, content, permissions) => {
+//   fileDelete(path, true)
+//   fileWrite(path, content)
+//   sh`chmod ${permissions} ${path}`
+// }
 
 // Function to read content from a file
 export const fileRead = (path) => {
@@ -213,6 +213,8 @@ export const execShFunction = ({verbose=false, env={}, cwd=null}) => (template, 
   return output
 }
 
+
+
 export const sh = execShFunction({verbose: false})
 export const shVerbose = execShFunction({verbose: true})
 
@@ -277,8 +279,7 @@ export const dedent = (templateStrings, ...values) => {
 
 
 
-
-  
+// TODO: this should be part of the JS engine
 function toStr(x) {
   // Handle null and undefined
   if (x === null || x === undefined) {
@@ -310,6 +311,8 @@ function toStr(x) {
 }
 
 
+
+// TODO: this should be part of the JS engine
 export const monkeyPatchConsoleLog = () => {
   // TODO: maybe patch globalThis.console ?
   console.log_old = console.log
@@ -319,4 +322,11 @@ export const monkeyPatchConsoleLog = () => {
   }
   return console
 }
+
+
+
+// export const getRandomString = (len) => Array.from({ length: len }, () => 
+//     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+//     .charAt(Math.floor(Math.random() * 62))
+// ).join('');
 

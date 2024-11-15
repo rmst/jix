@@ -5,7 +5,7 @@ import * as std from 'std';
 import * as os from 'os';
 
 import * as util from './util.js'
-import * as drv from './drv.js'
+import * as drv from './effect.js'
 import { dedent, sh, shVerbose } from './util.js'
 import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "./context.js";
 import nux from './nux.js'
@@ -15,7 +15,7 @@ import * as lib from './lib.js'
 import { execFileSync } from './node/child_process.js';
 import context from './context.js';
 import * as fs from './node/fs.js';
-
+import { Effect } from './effect.js';
 
 const updateHosts = (hosts) => {
   fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8')
@@ -61,27 +61,27 @@ const uninstall = (hashes) => {
   let reversedHashes = [...hashes]
   reversedHashes.reverse()
 
-  let stats = reversedHashes.map(h => {
-    let x = util.fileRead(`${LOCAL_STORE_PATH}/${h}`)
-    // let [install, uninstall] = JSON.parse(x)
+  let stats = reversedHashes.map(hash => {
+    let x = util.fileRead(`${LOCAL_STORE_PATH}/${hash}`)
+
     let {uninstall=null, host, user} = JSON.parse(x)
 
     if(uninstall) {
       let [f, ...args] = uninstall
 
       try {
-        let cmd = lib[f](...args)
+        let cmd = lib[f](...args, hash)
         executeCmd(cmd, host, user)
 
       } catch (e) {
-        console.log(`Error with ${h}, ${f}, ${args}:\n${e.message}`)
+        console.log(`Error with ${hash}, ${f}, ${args}:\n${e.message}`)
         console.log(e.stack)
         console.log("\n...uninstall continuing...\n")
-        return [h, e]
+        return [hash, e]
       }
     }
 
-    return [h, null]
+    return [hash, null]
   })
   
   let errors = stats.filter(([h, e]) => e !== null)
@@ -99,9 +99,7 @@ const install = (hashes, ignoreErrors=false) => {
     try {
       let x = util.fileRead(`${LOCAL_STORE_PATH}/${hash}`)
     
-      // let [install, uninstall] = JSON.parse(x)
       var {install = null, build = null, host, user} = JSON.parse(x)
-
 
       if(build) {
         // check if the out file exists (works both locally and over ssh)
@@ -153,7 +151,8 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
   var oldHashes = util.exists(current_path) ? JSON.parse(util.fileRead(current_path)) : []
 
   // TODO: instead of processing a list of drvs use a single top level drv
-  let drvs = []
+  // let drvs = []
+  let drvs = Effect()  // empty derivation
 
   if(sourcePath) {
     let module = await import(sourcePath)
@@ -168,20 +167,23 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
 
     loadHosts()
     drvs = await f()  // compute the derivations
+
+    // if(drvs instanceof derivation)
+    drvs = Effect({dependencies: drvs})  // assume drvs is a list of derivations
   }
 
-  drvs = drvs.flat(Infinity)  // allows for nested derivations for convenience
+  // drvs = drvs.flat(Infinity)  // allows for nested derivations for convenience
 
-  drvs = drvs.map(d => {
-    // d = d.hash ? d : drv.derivation(d)
-    if(!d.hash) {
-      console.log(d) // TODO: i guess we should have patched Object.toString rather than console.log to produce better outputs then we could have put this into the error message
-      throw Error(`Not a proper derivation`)
-    }
-    return d.flatten()
-  })
-  drvs = drvs.flat()
-
+  // drvs = drvs.map(d => {
+  //   // d = d.hash ? d : drv.derivation(d)
+  //   if(!d.hash) {
+  //     console.log(d) // TODO: i guess we should have patched Object.toString rather than console.log to produce better outputs then we could have put this into the error message
+  //     throw Error(`Not a proper derivation`)
+  //   }
+  //   return d.flatten()
+  // })
+  // drvs = drvs.flat()
+  drvs = drvs.flatten()
 
   // write derivations to disk
   drvs.map(d => {

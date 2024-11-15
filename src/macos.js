@@ -3,7 +3,7 @@
 // import * as util from './util.js'
 import { dedent } from './util.js'
 import * as base from './base.js'
-import { derivation } from './drv.js';
+import { Effect } from './effect.js';
 import context from './context.js';
 
 
@@ -131,7 +131,7 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
   let TARGET = "gui/$(id -u)"
   // let TARGET = "user/$(id -u)"
 
-  let load_unload = derivation({
+  let load_unload = Effect({
     // https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/2c6eb981-9987-4ac6-8cb3-48877d315b48
 
     install: ["execShV1", dedent`

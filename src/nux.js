@@ -4,7 +4,7 @@ import { dedent, sh } from './util.js'
 import { sha256 } from './sha256.js';
 import * as fs from './node/fs.js';
 import { createHash } from './shaNext.js';
-import { derivation } from './drv.js';
+import { Effect } from './effect.js';
 
 import context from './context.js';
 import base from './base.js'
@@ -52,7 +52,7 @@ export const sshSyncDir = (root, host, destination, ignore="") => {
   let scpActions = files.map(path => {
     let hashPath = base.file(root + '/'  + path)
     
-    let drv = derivation({
+    let drv = Effect({
       install: ["execShV1", `scp '${hashPath}' '${host}:${destination}/${path}'`], 
       uninstall: ["execShV1", `ssh '${host}' rm -f '${destination}/${path}'`],
     })
@@ -60,7 +60,7 @@ export const sshSyncDir = (root, host, destination, ignore="") => {
     return drv
   })
   
-  return derivation({
+  return Effect({
     dependencies: [mkRoot, ...mkdirActions, ...scpActions]
   }) 
 }
@@ -84,12 +84,12 @@ export const nixosConfig = (host, configPath) => {
   // console.log(dirs)
   // console.log(files)
 
-  let mkdirActions = dirs.map(path => derivation({
+  let mkdirActions = dirs.map(path => Effect({
     install: ["execShV1", `ssh ${host} mkdir -p /etc/nixos/${path}`],
     uninstall: ["execShV1", `ssh ${host} rm -rf /etc/nixos/${path}`]
   }))
 
-  let scpActions = contents.map(([path, content]) => derivation({
+  let scpActions = contents.map(([path, content]) => Effect({
     install:  ["writeScpV2", host, "/etc/nixos/" + path, content], 
     uninstall: ["execShV1", `ssh ${host} rm -f /etc/nixos/${path}`]
   }))
@@ -109,13 +109,13 @@ export const nixosConfig = (host, configPath) => {
   `
 
   return [
-    derivation({
+    Effect({
       install: ["execShV1", prepareScript], 
       uninstall: ["noop"]
     }),
     ...mkdirActions,
     ...scpActions,
-    derivation({install: ["execShVerboseV1", installScript], uninstall: ["noop"]}),
+    Effect({install: ["execShVerboseV1", installScript], uninstall: ["noop"]}),
   ]
 }
 
@@ -142,6 +142,7 @@ export default {
 
   get REPO() { return context.repo },
   get HOME() { return context.HOME },
+  get USER() { return context.user },
   get NUX_PATH() { return context.NUX_PATH },
   // scope: context.scope,
   remote: context.remote,

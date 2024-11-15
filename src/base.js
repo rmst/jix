@@ -1,12 +1,11 @@
 import * as util from './util.js';
-import { LOCAL_NUX_PATH } from './context.js';
-import { parseDrvValues, derivation } from './drv.js';
-import * as fs from './node/fs.js'
-import { createHash } from './shaNext.js';
+import { NUX_DIR, HASH_PLACEHOLDER } from './context.js';
+import { parseEffectValues, Effect } from './effect.js';
+
 import { dedent } from './util.js';
 import context from './context.js';
 
-export { derivation } from './drv.js';
+export { Effect } from './effect.js';
 // -----
 
 // export const HOME = util.getEnv().HOME  // TODO: switch to node API
@@ -16,6 +15,7 @@ export { derivation } from './drv.js';
 // TODO: get rid of this at some point
 
 
+export const HASH = HASH_PLACEHOLDER
 
 
 export const copy = (origin, path, mode = '-w') => {
@@ -26,21 +26,28 @@ export const copy = (origin, path, mode = '-w') => {
 };
 
 
+export const importScript = (origin) => {
+  // TODO: maybe cache the hash, don't read the file every time
+  let content = util.fileRead(origin);
+  return script`${content}`
+}
+
+
 // ------ NEW SYSTEM ----
 
 
 export const link = (origin, path, symbolic=false) => {
   // TODO: use builtin link functions
-  var { values: [ origin, path ], dependencies } = parseDrvValues([origin, path])
+  var { values: [ origin, path ], dependencies } = parseEffectValues([origin, path])
 
   // console.log("link", origin, path)
 
-  return derivation({
+  return Effect({
     install: [symbolic ? "symlinkV3" : "hardlinkV1", origin, path],
     // uninstall: ["deleteFileV1", path],
     uninstall: ["deleteFileV2", path],  // TODO: don't remove if the file is sth else than our symlink to prevent accidental data loss, i.e. create deleteSpecificFile
     dependencies,
-    str: path,
+    path: path,
   })
 };
 
@@ -48,30 +55,54 @@ export const symlink = (origin, path) => link(origin, path, true)
 
 
 export const alias = (mapping) => {
+  // TODO: add PATH check (to see if the login shell has .nux/bin in its path and warn if not (could be done via build script maybe?)
   let binDir = ensureDir(context.BIN_PATH)
   let links = Object.entries(mapping).map(([k, v]) => symlink(v, `${binDir}/${k}`))
 
   return links
 }
 
-export const run = ({install, uninstall=null}) => {
-  return derivation({
-    install: ["execShV1", install],
-    uninstall: uninstall === null ? ["noop"] : ["execShV1", uninstall]
+export const run = ({install=null, uninstall=null, ...other}) => {
+  let extraLines = util.dedent`
+    set -e  # error script if single command fails
+    set -o pipefail  # error on piped command fails
+    set -u  # error on unset variables
+  `
+
+  return Effect({
+    install: install ? ["execShV1", `${extraLines}\n${install}`] : ["noop"],
+    uninstall: uninstall ? ["execShV1", `${extraLines}\n${uninstall}`] : ["noop"],
+    ...other
   });
 };
 
-export const ensureDir = path => derivation({
+export const ensureDir = path => Effect({
   install: ["execV1", "mkdir", "-p", path],
-  str: path,
+  path: path,
 })
 
 export const mkdir = (path) => {
-  return derivation({
+  return Effect({
     install: ["execV1", "mkdir", "-p", path],
     uninstall: ["execShV1", `[ ! -e "${path}" ] || rmdir "${path}"`],
-    str: path,
+    path: path,
   })
+}
+
+export const scriptWithTempdir = (...args) => {
+  let inner = script(...args)
+  return script`
+    #!/bin/sh
+    export NUX_TEMP="$HOME"/${NUX_DIR}/tmp_drv/${HASH}
+    mkdir -p "$NUX_TEMP"
+
+    "${inner}"
+    exitcode=$?
+
+    rm -rf "$NUX_TEMP"
+
+    exit $exitcode
+  `
 }
 
 // export const globalConfigFile = (path, content, original, reloadScript = null) => {
@@ -83,29 +114,30 @@ export const mkdir = (path) => {
 
 export const str = (templateStrings, ...values) => {
 
-  var { values, dependencies } = parseDrvValues(values)
+  var { values, dependencies } = parseEffectValues(values)
   let text = util.dedent(templateStrings, ...values)
 
-  return derivation({
+  return Effect({
     str: text,
     dependencies,
   })
 }
 
 export const writeFile = (mode='-w') => (templateStrings, ...values) => {
-
-  var { values, dependencies } = parseDrvValues(values)
+  // TODO: shouldn't we use the str function here?
+  var { values, dependencies } = parseEffectValues(values)
   let text = util.dedent(templateStrings, ...values)
 
-  return derivation({
+  return Effect({
     build: ["writeOutFileV2", text, mode],
     dependencies,
   })
 }
 
-export const copyFile = (from, to) => derivation({
+export const copyFile = (from, to) => Effect({
   install: ["copyV2", from, to],
   uninstall: ["deleteFileV2", to],
+  path: to,
 })
 
 
@@ -152,7 +184,7 @@ export const build = (templateStrings, ...values) => {
   
   let buildScript = dedent(templateStrings, ...values)
 
-  return derivation({
+  return Effect({
     build: ["buildV6", buildScript],
     dependencies: [buildScript],
   })
@@ -160,11 +192,12 @@ export const build = (templateStrings, ...values) => {
 
 
 export default {
-  derivation,
+  Effect,
   // HOME,
   // NUX_PATH,
   
   copy,
+  importScript,
   link,
   symlink,
   alias,
@@ -175,6 +208,9 @@ export default {
   writeFile,
   textfile,
   script,
+  scriptWithTempdir,
   build,
   copyFile,
+
+  HASH,
 }
