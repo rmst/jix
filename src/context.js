@@ -1,7 +1,7 @@
 import * as std from 'std';
 
 export const NUX_DIR = '.nux'  // relative to the user home
-const LOCAL_HOME = std.getenv('HOME')
+export const LOCAL_HOME = std.getenv('HOME')
 export const LOCAL_NUX_PATH = `${LOCAL_HOME}/${NUX_DIR}`;  // local path
 export const TMP_PATH = `${LOCAL_NUX_PATH}/tmp`;
 export const LOCAL_BIN_PATH = `${LOCAL_NUX_PATH}/bin`;
@@ -9,9 +9,12 @@ export const LOCAL_STORE_PATH = `${LOCAL_NUX_PATH}/store`;
 
 
 
-const MAGIC_STRING = "d6165af5669c8a3de2aab402ad97c778"
+export const MAGIC_STRING = "d6165af5669c8a3de2aab402ad97c778"
 // WARNING: the HASH_PLACEHOLDER string should never appear any user generated content because it will be replaced by the derivation hash!
-export const HASH_PLACEHOLDER = `_HASH_PLACEHOLDER_${MAGIC_STRING}`  
+export const HASH_PLACEHOLDER = `_HASH_PLACEHOLDER_${MAGIC_STRING}`  // we need to use this constant placeholder because there is no other way to make available the hash during the construction of an effect/derivation
+export const HOME_PLACEHOLDER = `_HOME_PLACEHOLDER_${MAGIC_STRING}`  // TODO: ideally get rid of this, unfortunately this is used in lots of places, search for nux.HOME
+
+// export const USER_PLACEHOLDER = `_USER_PLACEHOLDER_${MAGIC_STRING}`  // TODO: get rid of this, this is used almost never, search for nux.USER
 
 
 
@@ -28,26 +31,31 @@ export const HASH_PLACEHOLDER = `_HASH_PLACEHOLDER_${MAGIC_STRING}`
 // 	return result
 // }
 
-const remote = (host, user, fn) => {
-	let c = globalThis.nuxContext
-	let original = {host: c.host, user: c.user}
-	Object.assign(globalThis.nuxContext, {host, user})
-	let result = fn()
-	Object.assign(globalThis.nuxContext, original)
-	return result ?? []
-}
 
+// TODO: delete this (we now do nux.target([host, user], ...))
+// const remote = (host, user, fn) => {
+// 	let c = globalThis.nuxContext
+// 	let original = {host: c.host, user: c.user}
+// 	Object.assign(globalThis.nuxContext, {host, user})
+// 	let result = fn()
+// 	Object.assign(globalThis.nuxContext, original)
+// 	return result ?? []
+// }
+
+
+// TODO: delete this
 const home = () => {
-	let c = globalThis.nuxContext
-	if(c.host === null) {
-		if(c.user === null)
-			return LOCAL_HOME
-		else
-			throw Error("Not Implemented Yet: Getting the home for other local users")
-	}
-	let defaultHome = c.user === "root" ? "/root" : "/home/" + c.user
-	let h = c?.hosts?.[c.host]?.users?.[c.user]?.home ?? defaultHome
-	return h
+	// let c = globalThis.nuxContext
+	// if(c.host === null) {
+	// 	if(c.user === null)
+	// 		return LOCAL_HOME
+	// 	else
+	// 		throw Error("Getting the home for other local users is not implemented yet")
+	// }
+	// let defaultHome = c.user === "root" ? "/root" : "/home/" + c.user
+	// let h = c?.hosts?.[c.host]?.users?.[c.user]?.home ?? defaultHome
+	// return h
+	return HOME_PLACEHOLDER
 }
 
 // We do this so that IDEs can infer the properties on nuxContext better, while also being about to handle that this module code gets executed multiple times which does happens sometimes for some reason.
@@ -57,15 +65,17 @@ globalThis.nuxContext = {
 	hosts: null,
 	repo: null,  // TODO: maybe remove? we can also do import.meta.url instead i think
 	// verbose: false,
-	host: null,
-	user: null,
+	// host: null,
+	// user: null,
+
+	// TODO: move the following to nux.js
 	home,
 	get HOME() { return home() },
 	get NUX_PATH() { return home() + "/" + NUX_DIR },
 	get BIN_PATH() { return home() + "/" + NUX_DIR + "/bin"},
 
 	// scope
-	remote
+	// remote
 }
 
 if(originalCtx)

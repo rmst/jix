@@ -1,11 +1,12 @@
 import * as util from './util.js';
 import { NUX_DIR, HASH_PLACEHOLDER } from './context.js';
-import { parseEffectValues, Effect } from './effect.js';
+import { parseEffectValues, effect, target } from './effect.js';
 
 import { dedent } from './util.js';
 import context from './context.js';
 
-export { Effect } from './effect.js';
+// export { effect as effect } from './effect.js';
+
 // -----
 
 // export const HOME = util.getEnv().HOME  // TODO: switch to node API
@@ -36,20 +37,24 @@ export const importScript = (origin) => {
 // ------ NEW SYSTEM ----
 
 
-export const link = (origin, path, symbolic=false) => {
-  // TODO: use builtin link functions
-  var { values: [ origin, path ], dependencies } = parseEffectValues([origin, path])
+export const link = (origin, path, symbolic=false) => effect( target => {
+  // TODO?: use builtin link functions
+  let { values: [origin2, path2], dependencies } = parseEffectValues(target, [origin, path])
 
-  // console.log("link", origin, path)
+  if (path2.startsWith('~')) {
+    path2 = path2.replace('~', target.home)  // replaces first (i.e. leading) tilde
+  }
 
-  return Effect({
-    install: [symbolic ? "symlinkV3" : "hardlinkV1", origin, path],
+  // console.log("AAAHHH", originT, pathT)
+
+  return {
+    install: [symbolic ? "symlinkV3" : "hardlinkV1", origin2, path2],
     // uninstall: ["deleteFileV1", path],
-    uninstall: ["deleteFileV2", path],  // TODO: don't remove if the file is sth else than our symlink to prevent accidental data loss, i.e. create deleteSpecificFile
+    uninstall: ["deleteFileV2", path2],  // TODO: don't remove if the file is sth else than our symlink to prevent accidental data loss, i.e. create deleteSpecificFile
+    path: path2,
     dependencies,
-    path: path,
-  })
-};
+  }
+})
 
 export const symlink = (origin, path) => link(origin, path, true)
 
@@ -69,20 +74,20 @@ export const run = ({install=null, uninstall=null, ...other}) => {
     set -u  # error on unset variables
   `
 
-  return Effect({
+  return effect({
     install: install ? ["execShV1", `${extraLines}\n${install}`] : ["noop"],
     uninstall: uninstall ? ["execShV1", `${extraLines}\n${uninstall}`] : ["noop"],
     ...other
   });
 };
 
-export const ensureDir = path => Effect({
+export const ensureDir = path => effect({
   install: ["execV1", "mkdir", "-p", path],
   path: path,
 })
 
 export const mkdir = (path) => {
-  return Effect({
+  return effect({
     install: ["execV1", "mkdir", "-p", path],
     uninstall: ["execShV1", `[ ! -e "${path}" ] || rmdir "${path}"`],
     path: path,
@@ -112,29 +117,31 @@ export const scriptWithTempdir = (...args) => {
 //   };
 // };
 
-export const str = (templateStrings, ...values) => {
+export const str = (templateStrings, ...rawValues) => effect( target => {
 
-  var { values, dependencies } = parseEffectValues(values)
+  let { values, dependencies } = parseEffectValues(target, rawValues)
   let text = util.dedent(templateStrings, ...values)
 
-  return Effect({
+  return {
     str: text,
     dependencies,
+  }
+})
+
+export const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
+  return effect( target => {
+    // TODO: shouldn't we use the str function here?
+    var { values, dependencies } = parseEffectValues(target, rawValues)
+    let text = util.dedent(templateStrings, ...values)
+
+    return {
+      build: ["writeOutFileV2", text, mode],
+      dependencies,
+    }
   })
 }
 
-export const writeFile = (mode='-w') => (templateStrings, ...values) => {
-  // TODO: shouldn't we use the str function here?
-  var { values, dependencies } = parseEffectValues(values)
-  let text = util.dedent(templateStrings, ...values)
-
-  return Effect({
-    build: ["writeOutFileV2", text, mode],
-    dependencies,
-  })
-}
-
-export const copyFile = (from, to) => Effect({
+export const copyFile = (from, to) => effect({
   install: ["copyV2", from, to],
   uninstall: ["deleteFileV2", to],
   path: to,
@@ -184,15 +191,17 @@ export const build = (templateStrings, ...values) => {
   
   let buildScript = dedent(templateStrings, ...values)
 
-  return Effect({
+  return effect({
     build: ["buildV6", buildScript],
     dependencies: [buildScript],
   })
 }
 
 
-export default {
-  Effect,
+let base = {
+  effect,
+  target,
+
   // HOME,
   // NUX_PATH,
   
@@ -214,3 +223,13 @@ export default {
 
   HASH,
 }
+
+
+// this is to work around a severe quickjs bug whereas different modules are created for the same file when using dynamic imports (i.e. await import(...))
+if(globalThis._nux_modules_base)
+  base = globalThis._nux_modules_base
+else
+  globalThis._nux_modules_base = base
+
+
+export default base

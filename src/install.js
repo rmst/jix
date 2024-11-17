@@ -2,20 +2,20 @@
 
 
 import * as std from 'std';
-import * as os from 'os';
+// import * as os from 'os';
 
 import * as util from './util.js'
-import * as drv from './effect.js'
-import { dedent, sh, shVerbose } from './util.js'
+import { dedent } from './util.js'
 import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "./context.js";
 import nux from './nux.js'
-import { sha256 } from './sha256.js';
+// import { sha256 } from './sha256.js';
 
 import * as lib from './lib.js'
 import { execFileSync } from './node/child_process.js';
 import context from './context.js';
 import * as fs from './node/fs.js';
-import { Effect } from './effect.js';
+import { effect, TargetedEffect, Effect } from './effect.js';
+// import { AbstractEffect } from "./effectUtil.js";
 
 const updateHosts = (hosts) => {
   fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8')
@@ -150,39 +150,38 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
       
   var oldHashes = util.exists(current_path) ? JSON.parse(util.fileRead(current_path)) : []
 
-  // TODO: instead of processing a list of drvs use a single top level drv
-  // let drvs = []
-  let drvs = Effect()  // empty derivation
+
+  let drvs = nux.target()  // create empty TargetedEffect
 
   if(sourcePath) {
+    
     let module = await import(sourcePath)
 
     if(module?.hosts)
       updateHosts(module.hosts)
   
-    let f = module[name]
+    loadHosts()
 
-    if(f === undefined)
+    let obj = module[name]
+
+    if(obj === undefined)
       throw new Error(`setup.nux.js doesn't export "${name}"`)
 
-    loadHosts()
-    drvs = await f()  // compute the derivations
+    else if (typeof obj === 'function')
+      drvs = await obj()
+    
+    else
+      drvs = obj
+    
+    // console.log(drvs)
+    if (! (drvs instanceof TargetedEffect)) {
+      // drvs can e.g be a list of Effects
+      drvs = nux.target(null, drvs)
 
-    // if(drvs instanceof derivation)
-    drvs = Effect({dependencies: drvs})  // assume drvs is a list of derivations
+      // console.log(`\n${drvs.toDebugString()}\n`)
+    }
   }
 
-  // drvs = drvs.flat(Infinity)  // allows for nested derivations for convenience
-
-  // drvs = drvs.map(d => {
-  //   // d = d.hash ? d : drv.derivation(d)
-  //   if(!d.hash) {
-  //     console.log(d) // TODO: i guess we should have patched Object.toString rather than console.log to produce better outputs then we could have put this into the error message
-  //     throw Error(`Not a proper derivation`)
-  //   }
-  //   return d.flatten()
-  // })
-  // drvs = drvs.flat()
   drvs = drvs.flatten()
 
   // write derivations to disk

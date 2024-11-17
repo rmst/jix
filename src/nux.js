@@ -1,12 +1,13 @@
 import * as os from 'os';
 import * as util from './util.js'
-import { dedent, sh } from './util.js'
+import { dedent, sh, dirname } from './util.js'
 import { sha256 } from './sha256.js';
 import * as fs from './node/fs.js';
 import { createHash } from './shaNext.js';
-import { Effect } from './effect.js';
+import { effect, TargetedEffect, Effect } from './effect.js';
+import { AbstractEffect } from "./effectUtil.js";
 
-import context from './context.js';
+import context, { HOME_PLACEHOLDER, NUX_DIR } from './context.js';
 import base from './base.js'
 import macos from './macos.js'
 
@@ -52,7 +53,7 @@ export const sshSyncDir = (root, host, destination, ignore="") => {
   let scpActions = files.map(path => {
     let hashPath = base.file(root + '/'  + path)
     
-    let drv = Effect({
+    let drv = effect({
       install: ["execShV1", `scp '${hashPath}' '${host}:${destination}/${path}'`], 
       uninstall: ["execShV1", `ssh '${host}' rm -f '${destination}/${path}'`],
     })
@@ -60,15 +61,15 @@ export const sshSyncDir = (root, host, destination, ignore="") => {
     return drv
   })
   
-  return Effect({
+  return effect({
     dependencies: [mkRoot, ...mkdirActions, ...scpActions]
   }) 
 }
 
 
-export const nixosConfig = (host, configPath) => {
-  // TODO: use sshSyncDir instead
-
+export const nixosConfig = (host, configPath) => effect(target => {
+  // TODO: move this function to a separate file / directory
+  // TODO: use sshSyncDir instead??
   // TODO: should this be root protected?
 
 
@@ -84,12 +85,12 @@ export const nixosConfig = (host, configPath) => {
   // console.log(dirs)
   // console.log(files)
 
-  let mkdirActions = dirs.map(path => Effect({
+  let mkdirActions = dirs.map(path => effect({
     install: ["execShV1", `ssh ${host} mkdir -p /etc/nixos/${path}`],
     uninstall: ["execShV1", `ssh ${host} rm -rf /etc/nixos/${path}`]
   }))
 
-  let scpActions = contents.map(([path, content]) => Effect({
+  let scpActions = contents.map(([path, content]) => effect({
     install:  ["writeScpV2", host, "/etc/nixos/" + path, content], 
     uninstall: ["execShV1", `ssh ${host} rm -f /etc/nixos/${path}`]
   }))
@@ -109,15 +110,15 @@ export const nixosConfig = (host, configPath) => {
   `
 
   return [
-    Effect({
+    effect({
       install: ["execShV1", prepareScript], 
       uninstall: ["noop"]
     }),
     ...mkdirActions,
     ...scpActions,
-    Effect({install: ["execShVerboseV1", installScript], uninstall: ["noop"]}),
+    effect({install: ["execShVerboseV1", installScript], uninstall: ["noop"]}),
   ]
-}
+})
 
 // -----
 
@@ -131,20 +132,39 @@ export const nixosConfig = (host, configPath) => {
 //   ${dedent(...args)}
 // `
 
-export default {
+let nux = {
   dedent,
   sh,
 
   nixosConfig,
 
+  Effect,
+  TargetedEffect,
+  // AbstractEffect,
+
   ...base,
   ...macos,
 
   get REPO() { return context.repo },
-  get HOME() { return context.HOME },
-  get USER() { return context.user },
-  get NUX_PATH() { return context.NUX_PATH },
+  dirname,
+
+  // get HOME() { return context.HOME },
+  HOME: HOME_PLACEHOLDER,
+  // get USER() { return context.user },
+  NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,
   // scope: context.scope,
-  remote: context.remote,
-  context,
+  // remote: context.remote,
+  // context,  // TODO: remove
 }
+
+
+
+// this is to work around a severe quickjs bug whereas different modules are created for the same file when using dynamic imports (i.e. await import(...))
+// TODO: find a minimal example and report this bug to https://github.com/bellard/quickjs
+if(globalThis._nux_modules_nux)
+  nux = globalThis._nux_modules_nux
+else
+  globalThis._nux_modules_nux = nux
+
+
+export default nux 

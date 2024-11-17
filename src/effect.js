@@ -1,23 +1,41 @@
 import { sha256 } from './sha256.js';
-import { symlink, link, copyFile } from './base.js';
-import context from './context.js';
-import { HASH_PLACEHOLDER } from './context.js';
+import { HOME_PLACEHOLDER, HASH_PLACEHOLDER } from './context.js';
+import { NUX_DIR } from './context.js';
+import { AbstractEffect, userHome } from './effectUtil.js';
+import { dedent } from './util.js';
 
 export const effectPlaceholderMap = new Map()
 
 
 /*
-TODO: split into two types of Effects:
+TODO: split into two types of effects:
 - effect (side effects, install and uninstall functions)
 - build/derivation/artifact (no side effects all outputs in ~/nux/out/${hash}, build function)
 */
+
+
+/**
+ * @typedef {Object} EffectProps
+ * @property {Array} [install]
+ * @property {Array} [uninstall]
+ * @property {string} [path]
+ * @property {string} [str]
+ * @property {Array} [dependencies]
+ */
+
+/**
+  @callback TargetFn
+  @param {{host: string, user: string, home: string}} target
+  @returns {EffectProps | Array | Effect | TargetedEffect}
+*/
+
 /**
 
-  An Effect is a basic recipe to take actions, i.e. build, install and uninstall
+  An effect is a basic recipe to take actions, i.e. build, install and uninstall
 
   Basic form:
   ```js
-  let effect = Effect({
+  let x = effect({
     install: ["installActionV2", installArg0, installArg2],
     uninstall: ["uninstallActionV0", uninstallArg0],
     build: ["buildActionV1", buildArg0],
@@ -26,110 +44,252 @@ TODO: split into two types of Effects:
   ```
 
   Basic effect functions are defined under base.js and nux.js
+
+  @param {EffectProps | Array | TargetFn} obj
+  @returns {Effect}
 */
-export function Effect (eff={}) {
-  if(!(this instanceof Effect))
-    return new Effect(eff)
-  
-  // let obj = this
-  // let obj = {}
-  
-  // process dependencies  
-  this.dependencies = (eff.dependencies?.flat(Infinity) ?? []).map(x => {
-    return x instanceof Effect ? x : Effect(x)
-  })
+export function effect (obj) {    
 
-  // process values in the arguments to install, uninstall, etc
-  var { install, uninstall, build } = eff
-  var [install, uninstall, build] = [install, uninstall, build].map(x => {
-    if(!x) return x
+  let targetFn = (typeof obj === 'function')
+    ? obj
+    : () => obj
 
-    let {values, dependencies} = parseEffectValues(x)
-    this.dependencies.push(...dependencies)
-
-    return values
-  })
-
-  
-  Object.assign(this, {
-    install,
-    uninstall,
-    build,
-    host: context.host,
-    user: context.user,
-  })
-
-  
-  this.normalize = () => ({
-    install: this.install,
-    uninstall: this.uninstall,
-    build: this.build,
-    dependencies: this.dependencies.map(d => d.hash),
-    host: this.host,
-    user: this.user,
-  })
-
-
-  this.hash = sha256(JSON.stringify(this.normalize()))
-
-  this.serialize = () => {
-    return JSON.stringify(this.normalize()).replaceAll(HASH_PLACEHOLDER, this.hash)
-  }
-
-  let outPath = `${context.NUX_PATH}/out/${this.hash}`;
-
-  this.path = eff.path
-    ? eff.path.replaceAll(HASH_PLACEHOLDER, this.hash)
-    : (this.build ? outPath : undefined)
-
-  this.str = eff.str
-    ? eff.str.replaceAll(HASH_PLACEHOLDER, this.hash)
-    : this.path
-
-
-  this.toString = () => {
-    let key = `_effect_${this.hash}_`
-    effectPlaceholderMap.set(key, this)
-    return key
-  },
-
-  this.flatten = () => {
-    let deps = this.dependencies.map(d => d.flatten())
-    return [...deps, this].flat()  // flatten the nested list
-  }
-
-  this.symlinkTo = path => symlink(this, path)
-  this.linkTo = (path, symbolic=false) => link(this, path, symbolic)
-  this.copyTo = path => copyFile(this, path)
-
+  return new Effect(targetFn)
 }
 
 
+/** 
+  @param {string | Array | {host: string, user: string} | null} tgt - e.g. `root@home`
+  @param {TargetFn | Effect | Array} obj
+  @returns {TargetedEffect}
+*/
+export function target(tgt, obj) {
+  let user, host
+  
+  if (!tgt)
+    [host, user] = [null, null]
 
-export const parseEffectValues = (values) => {
+  else if (typeof tgt === "string")
+    [user, host] = tgt.split("@")
+  
+  else if (Array.isArray(tgt))
+    [host, user] = tgt
+  
+  else
+    [host, user] = [tgt.host, tgt.user]
+
+
+  let eff = (obj instanceof Effect) 
+    ? obj 
+    : effect(obj)
+  
+  return eff.target({ host, user })
+
+}
+  
+
+export class Effect extends AbstractEffect {
+  /**
+    @param {TargetFn} targetFn
+  */
+  constructor (targetFn) {
+    super()
+    this.targetFn = targetFn
+  }
+
+  /** 
+    @param {{ host: string, user: string, home?: string }} x
+    @returns {TargetedEffect}
+  */
+  target (x) {
+  
+    x = {
+      ...x,
+      home: x.home ?? userHome(x.host, x.user)
+      // TODO: add other useful paths
+    }
+    
+    // console.log('target', tgt)
+  
+    let r = this.targetFn(x)
+    
+    if(r instanceof TargetedEffect)
+      return r
+    
+    else if(r instanceof Effect)
+      return r.target(x)
+    
+    else {
+      if (Array.isArray(r))
+        r = { dependencies: r }
+
+      // console.log('target', r)
+
+      return new TargetedEffect(x, r)
+    }
+  
+  }
+}
+
+
+export class TargetedEffect extends AbstractEffect {
+
+  /**
+   * 
+   * @param {{ host: string, user: string}} tgt 
+   * @param {EffectProps} [props]
+   */
+  constructor(tgt, props={}) {
+    super()
+
+    this.dependencies = props.dependencies?.flat(Infinity) ?? []
+    
+    // TODO: delete this, instead we're doing assert x instanceof AbstractEffect 
+    // this.dependencies =  this.dependencies.map(x => {
+    //   return x instanceof AbstractEffect ? x : Effect(x)
+    // })
+
+    // process values in the arguments to install, uninstall, etc
+    // TODO: maybe also process "str" and "path" ?
+    var { install, uninstall, build } = props
+    var [install, uninstall, build] = [install, uninstall, build].map(x => {
+      if(!x) return x
+
+      let {values, dependencies} = parseEffectValues(tgt, x)
+      this.dependencies.push(...dependencies)
+
+      return values
+    })
+    
+
+    // process dependencies  
+    this.dependencies = this.dependencies.map(x => {
+      if(x instanceof TargetedEffect)
+        return x
+
+      else if(x instanceof Effect)
+        return x.target(tgt)
+
+      else {
+        // console.log(x)
+        let t = `${typeof x} || ${x?.constructor?.name}`
+        throw Error(`Effect: ${x} of type ${t} is not a proper dependency`)
+      }
+    })
+
+
+    Object.assign(this, {
+      install,
+      uninstall,
+      build,
+      host: tgt.host,
+      user: tgt.user,
+    })
+
+    
+    this.normalize = () => ({
+      install: this.install,
+      uninstall: this.uninstall,
+      build: this.build,
+      dependencies: this.dependencies.map(d => d.hash),
+      host: this.host,
+      user: this.user,
+    })
+
+
+    this.hash = sha256(JSON.stringify(this.normalize()))
+
+    this.serialize = () => {
+      return JSON.stringify(this.normalize())
+        .replaceAll(HASH_PLACEHOLDER, this.hash)
+    }
+
+    let outPath = `${tgt.home}/${NUX_DIR}/out/${this.hash}`
+
+    this.path = props.path
+      ? targetizeString(tgt, props.path.replaceAll(HASH_PLACEHOLDER, this.hash))
+      : (this.build ? outPath : undefined)
+
+    this.str = props.str
+      ? targetizeString(tgt, props.str.replaceAll(HASH_PLACEHOLDER, this.hash))
+      : this.path
+
+    this.flatten = () => {
+      let deps = this.dependencies.map(d => d.flatten())
+      return [...deps, this].flat()  // flatten the nested list
+    }
+
+    // console.log(`\n${this.toDebugString()}\n`)
+  }
+
+  toDebugString() {
+    return dedent`
+      path: ${this.path}
+      deps: ${this.dependencies.map(x => x.hash.slice(0, 5))}
+      host: ${this.host}
+      user: ${this.user}
+      str: ${this.str}
+      hash: ${this.hash.slice(0, 5)}
+    `
+  }
+}
+
+
+const targetizeString = (tgt, str) => {
+  if (!tgt.home)
+    throw Error(`Fatal: ${tgt}`)
+
+  return str
+    .replaceAll(HOME_PLACEHOLDER, tgt.home)
+    // .replaceAll(USER_PLACEHOLDER, tgt.user)
+}
+
+
+export const parseEffectValues = (tgt, values) => {
+
   let dependencies = [];
-  values = values.map(v => {
+  values = values.map((v, i) => {
+
     if (typeof v === "string") {
       // parse regular strings for placeholders, so we can track the dependencies, etc
       // this way we can avoid using nux.str to construct strings while tracking dependencies
+
+      // replace simple constants
+      // TODO: this shouldn't be necessary but especially nux.HOME is used a lot
+      v = targetizeString(tgt, v);
+
+      // search for dependencies
       [...effectPlaceholderMap.keys()].map(k => {
         if(v.includes(k)) {
-          let drv = effectPlaceholderMap.get(k)
+          let eff = effectPlaceholderMap.get(k)
 
           // console.log(`Found drv in string ${v}`)
           // console.log(`${k} will be replaced by ${drv.str}`)
-          dependencies.push(drv)
-          v = v.replaceAll(k, drv.str)
+          
+          if (! (eff instanceof AbstractEffect)) {
+            throw Error(`Fatal: ${eff}`)
+          }
+
+          if (! (eff instanceof TargetedEffect)) {
+            eff = eff.target(tgt)
+          }
+
+          dependencies.push(eff)
+          v = v.replaceAll(k, eff.str)
         }
       })
       
       return v
 
-    } else if (v instanceof Effect) {
+    } else if (v instanceof AbstractEffect) {
+      
+      if (! (v instanceof TargetedEffect))
+        v = v.target(tgt)
+
       // add it to the dependencies array
       // and replace the object with it's out path
-      dependencies.push(v);
-      return v.str;
+      dependencies.push(v)
+      return v.str
     }
 
     else
@@ -138,4 +298,3 @@ export const parseEffectValues = (values) => {
 
   return { values, dependencies };
 };
-

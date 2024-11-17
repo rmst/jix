@@ -8,7 +8,8 @@ import * as os from 'os';
 
 import * as util from './util.js'
 import { monkeyPatchProcess } from './node/util.js'
-util.monkeyPatchConsoleLog()
+// util.monkeyPatchConsoleLog()
+util.monkeyPatchObjectToString()
 
 monkeyPatchProcess()
 

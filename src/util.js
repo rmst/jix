@@ -323,6 +323,40 @@ export const monkeyPatchConsoleLog = () => {
   return console
 }
 
+export const monkeyPatchObjectToString = () => {
+  Object.prototype.toString = function() {
+    if (this === null) return '[object Null]';
+    if (typeof this !== 'object') return `[object ${typeof this}]`;
+
+    const type = this.constructor && this.constructor.name ? this.constructor.name : 'Object';
+    const keyValuePairs = Object.entries(this).map(([key, value]) => {
+        let stringValue;
+        if (typeof value === 'string') {
+            stringValue = `"${value}"`;
+        } else if (typeof value === 'object' && value !== null) {
+            stringValue = '[object Object]'; // Avoids infinite recursion
+        } else {
+            stringValue = String(value);
+        }
+        return `${key}: ${stringValue}`;
+    }).join(', ');
+
+    return `${type} { ${keyValuePairs} }`;
+  };
+
+  Array.prototype.toString = function() {
+    return `[${this.map(item => {
+        if (typeof item === 'string') {
+            return `"${item}"`;
+        } else if (typeof item === 'object' && item !== null) {
+            return '[object Object]'; // Similar treatment to avoid overly deep nesting
+        } else {
+            return String(item);
+        }
+    }).join(', ')}]`;
+};
+
+}
 
 
 // export const getRandomString = (len) => Array.from({ length: len }, () => 
@@ -330,3 +364,19 @@ export const monkeyPatchConsoleLog = () => {
 //     .charAt(Math.floor(Math.random() * 62))
 // ).join('');
 
+
+
+/**
+  gets the path of the directory for a file path or url, works with e.g.
+  ```
+  dirname(import.meta.url)
+  ```
+ */
+export function dirname(path) {
+	const isFileURL = path.startsWith('file://');
+	if (isFileURL) path = path.slice(7); // Remove 'file://' prefix
+	if (path.endsWith('/')) path = path.slice(0, -1); // Handle trailing slash
+	const parts = path.split('/');
+	parts.pop(); // Remove the last segment (assumed to be file or empty)
+	return parts.join('/') || '/';
+}
