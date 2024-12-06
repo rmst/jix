@@ -63,7 +63,7 @@ git.latestCommitHash = (path) => {
 
 
 const install_commit = async (repo, commit, name) => {
-  sh`rm -rf ${TMP_PATH}`
+  sh`rm -rf ${TMP_PATH} && sleep 0.5`
   git.clone(TMP_PATH, repo, commit)
   // let out = sh`${NUX_REPO}/bin/qjs-macos --unhandled-rejection ${NUX_REPO}/src/main.js install-raw ${TMP_PATH}`
   
@@ -88,6 +88,8 @@ const update = async (name) => {
 
   if(! git.isClean(path)) {
     // throw Error(`Uncommited changes in ${path}`)
+    // console.log(`git not clean ${path}`)
+
 		sh`
 			cd ${path}
 			git add .

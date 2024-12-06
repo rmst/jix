@@ -8,9 +8,8 @@ import * as util from './util.js'
 import { dedent } from './util.js'
 import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "./context.js";
 import nux from './nux.js'
-// import { sha256 } from './sha256.js';
 
-import * as lib from './lib.js'
+import * as actions from './actions.js'
 import { execFileSync } from './node/child_process.js';
 import context from './context.js';
 import * as fs from './node/fs.js';
@@ -70,7 +69,7 @@ const uninstall = (hashes) => {
       let [f, ...args] = uninstall
 
       try {
-        let cmd = lib[f](...args, hash)
+        let cmd = actions[f](...args, hash)
         executeCmd(cmd, host, user)
 
       } catch (e) {
@@ -114,14 +113,14 @@ const install = (hashes, ignoreErrors=false) => {
         // let exists = util.exists(outPath)  // maybe keep for local check is prob much faster
         if(!exists) {
           var [f, ...args] = build
-          let cmd = lib[f](...args, hash)
+          let cmd = actions[f](...args, hash)
           executeCmd(cmd, host, user)
         }
       }
       
       if(install) {
         var [f, ...args] = install
-        let cmd = lib[f](...args, hash)
+        let cmd = actions[f](...args, hash)
         executeCmd(cmd, host, user)
       }
 

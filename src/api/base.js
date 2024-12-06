@@ -1,9 +1,9 @@
-import * as util from './util.js';
-import { NUX_DIR, HASH_PLACEHOLDER } from './context.js';
-import { parseEffectValues, effect, target } from './effect.js';
+import * as util from '../util.js';
+import { NUX_DIR, HASH_PLACEHOLDER } from '../context.js';
+import { parseEffectValues, effect, target } from '../effect.js';
 
-import { dedent } from './util.js';
-import context from './context.js';
+import { dedent } from '../util.js';
+import context from '../context.js';
 
 // export { effect as effect } from './effect.js';
 

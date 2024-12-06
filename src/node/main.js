@@ -1,7 +1,7 @@
 
 // import * as fs from "./fs.js"
 import * as std from "std"
-import { monkeyPatchConsoleLog } from "../util.js"  // TODO: move this into node/
+import { monkeyPatchConsoleLog, monkeyPatchObjectToString } from "../util.js"  // TODO: move this into node/
 import { monkeyPatchProcess } from "./util.js"
 // import * as os from "os"
 
@@ -14,8 +14,8 @@ let qjsinteractive = std.getenviron()['QJSINTERACTIVE']
 
 
 monkeyPatchProcess()
-
-globalThis.console = monkeyPatchConsoleLog()
+monkeyPatchObjectToString()
+// globalThis.console = monkeyPatchConsoleLog()
 
 
 // TODO: instead of this make node:fs, etc imports work properly!! 

@@ -1,7 +1,5 @@
 import * as std from 'std';
 import * as os from 'os';
-import { sha256 } from './sha256.js';
-
 
 // TODO: move away from these functions towards the node/fs functions
 
