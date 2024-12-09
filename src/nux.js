@@ -14,6 +14,7 @@ import context, { HOME_PLACEHOLDER, NUX_DIR } from './context.js';
 import base from './api/base.js'
 import macos from './api/macos.js'
 import { nixosConfig } from './api/nixosConfig.js';
+import db from './api/db.js';
 
 
 let nux = {
@@ -29,6 +30,8 @@ let nux = {
   ...base,
   ...macos,
 
+  ...db,
+  
   get REPO() { return context.repo },
   dirname,
 

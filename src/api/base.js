@@ -19,19 +19,32 @@ import context from '../context.js';
 export const HASH = HASH_PLACEHOLDER
 
 
+
+export const importFile = (origin, mode='-w') => {
+  let content = util.fileRead(origin)
+  return writeFile(mode)`${content}`
+}
+
+export const importScript = (origin) => {
+  // TODO: add dependency tracking, e.g. for python and js
+  return importFile(origin, '-w+x')
+}
+
 export const copy = (origin, path, mode = '-w') => {
   // TODO: maybe cache the hash, don't read the file every time
   // TODO: make permissions work
+  // TODO: use importFile
+  // TODO: is this even use, delete
   let content = util.fileRead(origin);
   return link(writeFile(mode)(content), path)
 };
 
 
-export const importScript = (origin) => {
-  // TODO: maybe cache the hash, don't read the file every time
-  let content = util.fileRead(origin);
-  return script`${content}`
-}
+// export const importScript = (origin) => {
+//   // TODO: maybe cache the hash, don't read the file every time
+//   let content = util.fileRead(origin);
+//   return script`${content}`
+// }
 
 
 // ------ NEW SYSTEM ----
@@ -67,6 +80,11 @@ export const alias = (mapping) => {
   return links
 }
 
+
+
+/** 
+  @param {{install?: string, uninstall?: string, dependencies?: Array, path?: string, str?: string}} obj
+*/
 export const run = ({install=null, uninstall=null, ...other}) => {
   let extraLines = util.dedent`
     set -e  # error script if single command fails
@@ -78,12 +96,14 @@ export const run = ({install=null, uninstall=null, ...other}) => {
     install: install ? ["execShV1", `${extraLines}\n${install}`] : ["noop"],
     uninstall: uninstall ? ["execShV1", `${extraLines}\n${uninstall}`] : ["noop"],
     ...other
-  });
-};
+  })
+}
 
-export const ensureDir = path => effect({
+
+export const ensureDir = (path, eff={}) => effect({
   install: ["execV1", "mkdir", "-p", path],
   path: path,
+  ...eff,
 })
 
 export const mkdir = (path) => {
@@ -116,6 +136,7 @@ export const scriptWithTempdir = (...args) => {
 //     uninstall: ["writeConfSudoV1", path, original, reloadScript],
 //   };
 // };
+
 
 export const str = (templateStrings, ...rawValues) => effect( target => {
 
@@ -205,8 +226,11 @@ let base = {
   // HOME,
   // NUX_PATH,
   
-  copy,
+  importFile,
   importScript,
+  copy,
+  // importScript,
+
   link,
   symlink,
   alias,

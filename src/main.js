@@ -72,7 +72,8 @@ const install_commit = async (repo, commit, name) => {
   await install_raw(`${TMP_PATH}/setup.nux.js`, name, name)
 
   // console.log(out)
-  sh`rm -rf ${TMP_PATH}`
+
+  sh`rm -rf ${TMP_PATH} 2> /dev/null || true`  // TODO: this seems to fail sometimes
   // util.fileWrite(CUR_PATH, commit)
 }
 

@@ -102,7 +102,7 @@ export class Effect extends AbstractEffect {
     @returns {TargetedEffect}
   */
   target (x) {
-  
+    // TODO: assert host, user
     x = {
       ...x,
       home: x.home ?? userHome(x.host, x.user)
@@ -150,9 +150,9 @@ export class TargetedEffect extends AbstractEffect {
     // })
 
     // process values in the arguments to install, uninstall, etc
-    // TODO: maybe also process "str" and "path" ?
-    var { install, uninstall, build } = props
-    var [install, uninstall, build] = [install, uninstall, build].map(x => {
+    var { install, uninstall, build, str, path } = props
+    var [install, uninstall, build, [str, path]]
+      = [install, uninstall, build, [str, path]].map(x => {
       if(!x) return x
 
       let {values, dependencies} = parseEffectValues(tgt, x)
@@ -206,12 +206,12 @@ export class TargetedEffect extends AbstractEffect {
 
     let outPath = `${tgt.home}/${NUX_DIR}/out/${this.hash}`
 
-    this.path = props.path
-      ? targetizeString(tgt, props.path.replaceAll(HASH_PLACEHOLDER, this.hash))
+    this.path = path
+      ? targetizeString(tgt, path.replaceAll(HASH_PLACEHOLDER, this.hash))
       : (this.build ? outPath : undefined)
 
-    this.str = props.str
-      ? targetizeString(tgt, props.str.replaceAll(HASH_PLACEHOLDER, this.hash))
+    this.str = str
+      ? targetizeString(tgt, str.replaceAll(HASH_PLACEHOLDER, this.hash))
       : this.path
 
     this.flatten = () => {

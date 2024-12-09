@@ -378,3 +378,19 @@ export function dirname(path) {
 	parts.pop(); // Remove the last segment (assumed to be file or empty)
 	return parts.join('/') || '/';
 }
+
+
+
+
+// export function randomString256() {
+//   const hexCharacters = '0123456789abcdef';
+//   let randomString = '';
+
+//   for (let i = 0; i < 64; i++) {
+//       // Generate a random index for hexCharacters
+//       const randomIndex = Math.floor(Math.random() * 16);
+//       randomString += hexCharacters[randomIndex];
+//   }
+
+//   return randomString;
+// }
