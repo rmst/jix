@@ -1,6 +1,6 @@
 import { sha256 } from './sha256.js';
 import { HOME_PLACEHOLDER, HASH_PLACEHOLDER } from './context.js';
-import { NUX_DIR } from './context.js';
+import { NUX_DIR, LOCAL_USER } from './context.js';
 import { AbstractEffect, userHome } from './effectUtil.js';
 import { dedent } from './util.js';
 
@@ -103,10 +103,17 @@ export class Effect extends AbstractEffect {
   */
   target (x) {
     // TODO: assert host, user
+    if(!x.host) {
+      if(!x.user) {
+        // x.user = LOCAL_USER  // TODO: we should do this but this will trigger mass rebuilds
+      }
+      else
+        throw Error("Alternative local users are not supported yet")  // TODO: support
+    }
     x = {
       ...x,
       home: x.home ?? userHome(x.host, x.user)
-      // TODO: add other useful paths
+      // TODO: add other useful paths?
     }
     
     // console.log('target', tgt)

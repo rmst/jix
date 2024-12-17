@@ -114,6 +114,10 @@ const main = async () => {
 
     if(operator === "update"){
       let name = scriptArgs[2]
+      if(name === "_") {
+        name = fs.readFileSync(`${LOCAL_NUX_PATH}/last_update_name`, 'utf8')
+      }
+      fs.writeFileSync(`${LOCAL_NUX_PATH}/last_update_name`, name)
       await update(name)
       return
 

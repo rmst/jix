@@ -162,6 +162,7 @@ export const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
   })
 }
 
+// TODO: make this work for directories
 export const copyFile = (from, to) => effect({
   install: ["copyV2", from, to],
   uninstall: ["deleteFileV2", to],
@@ -209,12 +210,13 @@ export const script = (templateStrings, ...values) => writeFile('-w+x')(template
 
 export const build = (templateStrings, ...values) => {
   // TODO: dependencies in the build script should be separated from runtime dependencies
-  
+  // TODO: make output read only?
+  // TODO: the error messages are terrible. we should first write a build script and execte that
   let buildScript = dedent(templateStrings, ...values)
 
   return effect({
     build: ["buildV6", buildScript],
-    dependencies: [buildScript],
+    dependencies: [],
   })
 }
 
