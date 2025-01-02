@@ -123,3 +123,13 @@ export const lstatSync = (path) => {
   }
   return createStatsObject(statResult);
 }
+
+
+export function existsSync(path) {
+	try {
+		statSync(path)
+		return true;
+	} catch (e) {
+		return false;
+	}
+}

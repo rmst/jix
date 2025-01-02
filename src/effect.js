@@ -112,12 +112,12 @@ export class Effect extends AbstractEffect {
     }
     x = {
       ...x,
-      home: x.home ?? userHome(x.host, x.user)
+      home: x.home ?? userHome(x.host, x.user),
+      os: globalThis.nuxContext.hosts?.[x.host]?.os,
       // TODO: add other useful paths?
     }
+
     
-    // console.log('target', tgt)
-  
     let r = this.targetFn(x)
     
     if(r instanceof TargetedEffect)

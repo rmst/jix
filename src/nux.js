@@ -15,17 +15,20 @@ import base from './api/base.js'
 import macos from './api/macos.js'
 import { nixosConfig } from './api/nixosConfig.js';
 import db from './api/db.js';
-
+import { loadRepo } from './api/repo.js'
 
 let nux = {
+  loadRepo,
+  
   dedent,
+  dirname,
   sh,
 
   nixosConfig,
 
   Effect,
   TargetedEffect,
-  // AbstractEffect,
+  AbstractEffect,
 
   ...base,
   ...macos,
@@ -33,7 +36,6 @@ let nux = {
   ...db,
   
   get REPO() { return context.repo },
-  dirname,
 
   // get HOME() { return context.HOME },
   HOME: HOME_PLACEHOLDER,

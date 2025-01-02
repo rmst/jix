@@ -12,19 +12,18 @@ import nux from './nux.js'
 import * as actions from './actions.js'
 import { execFileSync } from './node/child_process.js';
 import context from './context.js';
-import * as fs from './node/fs.js';
 import { effect, TargetedEffect, Effect } from './effect.js';
-// import { AbstractEffect } from "./effectUtil.js";
+import * as fs from './node/fs.js';
 
-const updateHosts = (hosts) => {
-  fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8')
-  loadHosts()
-}
+export const updateHosts = (hosts) => {
+  fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8');
+  loadHosts();
+};
 
-const loadHosts = () => {
+export const loadHosts = () => {
   let hosts = JSON.parse(fs.readFileSync(`${LOCAL_NUX_PATH}/hosts.json`, 'utf8'));
-  context.hosts = hosts
-}
+  context.hosts = hosts;
+};
 
 
 const setDifference = (a, b) => {
@@ -154,17 +153,21 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
 
   if(sourcePath) {
     
-    let module = await import(sourcePath)
-
-    if(module?.hosts)
-      updateHosts(module.hosts)
+    let hosts = (await import(`${util.dirname(sourcePath)}/hosts.js`)).default
+    if(hosts)
+      updateHosts(hosts)
   
     loadHosts()
 
-    let obj = module[name]
+    let module = await import(sourcePath)
+
+    let obj = module.default[name]
 
     if(obj === undefined)
-      throw new Error(`setup.nux.js doesn't export "${name}"`)
+      throw new Error(`${sourcePath} doesn't export "${name}"`)
+
+    else if (obj instanceof Promise)
+      drvs = await obj
 
     else if (typeof obj === 'function')
       drvs = await obj()

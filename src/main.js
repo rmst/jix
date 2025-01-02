@@ -69,7 +69,7 @@ const install_commit = async (repo, commit, name) => {
   
   context.repo = TMP_PATH
 
-  await install_raw(`${TMP_PATH}/setup.nux.js`, name, name)
+  await install_raw(`${TMP_PATH}/index.js`, name, name)
 
   // console.log(out)
 
