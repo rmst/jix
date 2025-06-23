@@ -1,5 +1,5 @@
 
-import  * as fs  from '../node/fs.js'
+import * as fs  from 'node:fs'
 
 
 export const loadRepo = (dir, other={}) => {

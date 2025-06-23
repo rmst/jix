@@ -1,6 +1,8 @@
+
+import { createHash } from 'node:crypto';
+
 import * as util from '../util.js';
 import { dedent } from '../util.js';
-import { sha256 } from '../sha256.js';
 import { effect } from '../effect.js';
 import base from './base.js';
 
@@ -56,7 +58,9 @@ export const nixosConfig = (host, configPath) => effect(target => {
 
   let contents = files.map(f => [f, util.fileRead(configPath + '/' + f)]);
 
-  let hash = sha256(JSON.stringify([dirs, contents]));
+  let hash = createHash('sha256')
+    .update(JSON.stringify([dirs, contents]))
+    .digest('hex')
 
   // console.log(dirs)
   // console.log(files)

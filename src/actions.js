@@ -1,10 +1,6 @@
 import * as util from './util.js'
 import { dedent, sh, shVerbose, execShFunction } from './util.js'
-import * as fs from './node/fs.js'   // mimicking node:fs
 import { NUX_DIR } from './context.js';
-// import { createHash } from './shaNext.js';
-import { execFileSync } from './node/child_process.js'
-
 
 const exx = (cmd, ...args) => {
 	// execFileSync(cmd, args)

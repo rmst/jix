@@ -2,6 +2,10 @@
 
 BUG: Before we uninstall / install an effect we need to check if another "nux system" is using the same effect!
 
+BUG: implement garbage collection for unreferenced effects json files, currently they just accumulate
+
+
+Improvement: eliminate all uses of quickjs std and os modules. use node shims instead
 
 Improvement: nux.appendLinesTo
 

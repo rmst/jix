@@ -1,2 +1,0 @@
-#!/bin/sh
-"$HOME"/.nux/nux/qjs --unhandled-rejection "$HOME"/.nux/nux/src/main.js "$@"

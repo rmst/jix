@@ -1,27 +1,21 @@
 
 // TODO: migrate this entire file to cli.js (and install.js, etc)
-
-
-import * as std from 'std';
-import * as os from 'os';
+import process from 'node:process'
+import * as fs from 'node:fs';
 
 import * as util from './util.js'
-import { monkeyPatchProcess } from './node/util.js'
 // util.monkeyPatchConsoleLog()
 util.monkeyPatchObjectToString()
-
-monkeyPatchProcess()
 
 import { dedent, sh, shVerbose } from './util.js'
 import { LOCAL_BIN_PATH, TMP_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH } from "./context.js";
 import context from "./context.js"
-
-import nux from './nux.js'
-
 import { install_raw } from './install.js';
 
+// import nux from './nux.js'
 
-import * as fs from './node/fs.js';
+
+
 
 
 // UTILS
@@ -226,5 +220,5 @@ const main = async () => {
 main().then(null, e => {
   console.log(`Error: ${e.message}`)
   console.log(e.stack)
-  std.exit(1)
+  process.exit(1)
 })

@@ -9,7 +9,6 @@ export const LOCAL_BIN_PATH = `${LOCAL_NUX_PATH}/bin`;
 export const LOCAL_STORE_PATH = `${LOCAL_NUX_PATH}/store`;
 
 
-
 export const MAGIC_STRING = "d6165af5669c8a3de2aab402ad97c778"
 // WARNING: the HASH_PLACEHOLDER string should never appear any user generated content because it will be replaced by the derivation hash!
 export const HASH_PLACEHOLDER = `_HASH_PLACEHOLDER_${MAGIC_STRING}`  // we need to use this constant placeholder because there is no other way to make available the hash during the construction of an effect/derivation

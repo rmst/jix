@@ -1,19 +1,15 @@
 
-
-
-import * as std from 'std';
-// import * as os from 'os';
+import process from 'node:process';
+import { execFileSync } from 'node:child_process';
+import * as fs from 'node:fs';
 
 import * as util from './util.js'
 import { dedent } from './util.js'
 import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "./context.js";
 import nux from './nux.js'
-
 import * as actions from './actions.js'
-import { execFileSync } from './node/child_process.js';
 import context from './context.js';
 import { effect, TargetedEffect, Effect } from './effect.js';
-import * as fs from './node/fs.js';
 
 export const updateHosts = (hosts) => {
   fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8');
@@ -288,7 +284,7 @@ export const install_raw = async ({
       util.fileWrite(current_path, JSON.stringify(remainingHashes))  // update db
     }
 
-    std.exit(1)  // exit with error
+    process.exit(1)  // exit with error
 
   }
 }

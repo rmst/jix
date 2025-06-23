@@ -1,10 +1,12 @@
-import { sha256 } from './sha256.js';
 import { HOME_PLACEHOLDER, HASH_PLACEHOLDER } from './context.js';
 import { NUX_DIR, LOCAL_USER } from './context.js';
 import { AbstractEffect, userHome } from './effectUtil.js';
 import { dedent } from './util.js';
 
 export const effectPlaceholderMap = new Map()
+
+import { createHash } from 'node:crypto';
+// import { createHash } from 'node/crypto';
 
 
 /*
@@ -204,7 +206,9 @@ export class TargetedEffect extends AbstractEffect {
     })
 
 
-    this.hash = props.hash ?? sha256(JSON.stringify(this.normalize()))
+    this.hash = props.hash ?? createHash('sha256')
+      .update(JSON.stringify(this.normalize()))
+      .digest('hex')
 
     // debug information
     // TODO: this is a massive hack: debug info isn't part of the hash calculation (and shouldn't be) so therefore it will only be captured the first time an effect with a certain hash is defined. It might still be temporarily useful since usually newly defined effects fail (though of course not exclusively).
