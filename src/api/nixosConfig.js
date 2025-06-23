@@ -5,13 +5,34 @@ import { effect } from '../effect.js';
 import base from './base.js';
 
 
-export const nixosRebuild = base.script`
+// TODO: remove the -v flag from rsync to make it less verbose
+export const nixosRebuild2 = base.script`
   #!/bin/sh
   mkdir -p /root/.systemd
   rm -rf /root/.systemd/diff
   rsync -avc --compare-dest=/etc/static/systemd/system /etc/systemd/system/ /root/.systemd/diff
   rm -rf /etc/systemd/system
   ln -s /etc/static/systemd/system /etc/systemd/system  # restore original symlink
+
+  /run/current-system/sw/bin/nixos-rebuild "$@"
+  return_code=$?
+
+  rm -rf /etc/systemd/system
+  cp -rp $(realpath /etc/static/systemd/system) /etc/systemd/system
+
+  rsync -a /root/.systemd/diff/ /etc/systemd/system/
+
+  exit $return_code
+`
+
+export const nixosRebuild = base.script`
+  #!/bin/sh
+  mkdir -p /root/.systemd
+
+  rm -rf /root/.systemd/diff
+  rsync -avc --compare-dest=/etc/static/systemd/system /etc/systemd/system/ /root/.systemd/diff
+  # rm -rf /etc/systemd/system
+  # ln -s /etc/static/systemd/system /etc/systemd/system  # restore original symlink
 
   /run/current-system/sw/bin/nixos-rebuild "$@"
   return_code=$?

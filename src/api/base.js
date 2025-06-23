@@ -208,6 +208,11 @@ export const script = (templateStrings, ...values) => writeFile('-w+x')(template
 //   })
 // }
 
+
+
+/**
+  write a build shell script, it drops you into a temp dir and
+ */
 export const build = (templateStrings, ...values) => {
   // TODO: dependencies in the build script should be separated from runtime dependencies
   // TODO: make output read only?

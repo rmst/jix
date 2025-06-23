@@ -22,6 +22,7 @@ export const updateHosts = (hosts) => {
 
 export const loadHosts = () => {
   let hosts = JSON.parse(fs.readFileSync(`${LOCAL_NUX_PATH}/hosts.json`, 'utf8'));
+  // console.log("LOAD HOSTS", hosts)
   context.hosts = hosts;
 };
 
@@ -97,7 +98,7 @@ const install = (hashes, ignoreErrors=false) => {
     try {
       let x = util.fileRead(`${LOCAL_STORE_PATH}/${hash}`)
     
-      var {install = null, build = null, host, user} = JSON.parse(x)
+      var {install = null, build = null, host, user, debug={}} = JSON.parse(x)
 
       if(build) {
         // check if the out file exists (works both locally and over ssh)
@@ -113,14 +114,29 @@ const install = (hashes, ignoreErrors=false) => {
         if(!exists) {
           var [f, ...args] = build
           let cmd = actions[f](...args, hash)
-          executeCmd(cmd, host, user)
+
+          try {
+            executeCmd(cmd, host, user)
+          } catch (e) {
+            if(debug.stack)
+              // TODO: this try/catch and the debug property itself is a massive hack, the displayed stack trace 
+              console.log(`DEBUG Stack trace for effect defined ${debug.date}:\n`, debug.stack)
+            throw e
+          }
         }
       }
       
       if(install) {
         var [f, ...args] = install
         let cmd = actions[f](...args, hash)
-        executeCmd(cmd, host, user)
+        try {
+          executeCmd(cmd, host, user)
+        } catch (e) {
+          if(debug.stack)
+            // TODO: this try/catch and the debug property itself is a massive hack, the displayed stack trace 
+            console.log(`DEBUG Stack trace for effect defined ${debug.date}:\n`, debug.stack)
+          throw e
+        }
       }
 
       successfulHashes.push(hash)
@@ -139,32 +155,45 @@ const install = (hashes, ignoreErrors=false) => {
 }
 
 
-export const install_raw = async (sourcePath, name="default", nuxId=null) => {
+export const install_raw = async ({
+  sourcePath = null, 
+  // name="default", 
+  nuxId = null
+}) => {
   // console.log("install-raw")
 
-  nuxId = nuxId ?? name
+
+  // TODO: UPDATE HOSTS if the path is hosts.nux.js or sth
+  // let hosts = (await import(`${util.dirname(sourcePath)}/hosts.js`)).default
+  // if(hosts)
+  //   updateHosts(hosts)
   
+  loadHosts()
+
+
+  let module
+
+  if(nuxId === null) {
+    module = await import(sourcePath)
+    nuxId = module.ID
+  }
+
+
   let current_path = `${LOCAL_NUX_PATH}/cur-${nuxId}`
-      
+ 
+
   var oldHashes = util.exists(current_path) ? JSON.parse(util.fileRead(current_path)) : []
 
 
   let drvs = nux.target()  // create empty TargetedEffect
 
   if(sourcePath) {
-    
-    let hosts = (await import(`${util.dirname(sourcePath)}/hosts.js`)).default
-    if(hosts)
-      updateHosts(hosts)
-  
-    loadHosts()
 
-    let module = await import(sourcePath)
-
-    let obj = module.default[name]
+    // let obj = module.default[name]
+    let obj = module.default
 
     if(obj === undefined)
-      throw new Error(`${sourcePath} doesn't export "${name}"`)
+      throw new Error(`${sourcePath} is missing "export default ..."`)
 
     else if (obj instanceof Promise)
       drvs = await obj
@@ -212,7 +241,7 @@ export const install_raw = async (sourcePath, name="default", nuxId=null) => {
       ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed:
         ${failedUninstalls.join('\n  ')}
       
-      Uninstall them manually, then delete them from ${current_path} manually or run nux force-remove ${name} '<paste the newline separated hashes here>'
+      Uninstall them manually, then delete them from ${current_path} manually or run nux force-remove ${nuxId} '<paste the newline separated hashes here>'
     `)
   }
 

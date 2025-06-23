@@ -25,7 +25,7 @@ TODO: split into two types of effects:
 
 /**
   @callback TargetFn
-  @param {{host: string, user: string, home: string}} target
+  @param {{host: string, user: string, home: string, os: string}} target
   @returns {EffectProps | Array | Effect | TargetedEffect}
 */
 
@@ -204,11 +204,24 @@ export class TargetedEffect extends AbstractEffect {
     })
 
 
-    this.hash = sha256(JSON.stringify(this.normalize()))
+    this.hash = props.hash ?? sha256(JSON.stringify(this.normalize()))
+
+    // debug information
+    // TODO: this is a massive hack: debug info isn't part of the hash calculation (and shouldn't be) so therefore it will only be captured the first time an effect with a certain hash is defined. It might still be temporarily useful since usually newly defined effects fail (though of course not exclusively).
+    let debugInfo = {
+      debug: {
+        date: (new Date()).toString(),
+        stack: (new Error()).stack,
+      }
+    }
 
     this.serialize = () => {
-      return JSON.stringify(this.normalize())
-        .replaceAll(HASH_PLACEHOLDER, this.hash)
+      return JSON.stringify(
+        {
+          ...this.normalize(),
+          ...debugInfo,
+        }
+      ).replaceAll(HASH_PLACEHOLDER, this.hash)
     }
 
     let outPath = `${tgt.home}/${NUX_DIR}/out/${this.hash}`

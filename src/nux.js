@@ -2,10 +2,8 @@
 // see ./api/ for implementations
 // see ../nlib for more implementations that eventually should make their way into ./api/
 
-import * as os from 'os';
 import { sh, dirname, dedent } from './util.js'
 
-import * as fs from './node/fs.js';
 // import { createHash } from './shaNext.js';
 import { TargetedEffect, Effect } from './effect.js';
 import { AbstractEffect } from "./effectUtil.js";
@@ -22,7 +20,7 @@ let nux = {
   
   dedent,
   dirname,
-  sh,
+  // sh,
 
   nixosConfig,
 
