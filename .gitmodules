@@ -4,3 +4,4 @@
 [submodule "quickjs-x"]
 	path = quickjs-x
 	url = ../quickjs-x
+	ignore = dirty
