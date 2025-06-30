@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+
 import * as std from 'std';
 import * as os from 'os';
 import { dedent } from '../nux/dedent';
@@ -83,109 +85,12 @@ export const mkdir = (path, ignoreExists=false) => {
 }
 
 
-export const withCwd = (cwd, f) => {
-	let oldCwd = os.getcwd()[0]
-	os.chdir(cwd)
-	let result = f()
-	os.chdir(oldCwd)
-	return result
+export const sh = (...args) => {
+	let command = dedent(...args)
+	return execFileSync("/bin/sh", ["-c", command])
 }
 
-export const withEnv = (env, f) => {
-	let oldEnv = std.getenviron()
-	setEnv(env)
-	let result = f()
-	setEnv(oldEnv)
-	return result
-}
-
-export const getEnv = std.getenviron
-
-export const setEnv = (env) => {
-	Object.keys(std.getenviron()).map(k => std.unsetenv(k))
-	Object.keys(env).map(k => std.setenv(k, env[k]))
-}
-
-// export const system = (...command) => {
-//     // TODO: delete
-//     // Join the command and its arguments into a single string
-//     const commandWithArgs = command.join(' ');
-		
-//     let error = {}
-
-//     // Open the command for reading
-//     let process = std.popen(commandWithArgs, "r", error);
-//     xw
-
-//     // Read the output
-//     let output = process.readAsString();
-
-//     // Close the process
-//     process.close();
-
-//     if(error.errno != 0)
-//       throw Error(`Error: ${error.errno}, Output: ${output}`)
-
-
-//     return output;
-// }
-
-
-
-// TODO: this code has been moved to node/child_process.js execSync, replace this function with a call to that
-export const execShFunction = ({verbose=false, env={}, cwd=null}) => (template, ...args) => {
-	let cmd = dedent(template, ...args)
-
-	// make everything fail if one command fails, TODO: is this a good default?
-	// redirect stderr to stdout
-
-	// TODO: this is a hack, we don't escape env values properly
-	let envSetup = Object.entries(env).map(([k, v]) => `export ${k}="${v}"`).join("\n")
-	let cwdSetup = cwd ? `cd '${cwd}'` : ""
-
-	let wrappedCmd = dedent`
-		{
-			set -e
-			${envSetup}
-			${cwdSetup}
-			${cmd}
-		} 2>&1
-	`
-
-	let process = std.popen(wrappedCmd, "r")
-	// let output = process.readAsString().trim()
-	let output = ""
-
-	while (true) {
-		let line = process.getline()
-		if (line === null) {
-			break;
-		}
-		output = output + line + '\n'
-		// Print the line, getline() does not include the trailing line feed
-		if (verbose)
-			console.log(line)
-	}
-
-
-	let code = process.close()
-
-	if(code != 0) {
-		throw Error(dedent`
-			Command:
-			${cmd}
-			failed with error code ${code}. Output:
-			${verbose ? "see above" : output}
-		`)
-	}
-
-	return output
-}
-
-
-
-export const sh = execShFunction({verbose: false})
-export const shVerbose = execShFunction({verbose: true})
+export const shVerbose = sh
 
 
 export const time = () => {
@@ -226,18 +131,6 @@ function toStr(x) {
 }
 
 
-
-// TODO: this should be part of the JS engine
-export const monkeyPatchConsoleLog = () => {
-	// TODO: maybe patch globalThis.console ?
-	console.log_old = console.log
-	console.log = (...args) => {
-		args = args.map(x => toStr(x))
-		console.log_old(...args)
-	}
-	return console
-}
-
 export const monkeyPatchObjectToString = () => {
 	Object.prototype.toString = function() {
 		if (this === null) return '[object Null]';
@@ -273,7 +166,6 @@ export const monkeyPatchObjectToString = () => {
 
 }
 
-
 export function basename(path) {
 	if (typeof path !== 'string' || path.length === 0) return '';
 	
@@ -286,7 +178,6 @@ export function basename(path) {
 	const lastSlashIndex = path.lastIndexOf('/');
 	return lastSlashIndex === -1 ? path : path.slice(lastSlashIndex + 1);
 }
-
 
 
 
