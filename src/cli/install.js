@@ -3,13 +3,15 @@ import process from 'node:process';
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 
+import nux from 'nux'
+import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "../nux/context.js";
+import context from '../nux/context.js';
+import { effect, TargetedEffect, Effect } from '../nux/effect.js';
+import { dedent } from '../nux/dedent.js';
+
 import * as util from './util.js'
-import { dedent } from './util.js'
-import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "./context.js";
-import nux from './nux.js'
 import * as actions from './actions.js'
-import context from './context.js';
-import { effect, TargetedEffect, Effect } from './effect.js';
+
 
 export const updateHosts = (hosts) => {
   fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8');
@@ -57,7 +59,7 @@ const uninstall = (hashes) => {
   reversedHashes.reverse()
 
   let stats = reversedHashes.map(hash => {
-    let x = util.fileRead(`${LOCAL_STORE_PATH}/${hash}`)
+    let x = fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8')
 
     let {uninstall=null, host, user} = JSON.parse(x)
 
@@ -92,7 +94,7 @@ const install = (hashes, ignoreErrors=false) => {
 
   for (const hash of hashes) {
     try {
-      let x = util.fileRead(`${LOCAL_STORE_PATH}/${hash}`)
+      let x = fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8')
     
       var {install = null, build = null, host, user, debug={}} = JSON.parse(x)
 
@@ -178,7 +180,7 @@ export const install_raw = async ({
   let current_path = `${LOCAL_NUX_PATH}/cur-${nuxId}`
  
 
-  var oldHashes = util.exists(current_path) ? JSON.parse(util.fileRead(current_path)) : []
+  var oldHashes = util.exists(current_path) ? JSON.parse(fs.readFileSync(current_path, 'utf8')) : []
 
 
   let drvs = nux.target()  // create empty TargetedEffect

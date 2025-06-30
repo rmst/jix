@@ -1,19 +1,17 @@
 // This is the root of the nux API
-// see ./api/ for implementations
-// see ../nlib for more implementations that eventually should make their way into ./api/
 
-import { sh, dirname, dedent } from './util.js'
+import { dirname } from './util.js';
+import { dedent } from './dedent.js';
 
-// import { createHash } from './shaNext.js';
 import { TargetedEffect, Effect } from './effect.js';
 import { AbstractEffect } from "./effectUtil.js";
 
 import context, { HOME_PLACEHOLDER, NUX_DIR } from './context.js';
-import base from './api/base.js'
-import macos from './api/macos.js'
-import { nixosConfig } from './api/nixosConfig.js';
-import db from './api/db.js';
-import { loadRepo } from './api/repo.js'
+import base from './base.js'
+import macos from './macos.js'
+import { nixosConfig } from './nixosConfig.js';
+import db from './db.js';
+import { loadRepo } from './repo.js'
 
 let nux = {
   loadRepo,

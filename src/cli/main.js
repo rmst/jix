@@ -3,19 +3,17 @@
 import process from 'node:process'
 import * as fs from 'node:fs';
 
+// import nux from 'nux'
+import { LOCAL_BIN_PATH, TMP_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH } from "../nux/context.js";
+import * as dirnameJs from '../nux/util.js';
+import context from "../nux/context.js"
+
 import * as util from './util.js'
 // util.monkeyPatchConsoleLog()
 util.monkeyPatchObjectToString()
 
-import { dedent, sh, shVerbose } from './util.js'
-import { LOCAL_BIN_PATH, TMP_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH } from "./context.js";
-import context from "./context.js"
+import { sh, shVerbose } from './util.js'
 import { install_raw } from './install.js';
-
-// import nux from './nux.js'
-
-
-
 
 
 // UTILS
@@ -134,7 +132,7 @@ const install = async (path) => {
 
   if(!exportsID(path)) {
     // let id = util.uuidV4()
-    let id = util.basename(util.dirname(path))
+    let id = util.basename(dirnameJs.dirname(path))
     console.log(`new path assigning ID ${id}`)
     sh`echo '\n\n\nexport const ID = "${id}"' >> "${path}"`
   }

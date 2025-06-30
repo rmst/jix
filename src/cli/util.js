@@ -1,5 +1,6 @@
 import * as std from 'std';
 import * as os from 'os';
+import { dedent } from '../nux/dedent';
 
 // TODO: move away from these functions towards the node/fs functions
 
@@ -39,6 +40,7 @@ export const fileWrite = (path, content) => {
 // }
 
 // Function to read content from a file
+// TODO: delete this, it's unused
 export const fileRead = (path) => {
 	const file = std.open(path, 'r');
 	if (!file) {
@@ -59,52 +61,6 @@ export const dirRead = (path) => {
 
 	return files
 }
-
-
-export function traverseFileSystem(rootPath, ignore='') {
-	// Recursive function to traverse the file system
-
-	ignore = dedent(ignore).split('\n')
-
-	let dirs = [];
-	let files = [];
-
-	// Inner function to handle recursion
-	function traverse(currentPath) {
-		let entries = dirRead(currentPath)
-
-		entries.forEach(entry => {
-				
-			let fullPath = currentPath + "/" + entry
-			let [stat, err] = os.stat(fullPath)  // os.stat follows symlinks (as opposed to os.lstat)
-			if(err)
-				throw new Error(`Unable to stat ${fullPath}`)
-
-			let relativePath = fullPath.substring((rootPath + "/").length);
-
-			let isDir = stat.mode & 0o040000   // directory
-			let isFile = stat.mode & 0o100000  // fegular file
-
-			if([".", "..", ".DS_Store"].includes(entry) || ignore.includes(relativePath)) {
-				// console.log("ignoring", relativePath)
-				// TODO: maybe support .gitignore directly?
-				return
-			}
-
-			if (isDir) { 
-				dirs.push(relativePath)
-				// console.log(fullPath)
-				traverse(fullPath)
-			} else if (isFile) {  
-				files.push(relativePath)
-			}
-		});
-	}
-
-	traverse(rootPath);
-	return { dirs, files };
-}
-
 
 
 export const fileDelete = (path, ignoreNonexisting=false) => {
@@ -238,60 +194,6 @@ export const time = () => {
 
 
 
-export const dedent = (templateStrings, ...values) => {
-	// https://github.com/MartinKolarik/dedent-js/blob/master/src/index.ts
-	// TODO: simplify
-	// TODO: allow for properly indented multiline values
-
-	// TODO: we have to be careful with raw because it doesn't seem to escape anything, e.g. \` will be \` and not `, I don't remember why we're even doing this...
-	templateStrings = templateStrings.raw ?? templateStrings
-
-	let matches = [];
-	let strings = typeof templateStrings === 'string' ? [ templateStrings ] : templateStrings.slice();
-
-
-	// TODO: maybe just do this for shell/bash?
-	strings = strings.map(x => x.replaceAll(String.raw`\$`, "$"))
-	strings = strings.map(x => x.replaceAll(String.raw`\``, "`"))
-
-
-	// 1. Remove trailing whitespace.
-	strings[strings.length - 1] = strings[strings.length - 1].replace(/\r?\n([\t ]*)$/, '');
-
-	// 2. Find all line breaks to determine the highest common indentation level.
-	for (let i = 0; i < strings.length; i++) {
-		let match;
-
-		if (match = strings[i].match(/\n[\t ]+/g)) {
-			matches.push(...match);
-		}
-	}
-
-	// 3. Remove the common indentation from all strings.
-	if (matches.length) {
-		let size = Math.min(...matches.map(value => value.length - 1));
-		let pattern = new RegExp(`\n[\t ]{${size}}`, 'g');
-
-		for (let i = 0; i < strings.length; i++) {
-			strings[i] = strings[i].replace(pattern, '\n');
-		}
-	}
-
-	// 4. Remove leading whitespace.
-	strings[0] = strings[0].replace(/^\r?\n/, '');
-
-	// 5. Perform interpolation.
-	let string = strings[0];
-
-	for (let i = 0; i < values.length; i++) {
-		string += values[i] + strings[i + 1];
-	}
-
-	return string;
-}
-
-
-
 // TODO: this should be part of the JS engine
 function toStr(x) {
 	// Handle null and undefined
@@ -369,29 +271,6 @@ export const monkeyPatchObjectToString = () => {
 		}).join(', ')}]`;
 };
 
-}
-
-
-// export const getRandomString = (len) => Array.from({ length: len }, () => 
-//     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-//     .charAt(Math.floor(Math.random() * 62))
-// ).join('');
-
-
-
-/**
-	gets the path of the directory for a file path or url, works with e.g.
-	```
-	dirname(import.meta.url)
-	```
- */
-export function dirname(path) {
-	const isFileURL = path.startsWith('file://');
-	if (isFileURL) path = path.slice(7); // Remove 'file://' prefix
-	if (path.endsWith('/')) path = path.slice(0, -1); // Handle trailing slash
-	const parts = path.split('/');
-	parts.pop(); // Remove the last segment (assumed to be file or empty)
-	return parts.join('/') || '/';
 }
 
 

@@ -1,7 +1,7 @@
 import { HOME_PLACEHOLDER, HASH_PLACEHOLDER } from './context.js';
 import { NUX_DIR, LOCAL_USER } from './context.js';
 import { AbstractEffect, userHome } from './effectUtil.js';
-import { dedent } from './util.js';
+import { dedent } from './dedent.js';
 
 export const effectPlaceholderMap = new Map()
 

@@ -1,6 +1,5 @@
-import * as util from './util.js'
-import { dedent, sh, shVerbose, execShFunction } from './util.js'
-import { NUX_DIR } from './context.js';
+import { dedent } from '../nux/dedent.js';
+import { NUX_DIR } from '../nux/context.js';
 
 const exx = (cmd, ...args) => {
 	// execFileSync(cmd, args)
@@ -59,7 +58,7 @@ export const noop = () => null
 export const buildV6 = (script, hash) => {
 	// TODO: make output files read only
 
-	let extraLines = util.dedent`
+	let extraLines = dedent`
 		set -e  # error script if single command fails
 		set -o pipefail  # error on piped command fails
 		set -u  # error on unset variables

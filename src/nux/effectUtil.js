@@ -1,4 +1,4 @@
-import { symlink, link, copyFile } from './api/base.js';
+import { symlink, link, copyFile } from './base.js';
 import { LOCAL_HOME, MAGIC_STRING } from './context.js';
 import { effectPlaceholderMap } from './effect.js';
 

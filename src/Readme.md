@@ -1,2 +1,0 @@
-
-TODO: index.js symlink is there so that we can link the nux library from other places in node_modules. It's only needed because the main file is named nux.js and not index.js. We should probably move nux.js into api and name it index.js. And maybe we should make the api dir its own git repo.

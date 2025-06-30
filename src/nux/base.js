@@ -1,9 +1,10 @@
-import * as util from '../util.js';
-import { NUX_DIR, HASH_PLACEHOLDER } from '../context.js';
-import { parseEffectValues, effect, target } from '../effect.js';
+import * as fs from 'node:fs';
 
-import { dedent } from '../util.js';
-import context from '../context.js';
+import { NUX_DIR, HASH_PLACEHOLDER } from './context.js';
+import { parseEffectValues, effect, target } from './effect.js';
+
+import { dedent } from './dedent.js';
+import context from './context.js';
 
 // export { effect as effect } from './effect.js';
 
@@ -21,7 +22,7 @@ export const HASH = HASH_PLACEHOLDER
 
 
 export const importFile = (origin, mode='-w') => {
-  let content = util.fileRead(origin)
+  let content = fs.readFileSync(origin, 'utf8')
   return writeFile(mode)`${content}`
 }
 
@@ -35,7 +36,7 @@ export const copy = (origin, path, mode = '-w') => {
   // TODO: make permissions work
   // TODO: use importFile
   // TODO: is this even use, delete
-  let content = util.fileRead(origin);
+  let content = fs.readFileSync(origin, 'utf8');
   return link(writeFile(mode)(content), path)
 };
 
@@ -86,7 +87,7 @@ export const alias = (mapping) => {
   @param {{install?: string, uninstall?: string, dependencies?: Array, path?: string, str?: string}} obj
 */
 export const run = ({install=null, uninstall=null, ...other}) => {
-  let extraLines = util.dedent`
+  let extraLines = dedent`
     set -e  # error script if single command fails
     set -o pipefail  # error on piped command fails
     set -u  # error on unset variables
@@ -141,7 +142,7 @@ export const scriptWithTempdir = (...args) => {
 export const str = (templateStrings, ...rawValues) => effect( target => {
 
   let { values, dependencies } = parseEffectValues(target, rawValues)
-  let text = util.dedent(templateStrings, ...values)
+  let text = dedent(templateStrings, ...values)
 
   return {
     str: text,
@@ -153,7 +154,7 @@ export const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
   return effect( target => {
     // TODO: shouldn't we use the str function here?
     var { values, dependencies } = parseEffectValues(target, rawValues)
-    let text = util.dedent(templateStrings, ...values)
+    let text = dedent(templateStrings, ...values)
 
     return {
       build: ["writeOutFileV2", text, mode],

@@ -1,9 +1,10 @@
-import * as util from '../util.js';
-import { effect } from '../effect.js';
-import base from './base.js';
-import { mkdirRemote } from '../nux.js';
+// TODO: Is any of this used at all?
 
-// TODO: is this used at all???
+import { traverseFileSystem } from './traverseFileSystem.js';
+import { effect } from './effect.js';
+import base from './base.js';
+import { mkdirRemote } from '.nux';
+
 
 
 export const sshSyncDir = (root, host, destination, ignore = "") => {
@@ -16,7 +17,7 @@ export const sshSyncDir = (root, host, destination, ignore = "") => {
         ControlPath ~/.ssh/master-socket/%r@%h:%p
  
   */
-  let { dirs, files } = util.traverseFileSystem(root, ignore);
+  let { dirs, files } = traverseFileSystem(root, ignore);
 
   // dirs and files are paths relative to root
   dirs.sort();

@@ -1,8 +1,8 @@
-import * as std from 'std';
+import process from 'node:process';
 
 export const NUX_DIR = '.nux'  // relative to the user home
-export const LOCAL_HOME = std.getenv('HOME')
-export const LOCAL_USER = std.getenv('USER')
+export const LOCAL_HOME = process.env.HOME
+export const LOCAL_USER = process.env.USER
 export const LOCAL_NUX_PATH = `${LOCAL_HOME}/${NUX_DIR}`;  // local path
 export const TMP_PATH = `${LOCAL_NUX_PATH}/tmp`;
 export const LOCAL_BIN_PATH = `${LOCAL_NUX_PATH}/bin`;

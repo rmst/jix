@@ -1,13 +1,14 @@
 all: bin/nux
 
 
-bin/nux: src/*
+bin/nux: src/cli/* src/nux/*
 	mkdir -p bin
 	rm -rf bin/modules
 	mkdir -p bin/modules
 	cp -R quickjs-x/node bin/modules/node
-	cp -R src bin/modules/nux
-	quickjs-x/qjsx-compile bin/nux bin/modules '--unhandled-rejection %/nux/main.js'
+	cp -R src/nux bin/modules/nux
+	cp -R src/cli bin/modules/nux-cli
+	quickjs-x/qjsx-compile bin/nux bin/modules '--unhandled-rejection %/nux-cli/main.js'
 
 install: bin/nux
 	mkdir -p "${HOME}"/.nux/nux

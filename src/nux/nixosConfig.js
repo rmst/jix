@@ -1,9 +1,10 @@
 
+import * as fs from 'node:fs'
 import { createHash } from 'node:crypto';
 
-import * as util from '../util.js';
-import { dedent } from '../util.js';
-import { effect } from '../effect.js';
+import * as traverseFileSystemJs from './traverseFileSystem.js';
+import { dedent } from './dedent.js';
+import { effect } from './effect.js';
 import base from './base.js';
 
 
@@ -51,12 +52,12 @@ export const nixosConfig = (host, configPath) => effect(target => {
   // TODO: move this function to a separate file / directory
   // TODO: use sshSyncDir instead??
   // TODO: should this be root protected?
-  let { dirs, files } = util.traverseFileSystem(configPath);
+  let { dirs, files } = traverseFileSystemJs.traverseFileSystem(configPath);
 
   dirs.sort();
   files.sort();
 
-  let contents = files.map(f => [f, util.fileRead(configPath + '/' + f)]);
+  let contents = files.map(f => [f, fs.readFileSync(configPath + '/' + f, 'utf8')]);
 
   let hash = createHash('sha256')
     .update(JSON.stringify([dirs, contents]))

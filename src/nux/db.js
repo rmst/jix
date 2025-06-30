@@ -1,7 +1,7 @@
 
 import base from "./base.js";
-import { dedent } from "../util.js";
-import { NUX_DIR } from "../context.js";
+import { dedent } from './dedent.js';
+import { NUX_DIR } from "./context.js";
 
 const stateDir = (id, owner=null) => base.effect(target => {
 

@@ -1,10 +1,8 @@
-// import * as std from 'std';
-// import * as os from 'os';
-// import * as util from './util.js'
-import { dedent } from '../util.js'
+
+import { dedent } from './dedent.js';
 import * as base from './base.js'
-import { effect } from '../effect.js';
-import context from '../context.js';
+import { effect } from './effect.js';
+import context from './context.js';
 
 
 const timeout_script = base.script`
