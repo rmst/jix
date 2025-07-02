@@ -1,23 +1,22 @@
 // This is the root of the nux API
 
-import { dirname } from './util.js';
-import { dedent } from './dedent.js';
+// import { dirname } from './util.js';
+// import { dedent } from './dedent.js';
 
 import { TargetedEffect, Effect } from './effect.js';
 import { AbstractEffect } from "./effectUtil.js";
 
 import context, { HOME_PLACEHOLDER, NUX_DIR } from './context.js';
 import base from './base.js'
-import macos from './macos.js'
+import macos from './macos'
 import { nixosConfig } from './nixosConfig.js';
 import db from './db.js';
 import { loadRepo } from './repo.js'
+import shelltools from './shelltools/index.js';
 
 let nux = {
   loadRepo,
   
-  dedent,
-  dirname,
   // sh,
 
   nixosConfig,
@@ -27,6 +26,7 @@ let nux = {
   AbstractEffect,
 
   ...base,
+  shelltools,
   ...macos,
 
   ...db,

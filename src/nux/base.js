@@ -5,6 +5,7 @@ import { parseEffectValues, effect, target } from './effect.js';
 
 import { dedent } from './dedent.js';
 import context from './context.js';
+import { dirname } from './util.js';
 
 // export { effect as effect } from './effect.js';
 
@@ -228,6 +229,9 @@ export const build = (templateStrings, ...values) => {
 
 
 let base = {
+  dirname,
+  dedent,
+
   effect,
   target,
 

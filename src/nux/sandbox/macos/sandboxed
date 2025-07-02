@@ -1,0 +1,117 @@
+#!/bin/bash
+#
+# sandboxed: A flexible wrapper for sandbox-exec on macOS.
+#
+# Secure by default: runs with a minimal profile and a clean environment.
+# Use flags to relax constraints and add capabilities.
+
+# Exit on error, on unset variable, and fail pipe if any command fails.
+set -euo pipefail
+
+usage() {
+	cat <<EOF >&2
+Usage: $(basename $0) [options] -- <command> [args...]
+
+A wrapper to run a command in a custom macOS sandbox.
+
+Options:
+  -p, --profile <rules>    A string of additional sandbox profile rules.
+  -e, --env <KEY=val>      Set a specific environment variable in the clean
+                           environment. Can be used multiple times.
+  --system-profile         Import Apple's permissive 'system.sb' profile.
+                           (Needed for networking, IPC, and GUI apps).
+  --inherit-env            Inherit the parent environment. Overrides -e.
+                           (Less secure; use with caution).
+  -h, --help               Show this help message.
+
+Example (allow curl with a specific HTTP proxy):
+  $(basename $0) --system-profile -p '(allow network-outbound)' \\
+     -e https_proxy=http://127.0.0.1:8080 -- /usr/bin/curl https://example.com
+EOF
+	exit 1
+}
+
+# --- Default Settings (Secure by Default) ---
+USE_SYSTEM_PROFILE=0
+INHERIT_ENV=0
+USER_PROFILE=""
+# Use a bash array to collect environment variables
+ENV_VARS=()
+
+# --- Parse Options ---
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		-p|--profile)
+			if [ "$#" -lt 2 ]; then echo "Error: '$1' requires an argument." >&2; usage; fi
+			USER_PROFILE="$2"
+			shift 2
+			;;
+		-e|--env)
+			if [ "$#" -lt 2 ]; then echo "Error: '$1' requires an argument." >&2; usage; fi
+			if [[ "$2" != *"="* ]]; then echo "Error: Argument for -e/--env must be in KEY=value format." >&2; usage; fi
+			ENV_VARS+=("$2")
+			shift 2
+			;;
+		--system-profile)
+			USE_SYSTEM_PROFILE=1
+			shift
+			;;
+		--inherit-env)
+			INHERIT_ENV=1
+			shift
+			;;
+		-h|--help)
+			usage
+			;;
+		--)
+			shift # Discard the '--'
+			break # Stop option processing
+			;;
+		-*)
+			echo "Error: Unknown option '$1'" >&2
+			usage
+			;;
+		*)
+			# Reached the command without a '--' separator.
+			break
+			;;
+	esac
+done
+
+# --- Validate Command ---
+if [ "$#" -eq 0 ]; then
+	echo "Error: No command provided." >&2
+	usage
+fi
+CMD_PATH="$1"
+
+# --- Build Sandbox Profile ---
+PROFILE_BASE="(version 1)(deny default)(allow process-exec (literal \"$CMD_PATH\"))"
+SYSTEM_PART=""
+
+if [ "$USE_SYSTEM_PROFILE" -eq 1 ]; then
+	# Allow reading system libraries and certs, which is what system.sb helps with.
+	SYSTEM_PART='(import "system.sb")(allow file-read-data (literal "/etc/ssl/cert.pem"))'
+fi
+
+FINAL_PROFILE="$PROFILE_BASE $SYSTEM_PART $USER_PROFILE"
+
+# --- Execute Command ---
+if [ "$INHERIT_ENV" -eq 1 ]; then
+	# Inherit environment (less secure).
+	# Note: --inherit-env takes precedence over -e flags.
+	exec sandbox-exec -p "$FINAL_PROFILE" "$@"
+else
+	# Use a clean, sanitized environment, adding user-specified variables.
+	# The "${ENV_VARS[@]}" syntax correctly handles spaces in values.
+	exec env -i \
+		PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+		HOME="${HOME:-/var/empty}" \
+		TERM="${TERM:-dumb}" \
+		USER="${USER:-unknown}" \
+		LOGNAME="${LOGNAME:-$USER}" \
+		TMPDIR="/private/var/tmp" \
+		LANG="${LANG:-C.UTF-8}" \
+		"${ENV_VARS[@]+"${ENV_VARS[@]}"}" \
+		sandbox-exec -p "$FINAL_PROFILE" "$@"
+fi

@@ -3,7 +3,18 @@
 Declarative system configurations using Javascript
 
 
-### Build
+
+### Usage
+
+`nux apply __nux__.js`
+
+
+#### Cluster management
+One use case for nux is to manage one or more machines based on a single git repository containing .js files describing the desired state of those machines.
+
+
+
+### Building
 
 ```bash
 git clone --recurse-submodules $PATH_TO_THIS_REPO
