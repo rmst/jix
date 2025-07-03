@@ -18,13 +18,13 @@ BUG: implement garbage collection for unreferenced effects json files, currently
 
 ### Improvements
 
+cli - quality-of-life: Create nux init, to create nux_modules dir, add nux_modules dir to jsConfig.json, and maybe more
 
-
-Protect against simultaneous nux installs (i.e. implement locking or sth)
+cli: Protect against simultaneous nux installs (i.e. implement locking or sth)
 
 Add tests (which could double as examples)
 
-If nux i doesn't find an install path, i.e. we're looking at a nux library file, instead of failing, maybe check all the installed nux roots if they would be affected by the library change. This could be done either via static import analysis or by actually running all nux roots (since they should be side-effect free)
+cli: if nux install doesn't find an install path, i.e. we're looking at a nux library file, instead of failing, maybe check all the installed nux roots if they would be affected by the library change. This could be done either via static import analysis or by actually running all nux roots (since they should be side-effect free)
 
 nux should be embeddable into other applications and support completely contained operation with custom state directories, i.e. it should never hardcode stuff like `~/.nux`
 

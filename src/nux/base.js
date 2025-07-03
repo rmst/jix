@@ -7,16 +7,6 @@ import { dedent } from './dedent.js';
 import context from './context.js';
 import { dirname } from './util.js';
 
-// export { effect as effect } from './effect.js';
-
-// -----
-
-// export const HOME = util.getEnv().HOME  // TODO: switch to node API
-// export const NUX_PATH = NUX_PATH
-
-// ----- OLD SYSTEM ----
-// TODO: get rid of this at some point
-
 
 export const HASH = HASH_PLACEHOLDER
 
@@ -234,14 +224,10 @@ let base = {
 
   effect,
   target,
-
-  // HOME,
-  // NUX_PATH,
   
   importFile,
   importScript,
   copy,
-  // importScript,
 
   link,
   symlink,

@@ -1,9 +1,6 @@
 
-import { dedent } from '../dedent.js';
-import * as nux from '../base.js'
-import { effect } from '../effect.js';
-import context from '../context.js';
-import { launchdJob } from './launchd.js';
+import nux from '../base.js'
+import { launchdJob, jobsDir } from './launchd.js';
 
 
 const timeout_script = nux.script`
@@ -16,7 +13,7 @@ export const macosUtilScripts = nux.alias({
   nj: nux.script`launchctl list | grep com.nux.`,
   njl: nux.script`
     #!/bin/bash
-    less +G ${context.NUX_PATH}/logs/$1
+    less +G ${jobsDir}/logs/$1
   `,
   // TODO: verify that the path is always gui/501
   nji: nux.script`
@@ -25,10 +22,10 @@ export const macosUtilScripts = nux.alias({
   `,
   njs: nux.script`
     #!/bin/bash
-    less +G ${context.NUX_PATH}/status/$1  # display the end of the log
+    less +G ${jobsDir}/status/$1  # display the end of the log
   `,
   njopen: nux.script`
-    open ${context.HOME}/Library/LaunchAgents
+    open ~/Library/LaunchAgents
   `
 })
 

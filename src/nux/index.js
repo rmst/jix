@@ -6,9 +6,9 @@
 import { TargetedEffect, Effect } from './effect.js';
 import { AbstractEffect } from "./effectUtil.js";
 
-import context, { HOME_PLACEHOLDER, NUX_DIR } from './context.js';
+import { HOME_PLACEHOLDER, NUX_DIR } from './context.js';
 import base from './base.js'
-import macos from './macos'
+import macos from './macos/index.js'
 import { nixosConfig } from './nixosConfig.js';
 import db from './db.js';
 import { loadRepo } from './repo.js'
@@ -17,8 +17,6 @@ import shelltools from './shelltools/index.js';
 let nux = {
   loadRepo,
   
-  // sh,
-
   nixosConfig,
 
   Effect,
@@ -26,20 +24,16 @@ let nux = {
   AbstractEffect,
 
   ...base,
+
   shelltools,
+
   ...macos,
 
   ...db,
   
-  get REPO() { return context.repo },
-
-  // get HOME() { return context.HOME },
   HOME: HOME_PLACEHOLDER,
-  // get USER() { return context.user },
-  NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,
-  // scope: context.scope,
-  // remote: context.remote,
-  // context,  // TODO: remove
+  NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,  // TODO: this should be independent of the user home
+
 }
 
 

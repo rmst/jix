@@ -1,10 +1,13 @@
 import context from "../context"
 import nux from "../base"
+import db from "nux/db"
 
 const timeout_script = nux.script`
 	#!/usr/bin/env perl
 	alarm shift; exec @ARGV;
 `
+
+export const jobsDir = db.stateDir("nux.jobs")
 
 /**
 	to see the logs: log show --predicate 'senderImagePath CONTAINS "test"' --info
@@ -47,7 +50,7 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
 	let label = `com.nux.${name}`
 	let wpath = `${context.BIN_PATH}/nux_job_${name}`
 	let ppath = `${context.HOME}/Library/LaunchAgents/${label}.plist`
-	let logpath = `${context.NUX_PATH}/logs/${name}`
+	let logpath = `${jobsDir}/logs/${name}`
 
 	let timeout_cmd = timeout == null ? "" : `${timeout_script} ${timeout}`  
 
@@ -62,9 +65,9 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
 			done
 		}
 
-		mkdir -p "${context.NUX_PATH}/status"
+		mkdir -p "${jobsDir}/status"
 
-		echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,start" >> "${context.NUX_PATH}/status/${name}"
+		echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,start" >> "${jobsDir}/status/${name}"
 
 
 		set -o pipefail  # if any of the pipe's process fail output a non-zero exit code 
@@ -73,9 +76,9 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
 		{ ${timeout_cmd} "${runscript}" 2>&1 ; } | add_timestamp
 
 		exitcode=$?
-		echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,stop,$exitcode" >> "${context.NUX_PATH}/status/${name}"
+		echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,stop,$exitcode" >> "${jobsDir}/status/${name}"
 	`
-		.symlinkTo(wpath)
+	.symlinkTo(wpath)
 
 	let plist = nux.textfile`
 		<?xml version="1.0" encoding="UTF-8"?>
@@ -99,6 +102,7 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
 		</plist>
 	`
 		.symlinkTo(ppath)
+
 
 	let TARGET = "gui/$(id -u)"
 	// let TARGET = "user/$(id -u)"

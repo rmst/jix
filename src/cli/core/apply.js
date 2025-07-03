@@ -4,12 +4,12 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 
 import nux from 'nux'
-import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "../nux/context.js";
-import context from '../nux/context.js';
-import { effect, TargetedEffect, Effect } from '../nux/effect.js';
-import { dedent } from '../nux/dedent.js';
+import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "../../nux/context.js";
+import context from '../../nux/context.js';
+import { effect, TargetedEffect, Effect } from '../../nux/effect.js';
+import { dedent } from '../../nux/dedent.js';
 
-import * as util from './util.js'
+import * as util from '../util.js'
 import * as actions from './actions.js'
 
 
@@ -100,6 +100,7 @@ const install = (hashes, ignoreErrors=false) => {
 
       if(build) {
         // check if the out file exists (works both locally and over ssh)
+
         let exists = executeCmd({
           cmd: "/bin/sh", 
           args: ["-c", `[ -e "$HOME/${NUX_DIR}/out/${hash}" ] && echo "y" || echo "n"`],
@@ -107,8 +108,7 @@ const install = (hashes, ignoreErrors=false) => {
       
         exists = (exists === "y")
 
-        // let outPath = `${NUX_PATH}/out/${hash}`  // get rid of NUX_PATH
-        // let exists = util.exists(outPath)  // maybe keep for local check is prob much faster
+        
         if(!exists) {
           var [f, ...args] = build
           let cmd = actions[f](...args, hash)

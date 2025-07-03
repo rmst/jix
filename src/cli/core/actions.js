@@ -1,5 +1,5 @@
-import { dedent } from '../nux/dedent.js';
-import { NUX_DIR } from '../nux/context.js';
+import { dedent } from '../../nux/dedent.js';
+import { NUX_DIR } from '../../nux/context.js';
 
 const exx = (cmd, ...args) => {
 	// execFileSync(cmd, args)
