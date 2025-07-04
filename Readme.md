@@ -41,3 +41,11 @@ Note that quickjs-x only provides a very minimal Node.js standard library shim. 
 
 ### The Effects System
 
+Two main types of effects:
+- pure effects: e.g. built packages and artifacts
+- impure effects: e.g. system configuration
+
+#### Rules and assumptions:
+
+For impure effects ordering must not matter, depending on previous configurations they can be applied in arbitrary order except that dependencies are always applied before (obviously)
+

@@ -10,15 +10,15 @@ Host *
 	ControlPath /master/socket/dir/%r@%h:%p
 ```
 
-BUG: Before we uninstall / install an effect we need to check if another "nux root" is using the same effect!
-
-BUG: implement garbage collection for unreferenced effects json files, currently they just accumulate
+no gc: implement garbage collection for unreferenced effects json files, currently they just accumulate
 
 
 
 ### Improvements
 
-cli - quality-of-life: Create nux init, to create nux_modules dir, add nux_modules dir to jsConfig.json, and maybe more
+store hashes and effects on target device
+
+cli qol: Create nux init, to create nux_modules dir, add nux_modules dir to jsConfig.json, and maybe more
 
 cli: Protect against simultaneous nux installs (i.e. implement locking or sth)
 

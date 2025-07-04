@@ -4,12 +4,12 @@ import process from 'node:process'
 import * as fs from 'node:fs';
 
 // import nux from 'nux'
-import { TMP_PATH, LOCAL_NUX_PATH } from "../nux/context.js";
+import { TMP_PATH, LOCAL_NUX_PATH, EXISTING_HASHES_PATH } from "../nux/context.js";
 
 import * as util from './util.js'
 util.monkeyPatchObjectToString()
 
-import { install_raw } from './core/apply.js';
+import apply from './core/apply.js';
 import { install } from './apply/index.js';
 
 
@@ -23,6 +23,7 @@ const main = async () => {
     let operator = scriptArgs[1]
 
     if(operator === "i"){
+      // TODO: this should be named "apply"
       let path = scriptArgs[2]
       // if(path === "_") {
       //   path = fs.readFileSync(`${LOCAL_NUX_PATH}/last_update_name`, 'utf8')
@@ -32,26 +33,31 @@ const main = async () => {
       return
 
     } else if (operator === "uninstall") {
+      // TODO: this should be named "delete" and ideally remove the reference to the nux root from .nux
       let nuxId = scriptArgs[2]
-      install_raw({nuxId})
+      apply({nuxId})
       return
 
     } else if (operator === "force-remove") {
       let nuxId = scriptArgs[2]
       let drvs = scriptArgs[3]
+
       // Split and trim the input string into lines
       const lines = drvs.split('\n').map(line => line.trim()).filter(line => line !== '');
       // console.log(lines)
-      // Load the existing JSON file
-      const jsonPath = `${LOCAL_NUX_PATH}/cur-${nuxId}`;
-      let jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-      console.log('Before:', jsonData.length, "derivations")
+      let existing = JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, 'utf8'));
+      console.log('Before:', existing.length, "derivations")
 
       // Remove each line from the JSON list
-      jsonData = jsonData.filter(item => !lines.includes(item));
-      console.log('After:', jsonData.length, "derivations")
-      // Save the updated list back to the JSON file
-      fs.writeFileSync(jsonPath, JSON.stringify(jsonData, null, 2), 'utf8');
+      existing = existing.filter(item => !lines.includes(item));
+      console.log('After:', existing.length, "derivations")
+      
+      fs.writeFileSync(
+        EXISTING_HASHES_PATH, 
+        JSON.stringify(existing, null, 2), 
+        'utf8'
+      )
+
     }
 
   }

@@ -5,7 +5,7 @@ import * as dirnameJs from '../../nux/util';
 import * as util from '../util';
 import { sh } from '../util';
 import { git } from './git';
-import { install_raw } from '../core/apply.js';
+import apply from '../core/apply.js';
 import { findNuxRoot, exportsID } from './util.js';
 
 
@@ -46,7 +46,7 @@ export const install = async (path) => {
   let commit = git.latestCommitHash(gitRoot);
   // console.log(`Installing ${path} from ${gitRoot}:${commit}`)
   
-  await install_raw({sourcePath: path})
+  await apply({sourcePath: path})
 }
 
 

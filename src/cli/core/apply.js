@@ -4,19 +4,21 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 
 import nux from 'nux'
-import { LOCAL_NUX_PATH, LOCAL_STORE_PATH, NUX_DIR } from "../../nux/context.js";
+import { ACTIVE_HASHES_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH } from "../../nux/context.js";
 import context from '../../nux/context.js';
 import { effect, TargetedEffect, Effect } from '../../nux/effect.js';
 import { dedent } from '../../nux/dedent.js';
 
 import * as util from '../util.js'
-import * as actions from './actions.js'
+import { tryInstallEffect, tryUninstallEffect } from './installEffect.js';
+import { EXISTING_HASHES_PATH } from '../../nux/context.js';
+import set from './set.js';
 
 
-export const updateHosts = (hosts) => {
-  fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8');
-  loadHosts();
-};
+// export const updateHosts = (hosts) => {
+//   fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8');
+//   loadHosts();
+// };
 
 export const loadHosts = () => {
   let hosts = JSON.parse(fs.readFileSync(`${LOCAL_NUX_PATH}/hosts.json`, 'utf8'));
@@ -25,270 +27,199 @@ export const loadHosts = () => {
 };
 
 
-const setDifference = (a, b) => {
-  a = [...new Set(a)]  // deduplicate
-  b = new Set(b)
-  return a.filter(x => ! b.has(x))
-}
 
-
-const executeCmd = (c, host, user) => {
-  
-  if(c === null)  // noop
-    return
-
-  let options = c.verbose ? { stdout: 'inherit', stderr: 'inherit' } : {}
-  let { cmd, args } = c
-  if(host !== null) {
-    // console.log("RC", host, user)
-    // TODO: add a check here on first ssh connection whether the user home matches context.hosts
-    host = context.hosts?.[host]?.address ?? host
-    args = [cmd, ...args]
-    args = args.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)  // escape all args
-    cmd = "ssh"
-    args = [`${user}@${host}`, "--", ...args]
-  }
-
-  return execFileSync(cmd, args, options)
-}
-
-
-const uninstall = (hashes) => {
-  // use reversed hashed since that's the proper way to clean up co-dependent things
-  let reversedHashes = [...hashes]
-  reversedHashes.reverse()
-
-  let stats = reversedHashes.map(hash => {
-    let x = fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8')
-
-    let {uninstall=null, host, user} = JSON.parse(x)
-
-    if(uninstall) {
-      let [f, ...args] = uninstall
-
-      try {
-        let cmd = actions[f](...args, hash)
-        executeCmd(cmd, host, user)
-
-      } catch (e) {
-        console.log(`Error with ${hash}, ${f}, ${args}:\n${e.message}`)
-        console.log(e.stack)
-        console.log("\n...uninstall continuing...\n")
-        return [hash, e]
-      }
-    }
-
-    return [hash, null]
-  })
-  
-  let errors = stats.filter(([h, e]) => e !== null)
-  let failedHashes = errors.map(([h, e]) => h)
-
-  return failedHashes
-}
-
-
-const install = (hashes, ignoreErrors=false) => {
-  let successfulHashes = []
-
-
-  for (const hash of hashes) {
-    try {
-      let x = fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8')
-    
-      var {install = null, build = null, host, user, debug={}} = JSON.parse(x)
-
-      if(build) {
-        // check if the out file exists (works both locally and over ssh)
-
-        let exists = executeCmd({
-          cmd: "/bin/sh", 
-          args: ["-c", `[ -e "$HOME/${NUX_DIR}/out/${hash}" ] && echo "y" || echo "n"`],
-        }, host, user)
-      
-        exists = (exists === "y")
-
-        
-        if(!exists) {
-          var [f, ...args] = build
-          let cmd = actions[f](...args, hash)
-
-          try {
-            executeCmd(cmd, host, user)
-          } catch (e) {
-            if(debug.stack)
-              // TODO: this try/catch and the debug property itself is a massive hack, the displayed stack trace 
-              console.log(`DEBUG Stack trace for effect defined ${debug.date}:\n`, debug.stack)
-            throw e
-          }
-        }
-      }
-      
-      if(install) {
-        var [f, ...args] = install
-        let cmd = actions[f](...args, hash)
-        try {
-          executeCmd(cmd, host, user)
-        } catch (e) {
-          if(debug.stack)
-            // TODO: this try/catch and the debug property itself is a massive hack, the displayed stack trace 
-            console.log(`DEBUG Stack trace for effect defined ${debug.date}:\n`, debug.stack)
-          throw e
-        }
-      }
-
-      successfulHashes.push(hash)
-
-    } catch (e) {
-      // TODO: return don't print errors
-      console.log(`Error: ${e.message}`)
-      console.log(e.stack)
-
-      if(!ignoreErrors)
-        break
-    }
-  }
-
-  return successfulHashes
-}
-
-
-export const install_raw = async ({
-  sourcePath = null, 
+export default async function apply({
+  sourcePath = null,
   // name="default", 
   nuxId = null
-}) => {
+}) {
   // console.log("install-raw")
-
-
   // TODO: UPDATE HOSTS if the path is hosts.nux.js or sth
   // let hosts = (await import(`${util.dirname(sourcePath)}/hosts.js`)).default
   // if(hosts)
   //   updateHosts(hosts)
-  
-  loadHosts()
+  loadHosts();
 
 
-  let module
+  let module;
 
-  if(nuxId === null) {
-    module = await import(sourcePath)
-    nuxId = module.ID
+  if (nuxId === null) {
+    module = await import(sourcePath);
+    nuxId = module.ID;
   }
 
 
-  let current_path = `${LOCAL_NUX_PATH}/cur-${nuxId}`
- 
 
-  var oldHashes = util.exists(current_path) ? JSON.parse(fs.readFileSync(current_path, 'utf8')) : []
+  let activeHashesById = util.exists(ACTIVE_HASHES_PATH)
+    ? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+    : {};
+
+  let activeHashes = set(Object.values(activeHashesById).flat()).list()
+  
+  let existingHashes = util.exists(EXISTING_HASHES_PATH)
+    ? set(JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, 'utf8'))).list()
+    : [];
 
 
-  let drvs = nux.target()  // create empty TargetedEffect
+  // TODO: IMPORTANT: first we should ensure that there is no difference between activeHashes and existingHashes, and offer interactively to remove them
+  if(activeHashes.length != existingHashes.length) {
+    console.log(dedent`
+      🚨 Warning: active = ${activeHashes.length} != existing = ${existingHashes.length}
+    `)
+    // process.exit(1)
+  }
 
-  if(sourcePath) {
+
+  let drvs = nux.target(); // create empty TargetedEffect
+
+  if (sourcePath) {
 
     // let obj = module.default[name]
-    let obj = module.default
+    let obj = module.default;
 
-    if(obj === undefined)
-      throw new Error(`${sourcePath} is missing "export default ..."`)
+    if (obj === undefined)
+      throw new Error(`${sourcePath} is missing "export default ..."`);
 
     else if (obj instanceof Promise)
-      drvs = await obj
+      drvs = await obj;
 
     else if (typeof obj === 'function')
-      drvs = await obj()
-    
+      drvs = await obj();
+
+
     else
-      drvs = obj
-    
+      drvs = obj;
+
     // console.log(drvs)
-    if (! (drvs instanceof TargetedEffect)) {
+    if (!(drvs instanceof TargetedEffect)) {
       // drvs can e.g be a list of Effects
-      drvs = nux.target(null, drvs)
+      drvs = nux.target(null, drvs);
 
       // console.log(`\n${drvs.toDebugString()}\n`)
     }
   }
 
-  drvs = drvs.flatten()
+  drvs = drvs.flatten();
 
   // write derivations to disk
   drvs.map(d => {
-    let p = `${LOCAL_STORE_PATH}/${d.hash}`
-    if(!util.exists(p))
-      util.fileWrite(p, d.serialize())
-  })
+    let p = `${LOCAL_STORE_PATH}/${d.hash}`;
+    if (!util.exists(p))
+      util.fileWrite(p, d.serialize());
+  });
 
-  let hashes = [...new Set(drvs.map(d => d.hash))]  // deduplicated hashes
+  let desiredForId = set(drvs.map(d => d.hash)).list()
 
+  let activeForId = activeHashesById[nuxId] ?? []
+  let activeOtherThanId = set(Object.values({...activeHashesById, [nuxId]: []}).flat())
 
-  let hashesToUninstall = setDifference(oldHashes, hashes)
-  let hashesToInstall = setDifference(hashes, oldHashes)
+  let hashesToUninstall = set(activeForId)  // "old" effects
+    .intersect(existingHashes)  // only uninstall actually existing
+    .minus(desiredForId) // new effects (shouldn't be removed if they already exist)
+    .minus(activeOtherThanId)  // other effects that shouldn't be removed
+    .list()
+    
+  let hashesToInstall = set(desiredForId)  // new effects
+    .minus(existingHashes)  // we shouldn't re-install anything
+    .list()
 
 
   console.log(dedent`
-    Uninstalling ${hashesToUninstall.length} of ${oldHashes.length}:
-      ${hashesToUninstall.join('\n  ')}
-  `)
-  
-  var failedUninstalls = uninstall(hashesToUninstall)
+    Uninstalling ${hashesToUninstall.length} of ${activeForId.length}:
+      ${[...hashesToUninstall].join('\n  ')}
+  `);
 
-  if(failedUninstalls.length > 0) {
-    throw Error(dedent`
-      ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed:
-        ${failedUninstalls.join('\n  ')}
+
+  var failedUninstalls = hashesToUninstall
+    .slice().reverse()
+    .map(hash => [hash, tryUninstallEffect(hash)])
+    .filter(([h, e]) => e !== null)
+    .map(([h, e]) => h)
+
+
+  if (failedUninstalls.length > 0) {
+    console.log(dedent`
+      ❌ ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed.
+      Uninstall them manually, then delete them via
       
-      Uninstall them manually, then delete them from ${current_path} manually or run nux force-remove ${nuxId} '<paste the newline separated hashes here>'
+        nux force-remove ${nuxId} '
+        ${failedUninstalls.join('\n  ')}
+        '
     `)
+
+    process.exit(1)
   }
-
-  console.log(`Installing ${hashesToInstall.length} of ${hashes.length}`)
-
-  let installedHashes = install(hashesToInstall)
   
-  if(installedHashes.length == hashesToInstall.length) {
+  console.log(`Installing ${hashesToInstall.length} of ${desiredForId.length}`);
 
-    util.fileWrite(current_path, JSON.stringify(hashes))
+  let installedHashes = [...(function*(){
+    for (const hash of hashesToInstall) {
+      let e = tryInstallEffect(hash)
+      if(e)
+        return  // return early on error
+      yield hash
+    }
+  })()]
 
-  } else {
-    // failed to install completely
-    console.log(`Partial install ${installedHashes.length}/${hashes.length}`)
-    console.log(`Trying to remove partial install...`)
+  if (installedHashes.length != hashesToInstall.length) {
+    console.log(dedent`
+      ❌ Partial install: ${installedHashes.length} out of ${hashesToInstall.length} installed
 
-    // TODO: maybe we should call uninstalled on the hash that failed too in case there is anything that needs to be cleaned up?
-    // try to undo what we've done so far
-    var failedUninstalls = uninstall(installedHashes)
-    console.log(`Cleaned up ${installedHashes.length-failedUninstalls.length}/${installedHashes.length}`)
+      🧹 Trying to clean up partial install...
+      
+    `)
 
-    if(failedUninstalls.length != 0)
-      console.log(`Leftover installed hashes: ${failedUninstalls}`)
-    
-    console.log(`Trying to restore old install...`)
+    var failedUninstalls = installedHashes
+      .slice().reverse()
+      .map(hash => [hash, tryUninstallEffect(hash)])
+      .filter(([h, e]) => e !== null)
+      .map(([h, e]) => h);
 
-    let reinstalledHashes = install(hashesToUninstall, true)
+    if (failedUninstalls.length != 0) {
+      console.log(dedent`
+        ❌ Leftover installed hashes ${failedUninstalls}/${installedHashes.length} 🤷‍♂️:
+          ${failedUninstalls.join('\n  ')}
 
-    if(reinstalledHashes.length == hashesToUninstall.length) {
+      `)
+    }
 
-      console.log(`Successfully restored previous install`)
-    
-    } else {
-    
-      let missingHashes = hashesToUninstall.filter(h => !reinstalledHashes.includes(h))
+    console.log(`⏮️ Trying to restore old install...\n`);
+
+    let reinstalledHashes = [...(function*(){
+      for (const hash of hashesToUninstall) {
+        let e = tryInstallEffect(hash)   // continue despite errors this time
+        yield hash
+      }
+    })()]
+
+    if (reinstalledHashes.length != hashesToUninstall.length) {
+
+      let missingHashes = set(hashesToUninstall)
+        .minus(reinstalledHashes)
+        .list()
 
       console.log(dedent`
-        Error: Only partially restored previous install (missing ${missingHashes.length}):
+        ❌ Partial re-install: ${reinstalledHashes.length} of the removed ${hashesToUninstall.length} re-installed. Missing ${missingHashes.length}:
           ${missingHashes.join('\n  ')}
-      `)
+      `)   
 
-      let remainingHashes = hashes.filter(h => !missingHashes.includes(h))
+    } else {
 
-      util.fileWrite(current_path, JSON.stringify(remainingHashes))  // update db
+      console.log(`Successfully restored previous install`)
     }
 
     process.exit(1)  // exit with error
 
   }
+
+
+  // success - desired hashes were installed
+  // console.log("✅")
+
+  // now we write to disk to remember to keep these hashes
+  activeHashesById[nuxId] = desiredForId
+  util.fileWrite(ACTIVE_HASHES_PATH, JSON.stringify(activeHashesById))
+
 }
 
 

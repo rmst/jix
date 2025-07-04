@@ -38,3 +38,5 @@ if(originalCtx)
 
 
 export default globalThis.nuxContext
+export let ACTIVE_HASHES_PATH = `${LOCAL_NUX_PATH}/active.json`;export const EXISTING_HASHES_PATH = `${LOCAL_NUX_PATH}/existing.json`;
+
