@@ -61,13 +61,13 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
 
 		add_timestamp() {
 			while IFS= read -r line; do
-				printf "%s\t%s\n" "$(date "+%Y-%m-%d %H:%M:%S")" "$line"
+				printf "%s\t%s\n" "$(date +"%Y-%m-%d %H:%M:%S")" "$line"
 			done
 		}
 
 		mkdir -p "${jobsDir}/status"
 
-		echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,start" >> "${jobsDir}/status/${name}"
+		echo "$(date +"%Y-%m-%d %H:%M:%S"),$scripthash,start" >> "${jobsDir}/status/${name}"
 
 
 		set -o pipefail  # if any of the pipe's process fail output a non-zero exit code 
@@ -76,7 +76,7 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
 		{ ${timeout_cmd} "${runscript}" 2>&1 ; } | add_timestamp
 
 		exitcode=$?
-		echo "$(date "+%Y-%m-%d %H:%M:%S"),$scripthash,stop,$exitcode" >> "${jobsDir}/status/${name}"
+		echo "$(date +"%Y-%m-%d %H:%M:%S"),$scripthash,stop,$exitcode" >> "${jobsDir}/status/${name}"
 	`
 	.symlinkTo(wpath)
 

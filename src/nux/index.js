@@ -10,13 +10,10 @@ import { HOME_PLACEHOLDER, NUX_DIR } from './context.js';
 import base from './base.js'
 import macos from './macos/index.js'
 import { nixosConfig } from './nixosConfig.js';
-import db from './db.js';
-import { loadRepo } from './repo.js'
 import shelltools from './shelltools/index.js';
+import service from './servicectl/index.js';
 
-let nux = {
-  loadRepo,
-  
+let nux = {  
   nixosConfig,
 
   Effect,
@@ -29,8 +26,10 @@ let nux = {
 
   ...macos,
 
-  ...db,
+  // ...db,
   
+  service,
+
   HOME: HOME_PLACEHOLDER,
   NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,  // TODO: this should be independent of the user home
 

@@ -30,8 +30,6 @@ export const macosUtilScripts = nux.alias({
 })
 
 
-
-
 export default {
   macosUtilScripts,
   launchdJob,

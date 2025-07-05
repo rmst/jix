@@ -5,8 +5,9 @@ import { parseEffectValues, effect, target } from './effect.js';
 
 import { dedent } from './dedent.js';
 import context from './context.js';
-import { dirname } from './util.js';
+import { dirname, shellEscape } from './util.js';
 
+import db from './db.js';
 
 export const HASH = HASH_PLACEHOLDER
 
@@ -91,6 +92,22 @@ export const run = ({install=null, uninstall=null, ...other}) => {
   })
 }
 
+
+
+export const dir = (files) => {
+  const copyCommands = Object.entries(files)
+    .map(([name, sourcePath]) => {
+      const source = shellEscape(`${sourcePath}`)
+      const destination = shellEscape(`./${name}`)
+      
+      return `cp -r ${source} ${destination}`  // works for files and directories
+    })
+    .join(' && ')
+
+  return build`
+    mkdir "$out" && cd "$out" && ${copyCommands}
+  `
+}
 
 export const ensureDir = (path, eff={}) => effect({
   install: ["execV1", "mkdir", "-p", path],
@@ -185,6 +202,18 @@ export const textfile = writeFile()
 export const script = (templateStrings, ...values) => writeFile('-w+x')(templateStrings, ...values)
 
 
+export const cleanScript = (templateStrings, ...values) => {
+  let s
+  s = dedent(templateStrings, ...values)
+
+  s = s
+    .split('\n')
+    .filter(line => !line.trim().startsWith('#') || line.startsWith("#!"))
+    .join('\n')
+
+  return script(s)
+}
+
 /**
  * define a build script writing to $out (environment variable named "out")
  * @returns the derivation / out path of the built artefact
@@ -225,23 +254,31 @@ let base = {
   effect,
   target,
   
+  build,
+
   importFile,
   importScript,
   copy,
+  copyFile,
 
   link,
   symlink,
   alias,
   run,
+
+  dir,
   mkdir,
   ensureDir,
+
   str,
+
   writeFile,
   textfile,
   script,
+  cleanScript,
   scriptWithTempdir,
-  build,
-  copyFile,
+
+  ...db,
 
   HASH,
 }

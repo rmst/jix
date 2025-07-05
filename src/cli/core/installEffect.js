@@ -20,6 +20,8 @@ const executeCmd = (c, host, user) => {
     // TODO: add a check here on first ssh connection whether the user home matches context.hosts
     host = context.hosts?.[host]?.address ?? host
     args = [cmd, ...args]
+
+    // TODO: maybe use nux/util.js shellEscape, both are correct though
     args = args.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)  // escape all args
     cmd = "ssh"
     args = [`${user}@${host}`, "--", ...args]

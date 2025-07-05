@@ -1,9 +1,10 @@
 
-import base from "./base.js";
+import { run } from "./base.js";
+import { effect } from "./effect.js";
 import { dedent } from './dedent.js';
 import { NUX_DIR } from "./context.js";
 
-const stateDir = (id, owner=null) => base.effect(target => {
+const stateDir = (id, owner=null) => effect(target => {
 
 	let db = `${target.home}/${NUX_DIR}/db`
 	let dbInactive = `${target.home}/${NUX_DIR}/db-inactive`
@@ -14,7 +15,7 @@ const stateDir = (id, owner=null) => base.effect(target => {
 		? `chown -R ${owner} "${state}"`
 		: ""
 		
-	return base.run({
+	return run({
 		install: dedent`
 			mkdir -p "${db}"
 
