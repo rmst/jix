@@ -13,9 +13,8 @@ export const install = async (path) => {
   util.mkdir(LOCAL_NUX_PATH, true);
   util.mkdir(LOCAL_BIN_PATH, true);
   util.mkdir(LOCAL_STORE_PATH, true);
-  util.mkdir(`${LOCAL_NUX_PATH}/logs`, true);
+  util.mkdir(`${LOCAL_NUX_PATH}/logs`, true);  // TODO: get rid of this safely
 
-  // let path = process.env.NUX_REPO || os.getcwd()[0]
   // NOTE: path can be any path inside of a git repo and doesn't necessarily have to point to a root.nux.js file
   console.log("path", path);
 
@@ -23,6 +22,8 @@ export const install = async (path) => {
   console.log("nuxroot", path);
 
   if (!exportsID(path)) {
+    // TODO: this should only be done interactively by asking the user
+
     // let id = util.uuidV4()
     let id = util.basename(dirnameJs.dirname(path));
     console.log(`new path assigning ID ${id}`);
@@ -34,6 +35,7 @@ export const install = async (path) => {
 
 
   if (!git.isClean(gitRoot)) {
+    // TODO: this should be configurable between {autocommit, fail on dirty, ignore dirty}
     // throw Error(`Uncommited changes in ${path}`)
     // console.log(`git not clean ${path}`)
     sh`

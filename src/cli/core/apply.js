@@ -142,7 +142,7 @@ export default async function apply({
       ❌ ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed.
       Uninstall them manually, then delete them via
       
-        nux force-remove ${nuxId} '
+        nux force-remove '
         ${failedUninstalls.join('\n  ')}
         '
     `)
