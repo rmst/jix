@@ -24,7 +24,14 @@ export default ({
 	const logFile = `${servicesDir}/logs/${label}`;
 	const statusFile = `${servicesDir}/status/${label}`;
 
-  const PATH = target.os == "nixos" ? "PATH=/bin:/usr/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin" : ""
+  const PATH = target.os === "nixos"
+		? "PATH=" + [
+			"/bin", 
+			"/usr/bin", 
+			"/run/current-system/sw/bin", 
+			"/nix/var/nix/profiles/default/bin",
+		].join(":")  // these are necessary to get a POSIX shell on NixOS
+		: ""
 
 	let wrapperScript = nux.script`
 		#!/bin/sh

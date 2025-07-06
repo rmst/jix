@@ -9,13 +9,13 @@ import { AbstractEffect } from "./effectUtil.js";
 import { HOME_PLACEHOLDER, NUX_DIR } from './context.js';
 import base from './base.js'
 import macos from './macos/index.js'
-import { nixosConfig } from './nixosConfig.js';
+import { nixosConfig } from './nixos/nixosConfig.js';
 import shelltools from './shelltools/index.js';
 import service from './servicectl/index.js';
 
-let nux = {  
-  nixosConfig,
+import nixos from './nixos';
 
+let nux = {  
   Effect,
   TargetedEffect,
   AbstractEffect,
@@ -29,6 +29,10 @@ let nux = {
   // ...db,
   
   service,
+
+  nixosConfig,
+
+  nixos,
 
   HOME: HOME_PLACEHOLDER,
   NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,  // TODO: this should be independent of the user home

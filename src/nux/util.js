@@ -19,6 +19,12 @@ export function dirname(path) {
 	return parts.join('/') || '/';
 }
 
+export function basename(path) {
+	if (path.endsWith('/')) path = path.slice(0, -1); // Handle trailing slash
+	const parts = path.split('/');
+	return parts.pop()
+}
+
 
 /**
  * Escapes a string for use as a single-quoted argument in a POSIX shell.

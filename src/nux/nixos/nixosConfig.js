@@ -2,35 +2,14 @@
 import * as fs from 'node:fs'
 import { createHash } from 'node:crypto';
 
-import * as traverseFileSystemJs from './traverseFileSystem.js';
-import { dedent } from './dedent.js';
-import { effect } from './effect.js';
-import nux from './base.js';
-
-
-// TODO: remove the -v flag from rsync to make it less verbose
-// export const nixosRebuild2 = nux.script`
-//   #!/bin/sh
-//   mkdir -p /root/.systemd
-//   rm -rf /root/.systemd/diff
-//   rsync -avc --compare-dest=/etc/static/systemd/system /etc/systemd/system/ /root/.systemd/diff
-//   rm -rf /etc/systemd/system
-//   ln -s /etc/static/systemd/system /etc/systemd/system  # restore original symlink
-
-//   /run/current-system/sw/bin/nixos-rebuild "$@"
-//   return_code=$?
-
-//   rm -rf /etc/systemd/system
-//   cp -rp $(realpath /etc/static/systemd/system) /etc/systemd/system
-
-//   rsync -a /root/.systemd/diff/ /etc/systemd/system/
-
-//   exit $return_code
-// `
+import * as traverseFileSystemJs from '../traverseFileSystem.js';
+import { dedent } from '../dedent.js';
+import { effect } from '../effect.js';
+import nux from '../base.js';
 
 
 // NOTE: This is a hack to work around nixos-rebuild deleting our custom files in /etc/systemd/system/. We first save then, then rebuild, then restore them
-export const nixosRebuild = nux.script`
+const nixosRebuild = nux.script`
   #!/bin/sh
   mkdir -p /root/.systemd
 

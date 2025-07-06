@@ -148,7 +148,7 @@ export class TargetedEffect extends AbstractEffect {
   /**
    * 
    * @param {{ host: string, user: string}} tgt 
-   * @param {EffectProps} [props]
+   * @param {EffectProps}} [props]
    */
   constructor(tgt, props={}) {
     super()

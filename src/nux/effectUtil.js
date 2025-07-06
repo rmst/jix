@@ -1,7 +1,7 @@
 import { sh } from '../nux-cli/util.js';
 import { symlink, link, copyFile } from './base.js';
 import { LOCAL_HOME, MAGIC_STRING } from './context.js';
-import { effectPlaceholderMap } from './effect.js';
+import { effectPlaceholderMap, effect } from './effect.js';
 
 
 export class AbstractEffect {

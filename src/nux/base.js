@@ -2,20 +2,27 @@ import * as fs from 'node:fs';
 
 import { NUX_DIR, HASH_PLACEHOLDER } from './context.js';
 import { parseEffectValues, effect, target } from './effect.js';
+import { AbstractEffect } from './effectUtil.js';
 
 import { dedent } from './dedent.js';
 import context from './context.js';
-import { dirname, shellEscape } from './util.js';
+import { dirname, basename, shellEscape } from './util.js';
 
 import db from './db.js';
 
 export const HASH = HASH_PLACEHOLDER
 
 
-
+/**
+ * @param {string} origin 
+ * @param {string} mode 
+ * @returns {AbstractEffect & { name: string }}
+ */
 export const importFile = (origin, mode='-w') => {
   let content = fs.readFileSync(origin, 'utf8')
-  return writeFile(mode)`${content}`
+  let e = writeFile(mode)`${content}`
+  e.name = basename(origin)
+  return e
 }
 
 export const importScript = (origin) => {
@@ -157,6 +164,7 @@ export const str = (templateStrings, ...rawValues) => effect( target => {
     dependencies,
   }
 })
+
 
 export const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
   return effect( target => {
