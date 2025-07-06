@@ -1,3 +1,4 @@
+import { sh } from '../nux-cli/util.js';
 import { symlink, link, copyFile } from './base.js';
 import { LOCAL_HOME, MAGIC_STRING } from './context.js';
 import { effectPlaceholderMap } from './effect.js';
@@ -32,8 +33,9 @@ export const userHome = (host, user) => {
     if (user === null)
       return LOCAL_HOME;
 
-    else
-      throw Error("Getting the home for other local users is not implemented yet");
+    else {
+      return sh`sudo -i -u ${user} -- echo '$HOME'`
+    }
   }
   let defaultHome = user === "root" ? "/root" : "/home/" + user;
   let h = c?.hosts?.[host]?.users?.[user]?.home ?? defaultHome;

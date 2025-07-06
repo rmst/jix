@@ -110,8 +110,9 @@ export class Effect extends AbstractEffect {
         // x.user = LOCAL_USER  // TODO: we should do this but this will trigger mass rebuilds
         // throw Error("Not a valid target")
       }
-      else
-        throw Error("Alternative local users are not supported yet")  // TODO: support
+      else {
+        // throw Error("Alternative local users are not supported yet")
+      }
     }
     x = {
       ...x,

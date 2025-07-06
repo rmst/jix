@@ -99,7 +99,7 @@ export const buildV6 = (script, hash) => {
 // }
 export const writeOutFileV2 = (content, mode, hash) => {
 	return exx(
-		"sh", 
+		"/bin/sh", 
 		"-c", 
 		dedent`
 			mkdir -p "$HOME/${NUX_DIR}/out"

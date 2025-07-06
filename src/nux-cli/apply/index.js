@@ -1,10 +1,10 @@
 
-import { LOCAL_NUX_PATH, LOCAL_BIN_PATH, LOCAL_STORE_PATH } from '../../nux/context';
+import { LOCAL_NUX_PATH, LOCAL_BIN_PATH, LOCAL_STORE_PATH } from '../../nux/context.js';
 
-import * as dirnameJs from '../../nux/util';
-import * as util from '../util';
-import { sh } from '../util';
-import { git } from './git';
+import * as dirnameJs from '../../nux/util.js';
+import * as util from '../util.js';
+import { sh } from '../util.js';
+import { git } from './git.js';
 import apply from '../core/apply.js';
 import { findNuxRoot, exportsID } from './util.js';
 

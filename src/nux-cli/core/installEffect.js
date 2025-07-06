@@ -2,10 +2,11 @@ import * as fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import process from 'node:process';
 
-import { EXISTING_HASHES_PATH, LOCAL_STORE_PATH, NUX_DIR } from '../../nux/context';
-import * as actions from './actions';
-import set from './set'
+import { EXISTING_HASHES_PATH, LOCAL_STORE_PATH, NUX_DIR } from '../../nux/context.js';
+import * as actions from './actions.js';
+import set from './set.js'
 import context from '../../nux/context.js';
+import { sh } from '../util.js';
 
 
 const executeCmd = (c, host, user) => {
@@ -15,7 +16,10 @@ const executeCmd = (c, host, user) => {
 
   let options = c.verbose ? { stdout: 'inherit', stderr: 'inherit' } : {}
   let { cmd, args } = c
+
   if(host !== null) {
+    // TODO: also switch to stdin-based approach for ssh, should be cleaner
+
     // console.log("RC", host, user)
     // TODO: add a check here on first ssh connection whether the user home matches context.hosts
     host = context.hosts?.[host]?.address ?? host
@@ -23,8 +27,18 @@ const executeCmd = (c, host, user) => {
 
     // TODO: maybe use nux/util.js shellEscape, both are correct though
     args = args.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)  // escape all args
+
     cmd = "ssh"
     args = [`${user}@${host}`, "--", ...args]
+  }
+
+  else if ( user && user != process.env.USER ) {
+    args = [cmd, ...args]
+    args = args.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)  // escape all args
+    options.input = args.join(' ')
+
+    cmd = "sudo"
+    args = [ "-i", "-u", user, "--", "/bin/sh" ]
   }
 
   return execFileSync(cmd, args, options)
