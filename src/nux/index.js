@@ -14,6 +14,7 @@ import shelltools from './shelltools/index.js';
 import service from './servicectl/index.js';
 
 import nixos from './nixos';
+import nix from './nix';
 
 let nux = {  
   Effect,
@@ -30,9 +31,11 @@ let nux = {
   
   service,
 
-  nixosConfig,
 
+  nix,
+  nixosConfig,
   nixos,
+
 
   HOME: HOME_PLACEHOLDER,
   NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,  // TODO: this should be independent of the user home

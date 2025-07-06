@@ -179,7 +179,7 @@ export class TargetedEffect extends AbstractEffect {
         return x
 
       else if(x instanceof Effect)
-        return x.target(tgt)
+        return x.target(tgt)  // TODO: maybe pass tgt copy instead?
 
       else {
         // console.log(x)
