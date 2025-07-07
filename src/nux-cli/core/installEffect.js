@@ -71,8 +71,9 @@ export const tryInstallEffect = (hash) => {
         executeCmd(cmd, host, user)
 
       } catch (e) {
-        console.log(`Error: ${e.message}`)
-        console.log(e.stack)
+        console.log(`Error with ${hash}, ${f}, ${args}:\n${e.message}`);
+        // console.log(e.stack);
+        console.log("\n...uninstall continuing...\n");
         return e
       }
     }
@@ -84,8 +85,9 @@ export const tryInstallEffect = (hash) => {
     try {
       executeCmd(cmd, host, user);
     } catch (e) {
-      console.log(`Error: ${e.message}`)
-      console.log(e.stack)
+      console.log(`Error with ${hash}, ${f}, ${args}:\n${e.message}`);
+      // console.log(e.stack);
+      console.log("\n...uninstall continuing...\n");
       return e
     }
   }
@@ -118,7 +120,7 @@ export const tryUninstallEffect = (hash) => {
 
     } catch (e) {
       console.log(`Error with ${hash}, ${f}, ${args}:\n${e.message}`);
-      console.log(e.stack);
+      // console.log(e.stack);
       console.log("\n...uninstall continuing...\n");
       return e
     }

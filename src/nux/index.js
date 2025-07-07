@@ -51,4 +51,6 @@ else
   globalThis._nux_modules_nux = nux
 
 
+globalThis.nux = nux
+
 export default nux 

@@ -49,3 +49,28 @@ Two main types of effects:
 
 For impure effects ordering must not matter, depending on previous configurations they can be applied in arbitrary order except that dependencies are always applied before (obviously)
 
+
+### VSCode Autocomplete
+
+The `compilerOptions` makes available `import nux from "nux"` while the `include` option makes available `nux` as a global variable.
+
+TODO: maybe autogenerate `jsconfig.json` as part of of `nux init` or sth
+
+jsconfig.json
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "*": ["nux_modules/*"]
+    }
+  },
+  "include": [
+    "**/*",
+    "nux_modules/*"
+  ],
+  "exclude": [
+
+  ]
+}
+```
