@@ -14,18 +14,7 @@ import { tryInstallEffect, tryUninstallEffect } from './installEffect.js';
 import { EXISTING_HASHES_PATH } from '../../nux/context.js';
 import set from './set.js';
 
-
-// export const updateHosts = (hosts) => {
-//   fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8');
-//   loadHosts();
-// };
-
-export const loadHosts = () => {
-  let hosts = JSON.parse(fs.readFileSync(`${LOCAL_NUX_PATH}/hosts.json`, 'utf8'));
-  // console.log("LOAD HOSTS", hosts)
-  context.hosts = hosts;
-};
-
+import { loadHosts } from './hosts.js';
 
 
 export default async function apply({

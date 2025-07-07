@@ -27,17 +27,17 @@ export class AbstractEffect {
 }
 
 
-export const userHome = (host, user) => {
-  let c = globalThis.nuxContext;
-  if (host === null) {
-    if (user === null)
-      return LOCAL_HOME;
+// export const userHome = (host, user) => {
+//   let c = globalThis.nuxContext;
+//   if (host === null) {
+//     if (user === null)
+//       return LOCAL_HOME;
 
-    else {
-      return sh`sudo -i -u ${user} -- echo '$HOME'`
-    }
-  }
-  let defaultHome = user === "root" ? "/root" : "/home/" + user;
-  let h = c?.hosts?.[host]?.users?.[user]?.home ?? defaultHome;
-  return h;
-};
+//     else {
+//       return sh`sudo -i -u ${user} -- echo '$HOME'`
+//     }
+//   }
+//   let defaultHome = user === "root" ? "/root" : "/home/" + user;
+//   let h = c?.hosts?.[host]?.users?.[user]?.home ?? defaultHome;
+//   return h;
+// };

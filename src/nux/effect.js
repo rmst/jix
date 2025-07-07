@@ -1,11 +1,13 @@
 import { HOME_PLACEHOLDER, HASH_PLACEHOLDER } from './context.js';
 import { NUX_DIR, LOCAL_USER } from './context.js';
-import { AbstractEffect, userHome } from './effectUtil.js';
+import { AbstractEffect } from './effectUtil.js';
 import { dedent } from './dedent.js';
 
 export const effectPlaceholderMap = new Map()
 
+import process from 'node:process';
 import { createHash } from 'node:crypto';
+import { hostInfo } from '../nux-cli/core/hosts.js';
 // import { createHash } from 'node/crypto';
 
 
@@ -114,13 +116,14 @@ export class Effect extends AbstractEffect {
         // throw Error("Alternative local users are not supported yet")
       }
     }
+    
+    let info = hostInfo(x.host, x.user)
+
     x = {
       ...x,
-      home: x.home ?? userHome(x.host, x.user),
-      os: globalThis.nuxContext.hosts?.[x.host]?.os,
-      // TODO: add other useful paths?
+      ...info,
+      ...info.users[x.user ?? process.env.USER],
     }
-
     
     let r = this.targetFn(x)
     

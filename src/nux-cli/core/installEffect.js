@@ -9,7 +9,7 @@ import context from '../../nux/context.js';
 import { sh } from '../util.js';
 
 
-const executeCmd = (c, host, user) => {
+export const executeCmd = (c, host, user) => {
   
   if(c === null)  // noop
     return
@@ -18,6 +18,9 @@ const executeCmd = (c, host, user) => {
   let { cmd, args } = c
 
   if(host !== null) {
+    if(!host)
+      throw Error(`Invalid host: ${host}`)
+
     // TODO: also switch to stdin-based approach for ssh, should be cleaner
 
     // console.log("RC", host, user)
