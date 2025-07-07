@@ -53,12 +53,7 @@ TODO: split into two types of effects:
   @returns {Effect}
 */
 export function effect (obj) {    
-
-  let targetFn = (typeof obj === 'function')
-    ? obj
-    : () => obj
-
-  return new Effect(targetFn)
+  return new Effect(obj)
 }
 
 
@@ -94,11 +89,32 @@ export function target(tgt, obj) {
 
 export class Effect extends AbstractEffect {
   /**
-    @param {TargetFn} targetFn
+    @param {EffectProps | Array | TargetFn} obj
   */
-  constructor (targetFn) {
+  constructor (obj) {
     super()
-    this.targetFn = targetFn
+    this.obj = obj
+  }
+
+  /**
+    Returns copy with additional dependencies
+    @param {...(AbstractEffect)} others
+    @returns {Effect}
+  */
+  dependOn(...others) {
+    if(typeof this.obj === 'function')
+      throw Error("effect.dependingOn works only with simple effects like `nux.effect({ install, uninstall, dependencies })`")
+    
+    if(Array.isArray(this.obj)) {
+      return new Effect([...this.obj, ...others])
+    }
+
+    else {
+      return new Effect({
+        ...this.obj, 
+        dependencies: [ ...(this.obj.dependencies ?? []), ...others ]
+      })
+    }
   }
 
   /** 
@@ -125,7 +141,9 @@ export class Effect extends AbstractEffect {
       ...info.users[x.user ?? process.env.USER],
     }
     
-    let r = this.targetFn(x)
+    let r = (typeof this.obj === 'function')
+      ? this.obj(x)
+      : this.obj
     
     if(r instanceof TargetedEffect)
       return r
@@ -136,8 +154,6 @@ export class Effect extends AbstractEffect {
     else {
       if (Array.isArray(r))
         r = { dependencies: r }
-
-      // console.log('target', r)
 
       return new TargetedEffect(x, r)
     }

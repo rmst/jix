@@ -179,7 +179,7 @@ export const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
   })
 }
 
-// TODO: make this work for directories
+
 export const copyFile = (from, to) => effect({
   install: ["copyV2", from, to],
   uninstall: ["deleteFileV2", to],

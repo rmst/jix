@@ -75,17 +75,30 @@ export const importModule = ({file, core=false}) => {
 			? `${file.name.replace(/\.nix$/,'')}-${tfile.hash.slice(0, 4)}.nix`
 			: `${tfile.hash.slice(0, 8)}.nix`
 
-		let cfile = tfile.copyTo(`${mdir}/${name}`)
 
-		return {
-			install: ["execShVerboseV1", nux.dedent`
+		let uninstall = nux.effect({
+			// if it's a core module (e.g. configuration.nix) we never want to run the system without it and therefore we don't need to rebuild it when it is removed
+			uninstall: core ? null : ["execShVerboseV1", nux.dedent`
 				start=$(date +%s)
 				${nixosRebuild} switch
 				echo nixos-rebuild switch ran for $(($(date +%s)-start)) seconds
 			`],
+		})
 
-			// if it's a core module (e.g. configuration.nix) we never want to run the system without it and therefore we don't need to rebuild it when it is removed
-			uninstall: core ? null : ["execShVerboseV1", nux.dedent`
+		// let config = nux.effect({
+		// 	dependencies: [
+		// 		// TODO: actually we want the .copyTo to depend on withoutConfig, right now these are peer dependencies which is not right
+		// 		withoutConfig,
+		// 		tfile.copyTo(`${mdir}/${name}`)
+		// 	]
+		// })
+
+		let config = tfile
+			.copyTo(`${mdir}/${name}`)
+			.dependOn(uninstall)
+
+		let install = nux.effect({
+			install: ["execShVerboseV1", nux.dedent`
 				start=$(date +%s)
 				${nixosRebuild} switch
 				echo nixos-rebuild switch ran for $(($(date +%s)-start)) seconds
@@ -93,9 +106,11 @@ export const importModule = ({file, core=false}) => {
 
 			dependencies: [
 				root,
-				cfile,
+				config,
 			]
-		}
+		})
+
+		return install
 	})
 }
 

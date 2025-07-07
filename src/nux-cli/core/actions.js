@@ -114,11 +114,7 @@ export const writeOutFileV2 = (content, mode, hash) => {
 export const writeOutFileV3 = writeOutFileV2
 
 export const copyV2 = (from, to, hash) => {
-
-	// TODO: check path against file hash!!
+	// TODO: check path against file hash
 	// TODO: make it work with MacOS' copy on write
-
-	// TODO: maybe make it work for directories?
-	
-return exx("cp", from, to)
+	return exx("cp", "-r", from, to)
 }
