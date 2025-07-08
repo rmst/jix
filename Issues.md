@@ -12,8 +12,6 @@ Host *
 
 no gc: implement garbage collection for unreferenced effects json files, currently they just accumulate
 
-use shellEscape everywhere
-
 ### Improvements
 
 store hashes and effects on target device

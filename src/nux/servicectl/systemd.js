@@ -1,4 +1,5 @@
 import nux from "../base.js"
+import nixos from "../nixos"
 
 
 export default ({
@@ -13,13 +14,7 @@ export default ({
 
 	const serviceName = `${label}.service`;
 
-	const servicePath = system
-		? `/etc/systemd/system/${serviceName}`
-		: `${target.home}/.config/systemd/user/${serviceName}`;
-
-	const systemctlFlags = system ? "" : "--user";
-
-	const serviceFile = nux.textfile`
+	let serviceFile = nux.textfile`
 		[Unit]
 		Description=${label}
 
@@ -29,12 +24,36 @@ export default ({
 
 		[Install]
 		WantedBy=${system ? 'multi-user.target' : 'default.target'}
-	`.symlinkTo(servicePath)
+	`
 
-    const startCmd = runOnInstall ? `systemctl ${systemctlFlags} start ${serviceName}` : '';
+	if(system && target.os === "nixos") {
+		// return nixos.systemdUnit({
+		// 	name: serviceName,
+		// 	file: serviceFile,
+		// 	runOnInstall
+		// })
+
+		return nixos.systemd.enableUnit({
+			name: serviceName,
+			file: serviceFile,
+			runOnInstall
+		})
+	}
+
+	const servicePath = system
+	? `/etc/systemd/system/${serviceName}`
+	: `${target.home}/.config/systemd/user/${serviceName}`;
+
+	const systemctlFlags = system ? "" : "--user";
+
+
+	serviceFile = serviceFile.symlinkTo(servicePath)
+
+	const startCmd = runOnInstall ? `systemctl ${systemctlFlags} start ${serviceName}` : '';
 
 	return nux.effect({
 		install: ["execShV1", nux.dedent`
+			set -e
 			# Create parent directory for service file if it doesn't exist
 			mkdir -p "$(dirname "${servicePath}")"
 			# Reload systemd to recognize the new service
