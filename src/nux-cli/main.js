@@ -9,9 +9,14 @@ import { install } from './apply/index.js';
 import { forceRemove } from './forceRemove.js';
 import { queryHostInfo, queryUserInfo } from './core/hosts.js';
 
+import { showEffect } from './show.js';
+import { readFileSync } from 'node:fs';
+import { LOCAL_NUX_PATH } from '../nux/context.js';
 
 
 const main = async () => {
+
+  // TODO: assign script args via node:process
 
   if(true) {
     let operator = scriptArgs[1]
@@ -48,10 +53,14 @@ const main = async () => {
       console.log(JSON.stringify(queryUserInfo(scriptArgs[2] || null, scriptArgs[3] || null), null, 2))
 
     }
-
+  
+    else if (operator === "show") {
+      showEffect(scriptArgs[2]);
+    }
   }
 
 }
+
 
 
 main().then(null, e => {
