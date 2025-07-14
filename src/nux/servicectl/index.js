@@ -16,14 +16,12 @@ export default ({
 	label, 
 	runscript, 
 	system = false, 
-	runOnInstall = true
+	runOnInstall = true,
+	noUninstall = false,
 }) => nux.effect(target => {
 
   const servicesDir = system ? systemServicesDir : userServicesDir
   
-	const logFile = `${servicesDir}/logs/${label}`;
-	const statusFile = `${servicesDir}/status/${label}`;
-
   const PATH = target.os === "nixos"
 		? "PATH=" + [
 			"/bin", 
@@ -39,28 +37,46 @@ export default ({
     ${PATH}
 
     # ensure log dirs exist
-		mkdir -p "${servicesDir}/logs"
-		mkdir -p "${servicesDir}/status"
+		mkdir -p "${servicesDir}/${label}"
 
 		add_timestamp() {
 			while IFS= read -r line; do
 				printf "%s\t%s\n" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$line"
 			done
 		}
+
+		DPATH="${servicesDir}/${label}/details"
 		
     set -o pipefail  # important
 
 		while true; do
-			echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ"),started,$$" >> "${statusFile}"
+			
+			START_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+			
+			echo "$START_TIME,started,$$" >> "${servicesDir}/${label}/status"
+
+			echo "exec=${runscript}" > "$DPATH"
+			echo "state=started" >> "$DPATH"
+			echo "start_time=$START_TIME" >> "$DPATH"
+			echo "pid=$$" >> "$DPATH"
 
 			# Execute the actual runscript, redirecting its output to the log file
-			( ${runscript} ) 2>&1 | add_timestamp >> "${logFile}"
+			( ${runscript} ) 2>&1 | add_timestamp >> "${servicesDir}/${label}/log"
 			
-			exit_code=$?
+			EXIT_CODE=$?
 			
-      echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ"),exited,$exit_code" >> "${statusFile}"
+			EXIT_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-			if [ $exit_code -eq 0 ]; then
+      echo "$EXIT_TIME,exited,$EXIT_CODE" >> "${servicesDir}/${label}/status"
+
+			echo "exec=${runscript}" > "$DPATH"
+			echo "state=exited" >> "$DPATH"
+			echo "start_time=$START_TIME" >> "$DPATH"
+			# echo "" >> "$DPATH"
+			echo "exit_time=$START_TIME" >> "$DPATH"
+			echo "exit_code=$EXIT_CODE" >> "$DPATH"
+
+			if [ $EXIT_CODE -eq 0 ]; then
 				break  # Exit the loop on success
 			else
 				sleep 5
@@ -79,7 +95,8 @@ export default ({
 			label,
 			runscript: wrapperScript,
 			system,
-			runOnInstall
+			runOnInstall,
+			noUninstall,
 		})
 
 		return nux.target({

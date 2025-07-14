@@ -28,8 +28,24 @@ TODO: split into two types of effects:
  */
 
 /**
+ * @typedef {Object} TargetInfo - Detailed information about the target host and user.
+ * @property {string} host - The target hostname or IP address.
+ * @property {string} user - The user to connect as.
+ * @property {string} home - The absolute path to the user's home directory.
+ * @property {'macos' | 'nixos' | 'linux'} os - The operating system identifier.
+ * @property {string} os_version - The specific version of the OS.
+ * @property {'Linux' | 'Darwin'} kernel_name - The kernel name (from `uname -s`).
+ * @property {string} hostname - The network hostname.
+ * @property {string} architecture - The system architecture (e.g., 'x86_64', 'arm64').
+ * @property {string} uid - The user ID.
+ * @property {string} gid - The group ID.
+ * @property {string} shell - The user's default shell path.
+ * @property {Object.<string, {uid: string, gid: string, home: string, shell: string}>} users - A map of user-specific information on the host.
+ */
+
+/**
   @callback TargetFn
-  @param {{host: string, user: string, home: string, os: string}} target
+  @param {TargetInfo} target
   @returns {EffectProps | Array | Effect | TargetedEffect}
 */
 
@@ -163,6 +179,11 @@ export class Effect extends AbstractEffect {
 
 
 export class TargetedEffect extends AbstractEffect {
+
+  /** 
+   * @type {TargetedEffect[]} 
+   */
+  dependencies
 
   /**
    * 

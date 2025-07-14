@@ -1,4 +1,7 @@
 
+import nux from "../base"
+
+
 const instanceofAbstractEffect = (obj) => {
 		// NOTE: we do this bc instanceof doesn't work here, bc we have a split world problem with the imports (maybe Quickjs bug?)
 
@@ -10,8 +13,16 @@ const instanceofAbstractEffect = (obj) => {
 	].includes(className)
 }
 
-export const importModules = (files, { core=false }={}) => {
 
+export const rebuild = (e) => nux.effect(target => {
+
+	let root = nux.target(target, e)
+	// root.dependencies.map(d => d.)
+})
+	
+	
+export const importModules = (files, { core=false }={}) => {
+	
 	files = !Array.isArray(files)
 		? Object.entries(files)
 		: files.map(f => typeof f === "string"

@@ -7,6 +7,7 @@ import * as actions from './actions.js';
 import set from './set.js'
 import context from '../../nux/context.js';
 import { sh } from '../util.js';
+import { prettyPrintEffect } from '../prettyPrint.js';
 
 
 export const executeCmd = (c, host, user) => {
@@ -50,9 +51,9 @@ export const executeCmd = (c, host, user) => {
 
 
 export const tryInstallEffect = (hash) => {
-  let x = fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8');
+  let effectData = JSON.parse(fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8'))
 
-  var { install = null, build = null, host, user, debug = {} } = JSON.parse(x);
+  var { install = null, build = null, host, user, debug = {} } = effectData
 
   if (build) {
     // check if the out file exists (works both locally and over ssh)
@@ -71,7 +72,10 @@ export const tryInstallEffect = (hash) => {
         executeCmd(cmd, host, user)
 
       } catch (e) {
-        console.log(`Error with ${hash}, ${f}, ${args}:\n${e.message}`);
+        console.log(`Error with ${hash}:`);
+        prettyPrintEffect(effectData)
+        console.log(`\n${e.message}`)
+
         // console.log(e.stack);
         console.log("\n...uninstall continuing...\n");
         return e
@@ -85,7 +89,10 @@ export const tryInstallEffect = (hash) => {
     try {
       executeCmd(cmd, host, user);
     } catch (e) {
-      console.log(`Error with ${hash}, ${f}, ${args}:\n${e.message}`);
+      console.log(`Error with ${hash}:`);
+      prettyPrintEffect(effectData)
+      console.log(`\n${e.message}`)
+
       // console.log(e.stack);
       console.log("\n...uninstall continuing...\n");
       return e
@@ -107,9 +114,9 @@ export const tryInstallEffect = (hash) => {
 
 
 export const tryUninstallEffect = (hash) => {
-  let x = fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8');
+  let effectData = JSON.parse(fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8'))
 
-  let { uninstall = null, host, user } = JSON.parse(x);
+  let { uninstall = null, host, user } = effectData
 
   if (uninstall) {
     let [f, ...args] = uninstall;
@@ -119,7 +126,10 @@ export const tryUninstallEffect = (hash) => {
       executeCmd(cmd, host, user);
 
     } catch (e) {
-      console.log(`Error with ${hash}, ${f}, ${args}:\n${e.message}`);
+      console.log(`Error with ${hash}:`);
+      prettyPrintEffect(effectData)
+      console.log(`\n${e.message}`)
+
       // console.log(e.stack);
       console.log("\n...uninstall continuing...\n");
       return e

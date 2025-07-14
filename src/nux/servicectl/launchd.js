@@ -5,7 +5,8 @@ export default ({
 	label, 
 	runscript, 
 	system = false, 
-	runOnInstall = true
+	runOnInstall = true,
+	noUninstall = false,
 }) => nux.effect(target => {
 
 	label ?? (()=>{throw Error("label is required")})()
@@ -39,13 +40,14 @@ export default ({
 
 
 	return nux.effect({
+		// if necessary, this will replace existing
 		install: ["execShV1", nux.dedent`
 			# Unload existing job to ensure it's updated
 			launchctl list | grep -q ${label} && launchctl bootout ${launchdTarget}/${label} || true
 			# Load the new job
 			launchctl bootstrap ${launchdTarget} "${plist}"
 		`],
-		uninstall: ["execShV1", nux.dedent`
+		uninstall: noUninstall ? null : ["execShV1", nux.dedent`
 			# Do nothing if the job isn't loaded
 			launchctl list | grep -q ${label} || exit 0
 			# Unload the job

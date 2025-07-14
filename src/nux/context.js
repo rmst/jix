@@ -7,6 +7,8 @@ export const LOCAL_NUX_PATH = `${LOCAL_HOME}/${NUX_DIR}`;  // local path
 export const TMP_PATH = `${LOCAL_NUX_PATH}/tmp`;
 export const LOCAL_BIN_PATH = `${LOCAL_NUX_PATH}/bin`;
 export const LOCAL_STORE_PATH = `${LOCAL_NUX_PATH}/store`;
+export let ACTIVE_HASHES_PATH = `${LOCAL_NUX_PATH}/active.json`
+export const EXISTING_HASHES_PATH = `${LOCAL_NUX_PATH}/existing.json`;
 
 
 export const MAGIC_STRING = "d6165af5669c8a3de2aab402ad97c778"
@@ -38,5 +40,4 @@ if(originalCtx)
 
 
 export default globalThis.nuxContext
-export let ACTIVE_HASHES_PATH = `${LOCAL_NUX_PATH}/active.json`;export const EXISTING_HASHES_PATH = `${LOCAL_NUX_PATH}/existing.json`;
 

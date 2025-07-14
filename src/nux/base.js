@@ -130,12 +130,16 @@ export const mkdir = (path) => {
   })
 }
 
-export const scriptWithTempdir = (...args) => {
+/**
+
+ */
+export const scriptInTempdir = (...args) => {
   let inner = script(...args)
-  return script`
+  return cleanScript`
     #!/bin/sh
-    export NUX_TEMP="$HOME"/${NUX_DIR}/tmp_drv/${HASH}
-    mkdir -p "$NUX_TEMP"
+    # export NUX_TEMP="$HOME"/${NUX_DIR}/tmp_drv/${HASH}
+    export NUX_TEMP="$(mktemp -d)"
+    cd "$NUX_TEMP"
 
     "${inner}"
     exitcode=$?
@@ -216,7 +220,8 @@ export const cleanScript = (templateStrings, ...values) => {
 
   s = s
     .split('\n')
-    .filter(line => !line.trim().startsWith('#') || line.startsWith("#!"))
+    .filter(line => !line.trim().startsWith('#') || line.startsWith("#!"))  // comment lines
+    .filter(line => line.trim())  // empty lines
     .join('\n')
 
   return script(s)
@@ -284,7 +289,7 @@ let base = {
   textfile,
   script,
   cleanScript,
-  scriptWithTempdir,
+  scriptInTempdir,
 
   ...db,
 

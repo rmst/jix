@@ -60,13 +60,14 @@ let bootstrapGenerator = systemdBase.generator({
 
 /**
  * 
- * @param {{name: string, file: AbstractEffect, runOnInstall: boolean, dependencies: Array<AbstractEffect>}} param0 
+ * @param {{name: string, file: AbstractEffect, runOnInstall: boolean, noUninstall: boolean, dependencies: Array<AbstractEffect>}} param0 
  * @returns {AbstractEffect}
  */
 export const enableUnit = ({
 	name, 
 	file, 
 	runOnInstall=false,
+	noUninstall=false,
 	dependencies=[],
 })=> {
 	if(!name)
@@ -85,7 +86,7 @@ export const enableUnit = ({
 				systemctl daemon-reload
 				${runOnInstall ? `systemctl start ${name}` : ""}
 			`,
-			uninstall: `systemctl stop ${name}`,
+			uninstall: noUninstall ? null : `systemctl stop ${name}`,
 			dependencies: [ ...dependencies, file ]
 		})
 

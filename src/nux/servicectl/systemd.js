@@ -6,7 +6,8 @@ export default ({
 	label,
 	runscript,
 	system = false,
-	runOnInstall = true
+	runOnInstall = true,
+	noUninstall = false,
 }) => nux.effect(target => {
 
 	label ?? (()=>{throw Error("label is required")})()
@@ -36,13 +37,14 @@ export default ({
 		return nixos.systemd.enableUnit({
 			name: serviceName,
 			file: serviceFile,
-			runOnInstall
+			runOnInstall,
+			noUninstall,
 		})
 	}
 
 	const servicePath = system
 	? `/etc/systemd/system/${serviceName}`
-	: `${target.home}/.config/systemd/user/${serviceName}`;
+	: `${nux.ensureDir(`${target.home}/.config/systemd/user`)}/${serviceName}`;
 
 	const systemctlFlags = system ? "" : "--user";
 
@@ -52,6 +54,7 @@ export default ({
 	const startCmd = runOnInstall ? `systemctl ${systemctlFlags} start ${serviceName}` : '';
 
 	return nux.effect({
+		// if necessary, this will replace existing
 		install: ["execShV1", nux.dedent`
 			set -e
 			# Create parent directory for service file if it doesn't exist
@@ -63,7 +66,7 @@ export default ({
 			# Start the service now if requested
 			${startCmd}
 		`],
-		uninstall: ["execShV1", nux.dedent`
+		uninstall: noUninstall ? null : ["execShV1", nux.dedent`
 			# Stop the service
 			systemctl ${systemctlFlags} stop ${serviceName} || true
 			# Disable the service
