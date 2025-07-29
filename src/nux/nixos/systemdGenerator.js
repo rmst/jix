@@ -84,7 +84,7 @@ export const enableUnit = ({
 			install: nux.dedent`
 				${bootstrapGeneratorScript} /run/systemd/generator
 				systemctl daemon-reload
-				${runOnInstall ? `systemctl start ${name}` : ""}
+				${runOnInstall ? `systemctl restart ${name}` : ""}
 			`,
 			uninstall: noUninstall ? null : `systemctl stop ${name}`,
 			dependencies: [ ...dependencies, file ]

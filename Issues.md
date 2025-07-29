@@ -34,7 +34,6 @@ eliminate all uses of quickjs std and os modules. use node shims instead
 
 ensure that nux system configuration evaluations are pure. we have to remove os and std and the ability to import binary libraries and maybe more. also we'd have to find a way to send the evaluation result (the effects graph) to the main nux cli. one way of handling this would be to implement the iframes-like feature in quickjs-x (see quickjs-x/Issues.md)
 
-nux.appendLinesTo, i.e. declarative append/remove lines from a config file, e.g. the hosts file
 
 Build processes should be sandboxed by default. escape hatch via buildImpure or sth
 

@@ -1,0 +1,30 @@
+#!/bin/sh
+
+[ $# -lt 2 ] && { echo "Usage: $0 <file> <command>"; exit 1; }
+
+FILE="$1"
+CMD="$2"
+
+# Determine the correct stat command once
+if [ "$(uname)" = "Darwin" ]; then
+  STAT_CMD="stat -f %m"
+else
+  STAT_CMD="stat -c %Y"
+fi
+
+# Function to get mtime or empty string if file doesn't exist
+get_mtime() {
+  $STAT_CMD "$FILE" 2>/dev/null
+}
+
+last_mtime=$(get_mtime)
+
+while true; do
+  sleep 1
+  mtime=$(get_mtime)
+
+  if [ "$mtime" != "$last_mtime" ]; then
+    eval "$CMD"
+    last_mtime=$mtime
+  fi
+done

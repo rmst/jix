@@ -51,7 +51,8 @@ export default ({
 
 	serviceFile = serviceFile.symlinkTo(servicePath)
 
-	const startCmd = runOnInstall ? `systemctl ${systemctlFlags} start ${serviceName}` : '';
+	// NOTE: "restart" will ensure we start our newly created service
+	const startCmd = runOnInstall ? `systemctl ${systemctlFlags} restart ${serviceName}` : '';
 
 	return nux.effect({
 		// if necessary, this will replace existing
