@@ -1,20 +1,19 @@
 
-import process from 'node:process';
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 
-import nux from 'nux'
-import { ACTIVE_HASHES_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH } from "../../nux/context.js";
+import nux from '../../nux'
+import { ACTIVE_HASHES_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH, LOCAL_BIN_PATH } from "../../nux/context.js";
 import context from '../../nux/context.js';
 import { effect, TargetedEffect, Effect } from '../../nux/effect.js';
 import { dedent } from '../../nux/dedent.js';
 
-import * as util from '../util.js'
 import { tryInstallEffect, tryUninstallEffect } from './installEffect.js';
 import { EXISTING_HASHES_PATH } from '../../nux/context.js';
 import set from './set.js';
 
 import { loadHosts } from './hosts.js';
+import * as util from '../util.js';
 
 
 export default async function apply({
@@ -22,6 +21,11 @@ export default async function apply({
   // name="default", 
   nuxId = null
 }) {
+  util.mkdir(LOCAL_NUX_PATH, true);
+  util.mkdir(LOCAL_BIN_PATH, true);
+  util.mkdir(LOCAL_STORE_PATH, true);
+  util.mkdir(`${LOCAL_NUX_PATH}/logs`, true);  // TODO: get rid of this safely
+  
   // console.log("install-raw")
   // TODO: UPDATE HOSTS if the path is hosts.nux.js or sth
   // let hosts = (await import(`${util.dirname(sourcePath)}/hosts.js`)).default
@@ -33,6 +37,7 @@ export default async function apply({
   let module;
 
   if (nuxId === null) {
+    globalThis.nux = nux
     module = await import(sourcePath);
     nuxId = module.ID;
   }
@@ -60,11 +65,24 @@ export default async function apply({
 
 
   let drvs = nux.target(); // create empty TargetedEffect
+  let result = {}
 
   if (sourcePath) {
 
-    // let obj = module.default[name]
-    let obj = module.default;
+    const runEffects = Object.entries(module.run || {}).map(([name, script]) => {
+      let effect = typeof script === 'string' 
+        ? nux.script`
+            #!/bin/sh
+            ${script}
+          ` 
+        : script
+
+      effect = effect.target({host: null, user: null})
+      result[name] = effect.path
+      return effect
+    })
+
+    let obj = module.default || []
 
     if (obj === undefined)
       throw new Error(`${sourcePath} is missing "export default ..."`);
@@ -75,9 +93,10 @@ export default async function apply({
     else if (typeof obj === 'function')
       drvs = await obj();
 
-
     else
       drvs = obj;
+
+    drvs = [drvs, runEffects]
 
     // console.log(drvs)
     if (!(drvs instanceof TargetedEffect)) {
@@ -209,6 +228,8 @@ export default async function apply({
   activeHashesById[nuxId] = desiredForId
   util.fileWrite(ACTIVE_HASHES_PATH, JSON.stringify(activeHashesById))
 
+
+  return result;
 }
 
 

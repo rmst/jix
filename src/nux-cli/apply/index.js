@@ -1,4 +1,3 @@
-
 import { LOCAL_NUX_PATH, LOCAL_BIN_PATH, LOCAL_STORE_PATH } from '../../nux/context.js';
 
 import * as dirnameJs from '../../nux/util.js';
@@ -10,15 +9,11 @@ import { findNuxRoot, exportsID } from './util.js';
 
 
 export const install = async (path) => {
-  util.mkdir(LOCAL_NUX_PATH, true);
-  util.mkdir(LOCAL_BIN_PATH, true);
-  util.mkdir(LOCAL_STORE_PATH, true);
-  util.mkdir(`${LOCAL_NUX_PATH}/logs`, true);  // TODO: get rid of this safely
 
   // NOTE: path can be any path inside of a git repo and doesn't necessarily have to point to a root.nux.js file
   console.log("path", path);
 
-  path = sh`realpath "${findNuxRoot(path)}"`.trim();
+  path = sh`realpath '${findNuxRoot(path)}'`.trim() // TODO: obviously get rid of this
   console.log("nuxroot", path);
 
   if (!exportsID(path)) {
@@ -50,5 +45,3 @@ export const install = async (path) => {
   
   await apply({sourcePath: path})
 }
-
-

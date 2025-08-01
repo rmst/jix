@@ -7,12 +7,19 @@ import { dedent } from "../../nux/dedent"
 import process from "node:process";
 
 export const updateHosts = (hosts) => {
+	if (!fs.existsSync(LOCAL_NUX_PATH))
+		throw Error(`Nux path doesn't exist: ${LOCAL_NUX_PATH}`)
+
   fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8');
   loadHosts();
 };
 
 export const loadHosts = () => {
-  let hosts = JSON.parse(fs.readFileSync(`${LOCAL_NUX_PATH}/hosts.json`, 'utf8'));
+  const hostsPath = `${LOCAL_NUX_PATH}/hosts.json`;
+  let hosts = {};
+  if (fs.existsSync(hostsPath)) {
+    hosts = JSON.parse(fs.readFileSync(hostsPath, 'utf8'));
+  }
   // console.log("LOAD HOSTS", hosts)
   context.hosts = hosts;
 	return hosts
@@ -69,6 +76,10 @@ export const hostInfo = (host, user) => {
 	if(!globalThis.nuxHosts)
 		globalThis.nuxHosts = loadHosts()
 
+	user = user ?? process.env.USER
+	if(!user)
+		throw Error("USER environment variable not set")
+
 	// TODO: handle host === null (local user)
 	if(!globalThis.nuxHosts)
 		globalThis.nuxHosts = {}
@@ -87,14 +98,14 @@ export const hostInfo = (host, user) => {
 	if(!globalThis.nuxHosts[host ?? "null"].users)
 		globalThis.nuxHosts[host ?? "null"].users = {}
 
-	if(!globalThis.nuxHosts[host ?? "null"].users[user ?? process.env.USER])
-		globalThis.nuxHosts[host ?? "null"].users[user ?? process.env.USER] = {}
+	if(!globalThis.nuxHosts[host ?? "null"].users[user])
+		globalThis.nuxHosts[host ?? "null"].users[user] = {}
 
-	if(!globalThis.nuxHosts[host ?? "null"].users[user ?? process.env.USER].uid) {
-		console.log(`Updating user info for ${user ?? process.env.USER}@${host ?? "localhost"}`)
+	if(!globalThis.nuxHosts[host ?? "null"].users[user].uid) {
+		console.log(`Updating user info for ${user}@${host ?? "localhost"}`)
 
-		globalThis.nuxHosts[host ?? "null"].users[user ?? process.env.USER] = {
-			...globalThis.nuxHosts[host ?? "null"].users[user ?? process.env.USER],
+		globalThis.nuxHosts[host ?? "null"].users[user] = {
+			...globalThis.nuxHosts[host ?? "null"].users[user],
 			...queryUserInfo(host, user),
 		}
 	}

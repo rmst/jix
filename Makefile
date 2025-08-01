@@ -1,13 +1,14 @@
 all: bin/nux
 
 # 	cp -R quickjs-x/node bin/modules/node
-bin/nux: $(shell find ../quickjs-x/node -type f) $(shell find src -type f)
+bin/nux: $(shell find quickjs-x/node -type f) $(shell find src -type f)
 	mkdir -p bin
 	rm -rf bin/modules
 	mkdir -p bin/modules
-	cp -R ../quickjs-x/node bin/modules/node
+	cp -R quickjs-x/node bin/modules/node
 	cp -R src/nux bin/modules/nux
 	cp -R src/nux-cli bin/modules/nux-cli
+	echo "quickjs-x/qjsx-compile bin/nux bin/modules '--unhandled-rejection %/nux-cli/main.js'"
 	quickjs-x/qjsx-compile bin/nux bin/modules '--unhandled-rejection %/nux-cli/main.js'
 
 

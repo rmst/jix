@@ -8,10 +8,12 @@ import apply from './core/apply.js';
 import { install } from './apply/index.js';
 import { forceRemove } from './forceRemove.js';
 import { queryHostInfo, queryUserInfo } from './core/hosts.js';
+import run from './run/index.js';
+
 
 import { showEffect } from './show.js';
 import { readFileSync } from 'node:fs';
-import { LOCAL_NUX_PATH } from '../nux/context.js';
+import { LOCAL_NUX_PATH } from 'nux/context.js';
 
 
 const main = async () => {
@@ -57,6 +59,10 @@ const main = async () => {
     else if (operator === "show") {
       showEffect(scriptArgs[2]);
     }
+
+    else if (operator === "run") {
+      await run(scriptArgs[2], scriptArgs.slice(3));
+    }
   }
 
 }
@@ -68,6 +74,3 @@ main().then(null, e => {
   console.log(e.stack)
   process.exit(1)
 })
-
-
-

@@ -104,7 +104,9 @@ export const tryInstallEffect = (hash) => {
   fs.writeFileSync(
     EXISTING_HASHES_PATH,
     JSON.stringify([...set(
-      JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, "utf8"))
+      fs.existsSync(EXISTING_HASHES_PATH)
+      ? JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, "utf8"))
+      : []
     ).plus([hash])]), 
     'utf8'
   )

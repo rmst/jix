@@ -215,6 +215,7 @@ export const script = (templateStrings, ...values) => writeFile('-w+x')(template
 
 
 export const cleanScript = (templateStrings, ...values) => {
+  throw Error("This function is deprecated because it produces strange indentation. Fix it or use sth else")
   let s
   s = dedent(templateStrings, ...values)
 

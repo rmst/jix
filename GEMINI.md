@@ -11,6 +11,6 @@ The nux CLI entry point is `src/nux-cli/main.js` and is, in addition to writing 
 The directory `src/nuxpkgs` contains build recipes to build certain important open-source software packages.
 
 ### Git
-Never commit without permission from the user. When committing include `Co-Authored-By: Gemini-CLI <noreply@google.com>` at the end.
+Never commit without permission from the user. When committing include `Co-Authored-By: Gemini-CLI` at the end.
 
 Ideally, changes to `src/nuxpkgs` should be committed separately from other changes, notify the user if necessary.
