@@ -4,6 +4,9 @@ This is an unusual and non-trivial project. If you don't understand something as
 ### Formatting
 Only use tabs for indentation. If you encouter a file using spaces, warn the user.
 
+### CLI
+The nux CLI entry point is `src/nux-cli/main.js` and is, in addition to writing their own nux code, the main way users interact with nux.
+
 ### Nuxpkgs
 The directory `src/nuxpkgs` contains build recipes to build certain important open-source software packages.
 
