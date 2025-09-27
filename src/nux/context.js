@@ -10,7 +10,6 @@ export const LOCAL_STORE_PATH = `${LOCAL_NUX_PATH}/store`;
 export let ACTIVE_HASHES_PATH = `${LOCAL_NUX_PATH}/active.json`
 export const EXISTING_HASHES_PATH = `${LOCAL_NUX_PATH}/existing.json`;
 
-
 export const MAGIC_STRING = "d6165af5669c8a3de2aab402ad97c778"
 
 /*

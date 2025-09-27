@@ -1,0 +1,95 @@
+#!/bin/sh
+
+# --- A truly robust, portable script to watch a path and restart a command. ---
+
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
+# 1. Argument Check
+if [ $# -lt 2 ]; then
+  echo "Usage: $0 <path_to_watch> <command> [args...]"
+  echo "Example: $0 ./src npm run dev"
+  exit 1
+fi
+
+PATH_TO_WATCH="$1"
+shift
+
+# 2. Platform-Specific Hashing/Stat Setup
+if [ "$(uname)" = "Darwin" ]; then
+  STAT_FMT="%m %N"
+  HASH_CMD="md5 -q"
+else
+  STAT_FMT="%Y %n"
+  HASH_CMD="md5sum"
+fi
+
+# 3. State-Hashing Function
+get_state_hash() {
+  [ ! -e "$1" ] && echo "" && return
+  find "$1" -type f -exec stat -f "$STAT_FMT" {} + 2>/dev/null | sort | $HASH_CMD | awk '{print $1}'
+}
+
+# 4. PORTABLE Process Killing Function
+get_all_descendants() {
+  local parent_pid="$1"
+  local children=$(ps -ef | awk -v ppid="$parent_pid" '$3 == ppid { print $2 }')
+
+  for child_pid in $children; do
+    echo "$child_pid"
+    get_all_descendants "$child_pid"
+  done
+}
+
+# 5. Cleanup Function and Trap
+child_pid=""
+cleanup() {
+  if [ -n "$child_pid" ]; then
+    echo # Newline for cleaner exit
+    echo "Signal caught. Stopping process tree starting from PID $child_pid..."
+    pids_to_kill="$(get_all_descendants "$child_pid") $child_pid"
+    kill $pids_to_kill 2>/dev/null || true
+  fi
+  exit 0
+}
+
+trap cleanup INT TERM
+
+# 6. Main Loop
+# FIX: Only clear the screen if we are in an interactive terminal.
+if [ -t 1 ]; then clear; fi
+
+echo "--> Watching path: '$PATH_TO_WATCH'"
+echo "--> Running command: '$@'"
+echo "---"
+
+last_hash=$(get_state_hash "$PATH_TO_WATCH")
+
+while true; do
+  sleep 1
+  current_hash=$(get_state_hash "$PATH_TO_WATCH")
+
+  if [ "$current_hash" != "$last_hash" ] || ([ -z "$child_pid" ] && [ -n "$current_hash" ]); then
+    echo # Newline for clarity
+    echo "Change detected. Restarting command..."
+
+    if [ -n "$child_pid" ]; then
+      echo "--> Stopping process tree from PID: $child_pid"
+      pids_to_kill="$(get_all_descendants "$child_pid") $child_pid"
+      kill $pids_to_kill 2>/dev/null || true
+      wait "$child_pid" 2>/dev/null || true
+    fi
+    
+    # FIX: Only clear the screen if we are in an interactive terminal.
+    if [ -t 1 ]; then clear; fi
+    
+    echo "--> Starting command at $(date): $@"
+    echo "---"
+    
+    "$@" &
+    child_pid=$!
+    echo "--> Command started with root PID: $child_pid"
+
+    last_hash=$current_hash
+  fi
+done

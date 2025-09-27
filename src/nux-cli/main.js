@@ -9,7 +9,7 @@ import { install } from './apply/index.js';
 import { forceRemove } from './forceRemove.js';
 import { queryHostInfo, queryUserInfo } from './core/hosts.js';
 import run from './run/index.js';
-
+import init from './init/index.js';
 
 import { showEffect } from './show.js';
 import { readFileSync } from 'node:fs';
@@ -62,6 +62,10 @@ const main = async () => {
 
     else if (operator === "run") {
       await run(scriptArgs[2], scriptArgs.slice(3));
+    }
+
+    else if (operator === "init") {
+      init()
     }
   }
 

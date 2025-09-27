@@ -47,8 +47,8 @@ export function installJsConfig(projectDir) {
     writeFileSync(configPath, content, 'utf8');
 
   } catch (error) {
-    console.error(`Failed to update ${configPath}:`, error);
+    // console.log(`Failed to update ${configPath}:`, error);
     // You could re-throw the error if the caller needs to handle it.
-    // throw error;
+    throw error;
   }
 }

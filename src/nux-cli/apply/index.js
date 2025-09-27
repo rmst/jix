@@ -7,6 +7,7 @@ import { git } from './git.js';
 import apply from '../core/apply.js';
 import { findNuxRoot, exportsID } from './util.js';
 
+import process from 'node:process';
 
 export const install = async (path) => {
 
@@ -29,7 +30,7 @@ export const install = async (path) => {
   console.log("gitroot", gitRoot);
 
 
-  if (!git.isClean(gitRoot)) {
+  if (process.env.NUX_GITCOMMIT && !git.isClean(gitRoot)) {
     // TODO: this should be configurable between {autocommit, fail on dirty, ignore dirty}
     // throw Error(`Uncommited changes in ${path}`)
     // console.log(`git not clean ${path}`)

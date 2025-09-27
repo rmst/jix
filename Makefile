@@ -1,7 +1,7 @@
 all: bin/nux
 
 # 	cp -R quickjs-x/node bin/modules/node
-bin/nux: $(shell find quickjs-x/node -type f) $(shell find src -type f)
+bin/nux: $(shell find quickjs-x/node -type f) $(shell find src -type f) Makefile
 	mkdir -p bin
 	rm -rf bin/modules
 	mkdir -p bin/modules
@@ -20,6 +20,7 @@ $(HOME)/.nux/bin/nux: bin/nux
 	cp bin/nux "${HOME}"/.nux/nux/nux
 	chmod +x "${HOME}"/.nux/nux/nux
 	ln -sf "${HOME}"/.nux/nux/nux "${HOME}"/.nux/bin/nux
+	ln -sfn $(abspath src/nux) "${HOME}"/.nux/nux/lib
 
 dev: bin/nux update
 	rm -rf node_modules

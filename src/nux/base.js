@@ -135,9 +135,9 @@ export const mkdir = (path) => {
  */
 export const scriptInTempdir = (...args) => {
   let inner = script(...args)
-  return cleanScript`
+  // # export NUX_TEMP="$HOME"/${NUX_DIR}/tmp_drv/${HASH}
+  return script`
     #!/bin/sh
-    # export NUX_TEMP="$HOME"/${NUX_DIR}/tmp_drv/${HASH}
     export NUX_TEMP="$(mktemp -d)"
     cd "$NUX_TEMP"
 

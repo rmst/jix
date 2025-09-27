@@ -10,15 +10,18 @@ export default async function run(cmd, args) {
   const manifestPath = './__nux__.js';
 
   if (!fs.existsSync(manifestPath)) {
-    console.error(`No __nux__.js manifest found in the current directory.`);
+    console.log(`No __nux__.js manifest found in the current directory.`);
     return;
   }
 
   // The dynamic import in 'apply' needs an absolute path.
   const absoluteManifestPath = sh`realpath ${manifestPath}`.trim() // TODO: obvious get rid of this
 
+  // TODO: we should make apply silent (or at least remove the output once it's done somehow)
   const runScriptPaths = await apply({ sourcePath: absoluteManifestPath });
 
+  console.log()
+  
   if (!cmd) {
     console.log('Available commands:');
     Object.keys(runScriptPaths).forEach(key => {
@@ -34,7 +37,7 @@ export default async function run(cmd, args) {
   }
 
   try {
-    
+
     execFileSync(scriptPath, args, { stdout: 'inherit', stderr: 'inherit' })
 
   } catch (e) {

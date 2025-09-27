@@ -14,6 +14,10 @@ no gc: implement garbage collection for unreferenced effects json files, current
 
 ### Improvements
 
+cli qol: check direnv for in-project nux api
+
+for sandboxing api inspiration you can check this https://www.youtube.com/watch?v=BV9467UDgDA
+
 store hashes and effects on target device
 
 cli qol: Create nux init, to create nux_modules dir, add nux_modules dir to jsConfig.json, and maybe more
@@ -48,3 +52,5 @@ Maybe move to nix flakes?https://aistudio.google.com/prompts/10uvcPmlcnVG1LcWhBV
 Side-effect free effects could be run in parallel (not a priority for me at the moment)
 
 cli: for nux install print how much bigger .nux/out, etc have gotten
+
+copy best features from uv, npm, cargo, pip (e.g. https://x.com/NielsRogge/status/1969064177470763337, https://docs.astral.sh/uv/pip/environments/)
