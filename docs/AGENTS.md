@@ -14,8 +14,12 @@ In `cli` we want to document every available subcommand and possible args.
 
 The docs you write should be in markdown and read as if they were auto-generated from the code. They should only contain information that you can infer from the code with absolute certainty.
 
+Properties should be split into subsections for classes, namespaces, functions, etc.
+
 For classes/namespaces/objects maintain a separate file where their functions/properties are documented.
 
 Make use of links to point to the file/section whenever you reference something
 
 Provide links to the source files as well
+
+The entry point in each dir should be named Readme.md.
