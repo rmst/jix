@@ -51,6 +51,7 @@ export const copy = (origin, path, mode = '-w') => {
 
 
 export const link = (origin, path, symbolic=false) => effect( target => {
+  // FIXME: we're not doing anythign to verify that path is something valid 
   // TODO?: use builtin link functions
   let { values: [origin2, path2], dependencies } = parseEffectValues(target, [origin, path])
 

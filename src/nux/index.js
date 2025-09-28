@@ -1,20 +1,21 @@
 // This is the root of the nux API
 
-// import { dirname } from './util.js';
-// import { dedent } from './dedent.js';
+// import { dirname } from './util.js'
+// import { dedent } from './dedent.js'
 
-import { TargetedEffect, Effect } from './effect.js';
-import { AbstractEffect } from "./effectUtil.js";
+import { TargetedEffect, Effect } from './effect.js'
+import { AbstractEffect } from "./effectUtil.js"
 
-import { HOME_PLACEHOLDER, NUX_DIR } from './context.js';
+import { HOME_PLACEHOLDER, NUX_DIR } from './context.js'
 import base from './base.js'
 import macos from './macos/index.js'
-import { nixosConfig } from './nixos/nixosConfig.js';
-import shelltools from './shelltools/index.js';
-import service from './servicectl/index.js';
+import { nixosConfig } from './nixos/nixosConfig.js'
+import shelltools from './shelltools/index.js'
+import service from './servicectl/index.js'
 
-import nixos from './nixos';
-import nix from './nix';
+import nixos from './nixos'
+import nix from './nix'
+import git from './git'
 
 let nux = {  
   Effect,
@@ -26,8 +27,6 @@ let nux = {
   shelltools,
 
   ...macos,
-
-  // ...db,
   
   service,
 
@@ -36,6 +35,7 @@ let nux = {
   nixosConfig,
   nixos,
 
+  git,
 
   HOME: HOME_PLACEHOLDER,
   NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,  // TODO: this should be independent of the user home
