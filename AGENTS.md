@@ -1,6 +1,8 @@
 # Nux
 This is an unusual and non-trivial project. If you don't understand something ask the user, he is the original author.
 
+Important: Read through all files in `examples` to get a feeling for the project.
+
 ### Nux CLI
 The nux CLI entry point is `src/nux-cli/main.js` and is, in addition to writing their own nux code, the main way users interact with nux.
 
