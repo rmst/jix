@@ -44,10 +44,6 @@ NixOS-specific utilities including systemd integration.
 
 *Source: [src/nux/nixos/index.js](../../src/nux/nixos/index.js)*
 
-### [db](./db.md)
-Database and persistent state management utilities.
-
-*Source: [src/nux/db.js](../../src/nux/db.js)*
 
 ## Functions
 
@@ -205,6 +201,19 @@ Create a script that runs in a temporary directory.
 - **Returns**: [Effect](./Effect.md)
 
 *Source: [src/nux/base.js:136](../../src/nux/base.js#L136)*
+
+### stateDir(id, owner)
+Create a managed state directory that persists across installs/uninstalls.
+- **Parameters**:
+  - `id` - Unique identifier for the state directory
+  - `owner` - Optional owner user (default: null)
+- **Returns**: [Effect](./Effect.md) with path property pointing to the state directory
+- **Behavior**:
+  - **Install**: Creates or reactivates state directory at `${HOME}/.nux/db/${id}`
+  - **Uninstall**: Moves state directory to `${HOME}/.nux/db-inactive/${id}` for later reactivation
+  - **Owner Management**: If `owner` is specified, directory ownership is changed using `chown -R ${owner}`
+
+*Source: [src/nux/db.js:7](../../src/nux/db.js#L7)*
 
 ### service(options)
 Create cross-platform services (uses launchd on macOS, systemd on Linux/NixOS).
