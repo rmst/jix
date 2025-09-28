@@ -45,6 +45,12 @@ NixOS-specific utilities including systemd integration.
 *Source: [src/nux/nixos/index.js](../../src/nux/nixos/index.js)*
 
 
+### [git](./git.md)
+Git-related helpers.
+
+*Source: [src/nux/git/index.js](../../src/nux/git/index.js)*
+
+
 ## Functions
 
 ### effect(obj)
@@ -230,10 +236,28 @@ Deploy NixOS configuration from local directory.
 
 *Source: [src/nux/nixos/nixosConfig.js](../../src/nux/nixos/nixosConfig.js)*
 
+### launchdJob(options)
+Create a macOS LaunchAgent for a script.
+- **Parameters:** Object with `name`, `config`, `runscript`, `timeout`
+- **Returns:** Array of [Effect](./Effect.md)
+
+Generates a timestamping wrapper script, writes a plist under `~/Library/LaunchAgents`, and uses `launchctl` to (un)load the job.
+
+*Source: [src/nux/macos/launchd.js](../../src/nux/macos/launchd.js)*
+
 ### dirname(path)
 Get directory name from path (equivalent to `dirname` utility).
 
 *Source: [src/nux/util.js](../../src/nux/util.js)*
+
+## Top-Level Values
+
+### macosUtilScripts
+Convenience aliases for macOS helpers (timeout, nj, njl, nji, njs, njopen).
+
+**Type:** Array of [Effect](./Effect.md) instances (from `nux.alias`)
+
+*Source: [src/nux/macos/index.js](../../src/nux/macos/index.js)
 
 ## Constants
 
