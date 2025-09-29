@@ -64,7 +64,8 @@ export default async function apply({
   }
 
 
-  let drvs = nux.target(); // create empty TargetedEffect
+  // Initialize as empty; for delete (no sourcePath) we keep it empty
+  let drvs = []
   let result = {}
 
   if (sourcePath) {
@@ -105,9 +106,9 @@ export default async function apply({
 
       // console.log(`\n${drvs.toDebugString()}\n`)
     }
+    // Flatten only when we constructed drvs from a source
+    drvs = drvs.flatten()
   }
-
-  drvs = drvs.flatten();
 
   // write derivations to disk
   drvs.map(d => {
@@ -225,11 +226,13 @@ export default async function apply({
   // console.log("✅")
 
   // now we write to disk to remember to keep these hashes
-  activeHashesById[nuxId] = desiredForId
+  if (desiredForId.length === 0)
+    delete activeHashesById[nuxId]
+  else
+    activeHashesById[nuxId] = desiredForId
   util.fileWrite(ACTIVE_HASHES_PATH, JSON.stringify(activeHashesById))
 
 
   return result;
 }
-
 
