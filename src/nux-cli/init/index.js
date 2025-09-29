@@ -1,15 +1,37 @@
 
 
-import { installJsConfig } from "./jsconfig.js";
-import process from "node:process";
-import { sh } from "../util.js";
-import { LOCAL_NUX_PATH } from "../../nux/context.js";
+import { installJsConfig } from "./jsconfig.js"
+import process from "node:process"
+import { sh } from "../util.js"
+import { LOCAL_NUX_PATH } from "../../nux/context.js"
+import { dedent } from "../../nux/dedent.js"
 
 
-export default () => {
+function initCmd() {
 	let wd = process.cwd()
 	installJsConfig(wd)  // TODO: this function seems way to complicated
 	sh`mkdir -p '${wd}/nux_modules'`
 	sh`grep '^nux_modules$' .gitignore >/dev/null 2>&1 || { echo; echo 'nux_modules'; } >> .gitignore`
 	sh`ln -sfn '${LOCAL_NUX_PATH}/nux/lib' '${wd}/nux_modules/nux'`
+}
+
+export default {
+	name: 'init',
+	description: 'Initialize a new nux environment.',
+	usage: 'nux init',
+	help: dedent`
+	Initialize nux support in the current working directory.
+
+	This sets up editor hints and links the nux libs locally.
+
+	Example:
+	  nux init
+	`,
+	run(a) {
+		if (a.length > 0 && (a.includes('--help') || a.includes('-h'))) {
+			console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
+			return
+		}
+		return initCmd()
+	}
 }

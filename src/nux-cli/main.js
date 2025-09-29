@@ -4,77 +4,77 @@ import process from 'node:process'
 import * as util from './util.js'
 util.monkeyPatchObjectToString()
 
-import apply from './core/apply.js';
-import { install } from './apply/index.js';
-import { forceRemove } from './forceRemove.js';
-import { queryHostInfo, queryUserInfo } from './core/hosts.js';
-import run from './run/index.js';
-import init from './init/index.js';
-
-import { showEffect } from './show.js';
-import { readFileSync } from 'node:fs';
-import { LOCAL_NUX_PATH } from 'nux/context.js';
+import applyCmd from './apply'
+import runCmd from './run/index.js'
+import initCmd from './init/index.js'
+import showCmd from './show.js'
+import forceRemoveCmd from './forceRemove.js'
+import deleteCmd from './delete.js'
+import hostInfoCmd from './host-info.js'
 
 
 const main = async () => {
+	// Parse argv via node:process
+	const argv = process.argv.slice(2)
 
-  // TODO: assign script args via node:process
+	const printOverview = () => {
+		console.log('Usage:\n')
+		console.log('  nux <command> [arguments...]\n')
+		console.log('Commands:')
+		Object.values(commands).forEach(c => {
+			console.log(`  ${c.name.padEnd(13)} ${c.description}`)
+		})
+		console.log('\nRun `nux <command> --help` for details')
+	}
 
-  if(true) {
-    let operator = scriptArgs[1]
+	const commands = {
+		apply: applyCmd,
+		delete: deleteCmd,
+		'force-remove': forceRemoveCmd,
+		'host-info': hostInfoCmd,
+		show: showCmd,
+		run: runCmd,
+		init: initCmd,
+		help: {
+			name: 'help',
+			description: 'Show help for a command.',
+			usage: 'nux help [command]',
+			run(a) {
+				const which = a[0]
+				if (which && commands[which]) {
+					const c = commands[which]
+					console.log(`${c.name}\n\n${c.description}\n\nUsage:\n  ${c.usage}`)
+					if (c.help) console.log(`\n${c.help}`)
+				} else {
+					printOverview()
+				}
+			}
+		}
+	}
 
-    if(operator === "apply"){
-      let path = scriptArgs[2]
-      // if(path === "_") {
-      //   path = fs.readFileSync(`${LOCAL_NUX_PATH}/last_update_name`, 'utf8')
-      // }
-      // fs.writeFileSync(`${LOCAL_NUX_PATH}/last_update_name`, path)
-      await install(path)
-      return
+	const cmd = argv[0]
+	const args = argv.slice(1)
 
-    }
-    
-    else if (operator === "delete") {
-      // TODO: this shouldn't create a dummy effect
-      // TODO: this should remove the reference to the nux root from .nux
-      let nuxId = scriptArgs[2]
-      apply({nuxId})
-      return
+	if (!cmd || cmd === '--help' || cmd === '-h') {
+		printOverview()
+		return
+	}
 
-    }
-    
-    else if (operator === "force-remove") {
-      let drvs = scriptArgs[2]
-      forceRemove(drvs);
-    }
+	const entry = commands[cmd]
+	if (!entry) {
+		console.log(`Unknown command: ${cmd}\n`)
+		printOverview()
+		process.exitCode = 1
+		return
+	}
 
-    else if (operator === "host-info") {
-      
-      console.log(JSON.stringify(queryHostInfo(scriptArgs[2] || null, scriptArgs[3] || null), null, 2))
-
-      console.log(JSON.stringify(queryUserInfo(scriptArgs[2] || null, scriptArgs[3] || null), null, 2))
-
-    }
-  
-    else if (operator === "show") {
-      showEffect(scriptArgs[2]);
-    }
-
-    else if (operator === "run") {
-      await run(scriptArgs[2], scriptArgs.slice(3));
-    }
-
-    else if (operator === "init") {
-      init()
-    }
-  }
-
+	await entry.run(args)
 }
 
 
 
 main().then(null, e => {
-  console.log(`Error: ${e.message}`)
-  console.log(e.stack)
-  process.exit(1)
+	console.log(`Error: ${e.message}`)
+	console.log(e.stack)
+	process.exit(1)
 })
