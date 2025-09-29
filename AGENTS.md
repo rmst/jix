@@ -1,7 +1,13 @@
 # Nux
 This is an unusual and non-trivial project. If you don't understand something ask the user, he is the original author.
 
-Important: Read through all files in `examples` to get a feeling for the project.
+### Important: At the start of every new conversation
+- Read all of the following documents:
+	- reference/nux/docs/how-nux-works.md
+	- reference/nux/docs/cli/Readme.md
+	- reference/nux/docs/api/Readme.md
+- Read through **all** examples in reference/nux/examples
+- Check the last few git commits (and list the files changed) to get a feeling for what has been worked on recently.
 
 ### Nux CLI
 The nux CLI entry point is `src/nux-cli/main.js` and is, in addition to writing their own nux code, the main way users interact with nux.
