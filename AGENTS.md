@@ -13,7 +13,7 @@ This is an unusual and non-trivial project. If you don't understand something as
 The nux CLI entry point is `src/nux-cli/main.js` and is, in addition to writing their own nux code, the main way users interact with nux.
 
 ### Building
-Important: Read `Makefile`. **Always** use a temporary directory outside of this repo as BUILD_DIR (never use the default).
+Important: Read `Makefile`. **Always** use `$TMPDIR/nux-build` as BUILD_DIR (never use the default).
 
 ### General Instructions
 - Use tabs instead of spaces for indentation
