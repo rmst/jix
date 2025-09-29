@@ -15,7 +15,7 @@ import hostInfoCmd from './host-info.js'
 
 const main = async () => {
 	// Parse argv via node:process
-	const argv = process.argv.slice(2)
+	const argv = process.argv.slice(1)
 
 	const printOverview = () => {
 		console.log('Usage:\n')
