@@ -1,5 +1,8 @@
 import apply from '../core/apply.js'
 import { sh } from '../util.js'
+import nux from '../../nux'
+import * as util from '../util.js'
+import { ACTIVE_HASHES_PATH } from '../../nux/context.js'
 import * as fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import process from 'node:process'
@@ -18,36 +21,60 @@ async function run(cmd, args) {
   // The dynamic import in 'apply' needs an absolute path.
   const absoluteManifestPath = sh`realpath ${manifestPath}`.trim() // TODO: obvious get rid of this
 
-  // TODO: we should make apply silent (or at least remove the output once it's done somehow)
-  const runScriptPaths = await apply({ sourcePath: absoluteManifestPath })
-
-  console.log()
-  
+  // For listing, just read the manifest without applying anything
   if (!cmd) {
+    // Manifests may expect globalThis.nux
+    globalThis.nux = nux
+    const module = await import(absoluteManifestPath)
+    const names = Object.keys(module.run || {})
     console.log('Available commands:')
-    Object.keys(runScriptPaths).forEach(key => {
-      console.log(`- ${key}`)
-    })
+    names.forEach(key => console.log(`- ${key}`))
     return
   }
 
-  const scriptPath = runScriptPaths[cmd]
-  if (!scriptPath) {
-    console.error(`Command "${cmd}" not found in the manifest's run configuration.`)
-    return
+	const name = `run.${cmd}`
+	const nuxId = `${absoluteManifestPath}#${name}`
+
+  // Fail fast if there is a leftover active entry for this run id
+  const activeById = util.exists(ACTIVE_HASHES_PATH)
+    ? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+    : {}
+  if (activeById[nuxId]) {
+    console.error(`Refusing to run: active.json already contains id ${nuxId}. Clean up leftover state first (it should be cleared after each run).`)
+    process.exit(1)
   }
 
+  // Apply only the effects required for this specific run script
+  let scriptPath
   try {
+    scriptPath = await apply({ sourcePath: absoluteManifestPath, name })
+  } catch (e) {
+    console.error(e.message || String(e))
+    return
+  }
+  console.log()
 
-    execFileSync(scriptPath, args, { stdout: 'inherit', stderr: 'inherit' })
-
+  let exitCode = 0
+  try {
+    execFileSync('/bin/sh', [scriptPath, ...args], { stdout: 'inherit', stderr: 'inherit' })
   } catch (e) {
     // The execFileSync function throws an error if the script returns a non-zero exit code.
     // This is expected behavior, so we don't need to log the error unless it's a true execution failure.
     // For now, we can just suppress the error to prevent crashing nux.
     // A more robust solution might inspect the error object.
-    process.exit(e.status || 1)
+    exitCode = e.status || 1
+  } finally {
+    console.log()
+    // Always uninstall effects installed for this run
+    try {
+      await apply({ sourcePath: absoluteManifestPath, uninstall: true, name })
+    } catch (_) {
+      // Best effort cleanup; errors here should not mask the original exit code
+    }
   }
+
+  if (exitCode !== 0)
+    process.exit(exitCode)
 }
 
 export default {

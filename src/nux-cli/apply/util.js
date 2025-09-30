@@ -25,6 +25,7 @@ export function warnAboutStaleManifestIds() {
   if (!fs.existsSync(ACTIVE_HASHES_PATH)) return
   const active = JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
   const stale = Object.keys(active).filter(id => {
+    if (id.includes('#')) return false
     const p = id.startsWith('~/') ? (process.env.HOME || LOCAL_HOME) + id.slice(1) : id
     return !fs.existsSync(p)
   })

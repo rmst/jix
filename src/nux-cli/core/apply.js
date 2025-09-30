@@ -18,7 +18,8 @@ import { warnAboutStaleManifestIds } from '../apply/util.js'
 
 export default async function apply({
 	sourcePath,
-	uninstall = false
+	uninstall = false,
+	name = 'default'
 }) {
 	if (!sourcePath)
 		throw new Error('apply requires a sourcePath')
@@ -29,8 +30,9 @@ export default async function apply({
   
   loadHosts()
 
-  // Derive ID from absolute manifest path
-  const nuxId = sh`realpath '${sourcePath}'`.trim()
+  // Derive ID from absolute manifest path and scoped name
+  const manifestPath = sh`realpath '${sourcePath}'`.trim()
+  const nuxId = name === 'default' ? manifestPath : `${manifestPath}#${name}`
 
   // Prepare results and drvs
   let drvs = []
@@ -56,34 +58,34 @@ export default async function apply({
 		// Warn about stale manifest IDs referencing missing files
 		warnAboutStaleManifestIds()
 
-		const runEffects = Object.entries(module.run || {}).map(([name, script]) => {
-			let effect = typeof script === 'string' 
-				? nux.script`
-						#!/bin/sh
-						${script}
-					`
-				: script
+		// Determine which effects to apply based on name
+		if (name.startsWith('run.')) {
+			const runName = name.slice(4)
+				const script = (module.run || {})[runName]
+				if (!script)
+					throw new Error(`run script not found: ${runName}`)
 
-			effect = effect.target({host: null, user: null})
-			result[name] = effect.path
-			return effect
-		})
+				if (typeof script !== 'string' && (!script || typeof script.target !== 'function'))
+					throw new Error('Run scripts must be of type string or nux.script')
 
-		let obj = module.default || []
+				let effect = typeof script === 'string'
+					? nux.script(script)
+					: script
 
-		if (obj === undefined)
-			throw new Error(`${sourcePath} is missing "export default ..."`)
-
-		else if (obj instanceof Promise)
-			drvs = await obj
-
-		else if (typeof obj === 'function')
-			drvs = await obj()
-
-		else
-			drvs = obj
-
-		drvs = [drvs, runEffects]
+				effect = effect.target({ host: null, user: null })
+				result = effect.path
+				drvs = effect
+		} else {
+			let obj = module.default || []
+			if (obj === undefined)
+				throw new Error(`${sourcePath} is missing "export default ..."`)
+			else if (obj instanceof Promise)
+				drvs = await obj
+			else if (typeof obj === 'function')
+				drvs = await obj()
+			else
+				drvs = obj
+		}
 
 		if (!(drvs instanceof TargetedEffect)) {
 			// drvs can e.g be a list of Effects
@@ -107,7 +109,7 @@ export default async function apply({
 
 
   // TODO: IMPORTANT: first we should ensure that there is no difference between activeHashes and existingHashes, and offer interactively to remove them
-  if(activeHashes.length != existingHashes.length) {
+  if(!uninstall && activeHashes.length != existingHashes.length) {
     console.log(dedent`
       🚨 Warning: active = ${activeHashes.length} != existing = ${existingHashes.length}
     ` + "\n")
