@@ -10,19 +10,19 @@ Host *
 	ControlPath /master/socket/dir/%r@%h:%p
 ```
 
-no gc: implement garbage collection for unreferenced effects json files, currently they just accumulate
+no gc: implement garbage collection for unreferenced effects json files, currently they just accumulate. E.g. whenever an effect is uninstalled, we should add it to a gc.json, which records all uninstalled effects with an "unusedSince" date, and then all effects (and their .nux/out results) not used in over 30 days will be deleted.
 
 ### Improvements
+
+cli: for the nux binary, instead of packaging as self-extracting script, try using quickjs compile (qjsc)
 
 cli qol: check direnv for in-project nux api
 
 for sandboxing api inspiration you can check this https://www.youtube.com/watch?v=BV9467UDgDA
 
-store hashes and effects on target device
+store hashes and effects on target host. while this would be the right thing to do, this would also be a breaking change. we'd have to exclude the "target" host-user-tuple from the identity of each effect. i'm not sure if that is ideal either. another idea would be to duplicate them on both localhost and the target host.
 
-cli qol: Create nux init, to create nux_modules dir, add nux_modules dir to jsConfig.json, and maybe more
-
-cli: Protect against simultaneous nux installs (i.e. implement locking or sth)
+cli: Protect against simultaneous runs of `nux apply` (i.e. implement locking or sth)
 
 Add tests (which could double as examples)
 
