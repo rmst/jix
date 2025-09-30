@@ -1,46 +1,45 @@
 
-import { execFileSync } from 'node:child_process';
-import * as fs from 'node:fs';
+import * as fs from 'node:fs'
 
 import nux from '../../nux'
-import { ACTIVE_HASHES_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH, LOCAL_BIN_PATH } from "../../nux/context.js";
-import context from '../../nux/context.js';
-import { effect, TargetedEffect, Effect } from '../../nux/effect.js';
-import { dedent } from '../../nux/dedent.js';
+import { ACTIVE_HASHES_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH, LOCAL_BIN_PATH, EXISTING_HASHES_PATH } from "../../nux/context.js"
+import { TargetedEffect } from '../../nux/effect.js'
+import { dedent } from '../../nux/dedent.js'
 
-import { tryInstallEffect, tryUninstallEffect } from './installEffect.js';
-import { EXISTING_HASHES_PATH } from '../../nux/context.js';
-import set from './set.js';
+import { tryInstallEffect, tryUninstallEffect } from './installEffect.js'
+import set from './set.js'
 
-import { loadHosts } from './hosts.js';
-import * as util from '../util.js';
+import { loadHosts } from './hosts.js'
+import * as util from '../util.js'
+import { sh } from '../util.js'
 import { warnAboutStaleManifestIds } from '../apply/util.js'
 
 
+
 export default async function apply({
-	sourcePath = null,
+	sourcePath,
 	uninstall = false
 }) {
-  if (sourcePath === null)
-    throw new Error('apply requires a sourcePath')
-  util.mkdir(LOCAL_NUX_PATH, true);
-  util.mkdir(LOCAL_BIN_PATH, true);
-  util.mkdir(LOCAL_STORE_PATH, true);
-  util.mkdir(`${LOCAL_NUX_PATH}/logs`, true);  // TODO: get rid of this safely
+	if (!sourcePath)
+		throw new Error('apply requires a sourcePath')
+  util.mkdir(LOCAL_NUX_PATH, true)
+  util.mkdir(LOCAL_BIN_PATH, true)
+  util.mkdir(LOCAL_STORE_PATH, true)
+  util.mkdir(`${LOCAL_NUX_PATH}/logs`, true)  // TODO: get rid of this safely
   
-  loadHosts();
-
-
-  let module
-  let nuxId = null
+  loadHosts()
 
   // Derive ID from absolute manifest path
-  nuxId = util.sh`realpath '${sourcePath}'`.trim()
+  const nuxId = sh`realpath '${sourcePath}'`.trim()
 
-	// Only import and migrate in non-uninstall mode
+  // Prepare results and drvs
+  let drvs = []
+  let result = {}
+
+	// Build effects (non-uninstall mode)
 	if (!uninstall) {
 		globalThis.nux = nux
-		module = await import(sourcePath)
+		const module = await import(sourcePath)
 		// Migration helper: if a manifest still exports an explicit ID,
 		// rename its key in active.json to the absolute path-based ID.
 		// Safe to delete this block once explicit IDs are no longer encountered.
@@ -56,19 +55,55 @@ export default async function apply({
     }
 		// Warn about stale manifest IDs referencing missing files
 		warnAboutStaleManifestIds()
-  }
+
+		const runEffects = Object.entries(module.run || {}).map(([name, script]) => {
+			let effect = typeof script === 'string' 
+				? nux.script`
+						#!/bin/sh
+						${script}
+					`
+				: script
+
+			effect = effect.target({host: null, user: null})
+			result[name] = effect.path
+			return effect
+		})
+
+		let obj = module.default || []
+
+		if (obj === undefined)
+			throw new Error(`${sourcePath} is missing "export default ..."`)
+
+		else if (obj instanceof Promise)
+			drvs = await obj
+
+		else if (typeof obj === 'function')
+			drvs = await obj()
+
+		else
+			drvs = obj
+
+		drvs = [drvs, runEffects]
+
+		if (!(drvs instanceof TargetedEffect)) {
+			// drvs can e.g be a list of Effects
+			drvs = nux.target(null, drvs)
+		}
+		// Flatten only when we constructed drvs from a source
+		drvs = drvs.flatten()
+	}
 
 
 
   let activeHashesById = util.exists(ACTIVE_HASHES_PATH)
     ? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
-    : {};
+    : {}
 
   let activeHashes = set(Object.values(activeHashesById).flat()).list()
   
   let existingHashes = util.exists(EXISTING_HASHES_PATH)
     ? set(JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, 'utf8'))).list()
-    : [];
+    : []
 
 
   // TODO: IMPORTANT: first we should ensure that there is no difference between activeHashes and existingHashes, and offer interactively to remove them
@@ -80,59 +115,12 @@ export default async function apply({
   }
 
 
-
-  // Initialize as empty; for delete (no sourcePath) we keep it empty
-  let drvs = []
-  let result = {}
-
-  if (!uninstall) {
-
-    const runEffects = Object.entries(module.run || {}).map(([name, script]) => {
-      let effect = typeof script === 'string' 
-        ? nux.script`
-            #!/bin/sh
-            ${script}
-          ` 
-        : script
-
-      effect = effect.target({host: null, user: null})
-      result[name] = effect.path
-      return effect
-    })
-
-    let obj = module.default || []
-
-    if (obj === undefined)
-      throw new Error(`${sourcePath} is missing "export default ..."`);
-
-    else if (obj instanceof Promise)
-      drvs = await obj;
-
-    else if (typeof obj === 'function')
-      drvs = await obj();
-
-    else
-      drvs = obj;
-
-    drvs = [drvs, runEffects]
-
-    // console.log(drvs)
-    if (!(drvs instanceof TargetedEffect)) {
-      // drvs can e.g be a list of Effects
-      drvs = nux.target(null, drvs);
-
-      // console.log(`\n${drvs.toDebugString()}\n`)
-    }
-    // Flatten only when we constructed drvs from a source
-    drvs = drvs.flatten()
-  }
-
   // write derivations to disk
   drvs.map(d => {
-    let p = `${LOCAL_STORE_PATH}/${d.hash}`;
+    let p = `${LOCAL_STORE_PATH}/${d.hash}`
     if (!util.exists(p))
-      util.fileWrite(p, d.serialize());
-  });
+      util.fileWrite(p, d.serialize())
+  })
 
   let desiredForId = set(drvs.map(d => d.hash)).list()
 
@@ -176,7 +164,7 @@ export default async function apply({
     process.exit(1)
   }
   
-  console.log(`Installing ${hashesToInstall.length} of ${desiredForId.length}`);
+  console.log(`Installing ${hashesToInstall.length} of ${desiredForId.length}`)
 
   let installedHashes = [...(function*(){
     for (const hash of hashesToInstall) {
@@ -199,7 +187,7 @@ export default async function apply({
       .slice().reverse()
       .map(hash => [hash, tryUninstallEffect(hash)])
       .filter(([h, e]) => e !== null)
-      .map(([h, e]) => h);
+      .map(([h, e]) => h)
 
     if (failedUninstalls.length != 0) {
       console.log(dedent`
@@ -209,7 +197,7 @@ export default async function apply({
       `)
     }
 
-    console.log(`⏮️ Trying to restore old install...\n`);
+    console.log(`⏮️ Trying to restore old install...\n`)
 
     let reinstalledHashes = [...(function*(){
       for (const hash of hashesToUninstall) {
@@ -247,5 +235,5 @@ export default async function apply({
   util.fileWrite(ACTIVE_HASHES_PATH, JSON.stringify(activeHashesById))
 
 
-  return result;
+  return result
 }
