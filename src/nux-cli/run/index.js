@@ -8,9 +8,10 @@ import { execFileSync } from 'node:child_process'
 import process from 'node:process'
 import * as os from 'os'
 import { dedent } from '../../nux/dedent.js'
+import { withLogger } from '../logger.js'
 
 
-async function run(cmd, args) {
+async function run(cmd, args, { verbose = false } = {}) {
   const manifestPath = './__nux__.js'
 
   if (!fs.existsSync(manifestPath)) {
@@ -47,7 +48,7 @@ async function run(cmd, args) {
   // Apply only the effects required for this specific run script
   let scriptPath
   try {
-    scriptPath = await apply({ sourcePath: absoluteManifestPath, name })
+    scriptPath = await withLogger({ verbose }, async () => await apply({ sourcePath: absoluteManifestPath, name }))
   } catch (e) {
     console.error(e.message || String(e))
     return
@@ -67,7 +68,7 @@ async function run(cmd, args) {
     console.log()
     // Always uninstall effects installed for this run
     try {
-      await apply({ sourcePath: absoluteManifestPath, uninstall: true, name })
+      await withLogger({ verbose }, async () => await apply({ sourcePath: absoluteManifestPath, uninstall: true, name }))
     } catch (_) {
       // Best effort cleanup; errors here should not mask the original exit code
     }
@@ -88,17 +89,38 @@ export default {
 	  <script>   Name of the script under export const run = {...}
 	  [args...]  Arguments forwarded to the invoked script
 
+	Options before <script>:
+	  -v, --verbose  Show Nux apply/uninstall logs for this run
+
+	Notes:
+	  - Only flags placed before <script> are consumed by Nux itself.
+	    Everything after <script> (or after a standalone "--") is forwarded
+	    unchanged to your script.
+
 	Examples:
 	  nux run hello
-	  nux run build --release
+	  nux run --verbose build --release
+	  nux run -- hello --verbose
 	`,
 	async run(a) {
-		if (a.includes('--help') || a.includes('-h')) {
-			console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
-			return
+		// Parse flags before the script name; support "--" sentinel
+		let verbose = false
+		let i = 0
+		while (i < a.length) {
+			const tok = a[i]
+			if (tok === '--') { i++; break }
+			if (tok === '--help' || tok === '-h') {
+				console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
+				return
+			}
+			if (tok === '--verbose' || tok === '-v') { verbose = true; i++; continue }
+			if (tok.startsWith('-')) { i++; continue }
+			break
 		}
-		const sub = a[0]
-		const rest = a.slice(1)
-		await run(sub, rest)
+
+		const sub = a[i]
+		const rest = a.slice(i + 1)
+
+		await run(sub, rest, { verbose })
 	}
 }

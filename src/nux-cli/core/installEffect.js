@@ -1,13 +1,12 @@
-import * as fs from 'node:fs';
-import { execFileSync } from 'node:child_process';
-import process from 'node:process';
+import * as fs from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import process from 'node:process'
 
-import { EXISTING_HASHES_PATH, LOCAL_STORE_PATH, NUX_DIR } from '../../nux/context.js';
-import * as actions from './actions.js';
+import { EXISTING_HASHES_PATH, LOCAL_STORE_PATH, NUX_DIR } from '../../nux/context.js'
+import * as actions from './actions.js'
 import set from './set.js'
-import context from '../../nux/context.js';
-import { sh } from '../util.js';
-import { prettyPrintEffect } from '../prettyPrint.js';
+import context from '../../nux/context.js'
+import { prettyPrintEffect } from '../prettyPrint.js'
 
 
 export const executeCmd = (c, host, user) => {
@@ -72,12 +71,11 @@ export const tryInstallEffect = (hash) => {
         executeCmd(cmd, host, user)
 
       } catch (e) {
-        console.log(`Error with ${hash}:`);
+        console.log(`Error with ${hash}:`)
         prettyPrintEffect(effectData)
         console.log(`\n${e.message}`)
 
-        // console.log(e.stack);
-        console.log("\n...uninstall continuing...\n");
+        console.log("\n...uninstall continuing...\n")
         return e
       }
     }
@@ -87,14 +85,13 @@ export const tryInstallEffect = (hash) => {
     var [f, ...args] = install;
     let cmd = actions[f](...args, hash);
     try {
-      executeCmd(cmd, host, user);
+      executeCmd(cmd, host, user)
     } catch (e) {
-      console.log(`Error with ${hash}:`);
+      console.log(`Error with ${hash}:`)
       prettyPrintEffect(effectData)
       console.log(`\n${e.message}`)
 
-      // console.log(e.stack);
-      console.log("\n...uninstall continuing...\n");
+      console.log("\n...uninstall continuing...\n")
       return e
     }
   }
@@ -124,16 +121,15 @@ export const tryUninstallEffect = (hash) => {
     let [f, ...args] = uninstall;
 
     try {
-      let cmd = actions[f](...args, hash);
-      executeCmd(cmd, host, user);
+      let cmd = actions[f](...args, hash)
+      executeCmd(cmd, host, user)
 
     } catch (e) {
-      console.log(`Error with ${hash}:`);
+      console.log(`Error with ${hash}:`)
       prettyPrintEffect(effectData)
       console.log(`\n${e.message}`)
 
-      // console.log(e.stack);
-      console.log("\n...uninstall continuing...\n");
+      console.log("\n...uninstall continuing...\n")
       return e
     }
   }
@@ -149,5 +145,4 @@ export const tryUninstallEffect = (hash) => {
   )
 
   return null
-};
-
+}

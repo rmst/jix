@@ -13,6 +13,7 @@ import { loadHosts } from './hosts.js'
 import * as util from '../util.js'
 import { sh } from '../util.js'
 import { warnAboutStaleManifestIds } from '../apply/util.js'
+import { log } from '../logger.js'
 
 
 
@@ -140,7 +141,7 @@ export default async function apply({
     .list()
 
 
-  console.log(dedent`
+  log(dedent`
     Uninstalling ${hashesToUninstall.length} of ${activeForId.length}:
       ${[...hashesToUninstall].join('\n  ')}
   `);
@@ -166,7 +167,7 @@ export default async function apply({
     process.exit(1)
   }
   
-  console.log(`Installing ${hashesToInstall.length} of ${desiredForId.length}`)
+  log(`Installing ${hashesToInstall.length} of ${desiredForId.length}`)
 
   let installedHashes = [...(function*(){
     for (const hash of hashesToInstall) {
