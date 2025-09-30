@@ -28,17 +28,17 @@ Installs the specified nux configuration by executing the install actions define
 *Source: [src/nux-cli/main.js:26](../../src/nux-cli/main.js#L26)*
 
 ### delete
-Delete/uninstall a nux effect by its ID.
+Delete/uninstall a nux manifest by its path.
 
 ```
-nux delete <nuxId>
+nux delete <path>
 ```
 
 **Parameters:**
-- `nuxId` - The unique identifier of the nux effect to remove
+- `path` - A filesystem path inside the project containing `__nux__.js` or the path to `__nux__.js` itself
 
 **Description:**
-Removes a previously applied nux effect. This creates a dummy effect for the deletion process.
+Removes a previously applied nux manifest. The path is resolved to its canonical manifest ID internally.
 
 *Source: [src/nux-cli/main.js:37](../../src/nux-cli/main.js#L37)*
 

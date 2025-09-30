@@ -31,9 +31,6 @@ const mainScript = nux.script`
 export default nux.alias({
   my_command: mainScript,
 })
-
-// 4. The ID uniquely identifies the manifest.
-export const ID = 'some-unique-id'
 ```
 
 

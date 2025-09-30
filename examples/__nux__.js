@@ -6,5 +6,3 @@ export const run = {
 	`
 }
 
-
-export const ID = "nux.examples"

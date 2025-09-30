@@ -5,7 +5,7 @@ import * as util from '../util.js'
 import { sh } from '../util.js'
 import { git } from './git.js'
 import apply from '../core/apply.js'
-import { findNuxRoot, exportsID } from './util.js'
+import { findNuxRoot } from './util.js'
 import { dedent } from '../../nux/dedent.js'
 
 import process from 'node:process'
@@ -18,14 +18,7 @@ export const install = async (path) => {
   path = sh`realpath '${findNuxRoot(path)}'`.trim() // TODO: obviously get rid of this
   console.log("nuxroot", path)
 
-  if (!exportsID(path)) {
-    // TODO: this should only be done interactively by asking the user
-
-    // let id = util.uuidV4()
-    let id = util.basename(dirnameJs.dirname(path))
-    console.log(`new path assigning ID ${id}`)
-    sh`echo '\n\n\nexport const ID = "${id}"' >> "${path}"`
-  }
+  
 
   let gitRoot = git.root(path)
   console.log("gitroot", gitRoot)

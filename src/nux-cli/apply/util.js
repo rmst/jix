@@ -1,33 +1,40 @@
-import * as fs from 'node:fs';
+import * as fs from 'node:fs'
+import process from 'node:process'
+import { ACTIVE_HASHES_PATH, LOCAL_HOME } from '../../nux/context.js'
+import { dedent } from '../../nux/dedent.js'
 
 
-
-// const ROOTNAME = "root.nux.js"
-export const ROOTNAME = "__nux__.js"
-
-
-export function exportsID(path) {
-  let text = fs.readFileSync(path, 'utf8');
-
-  return (false
-    || text.includes('export const ID')
-    || text.includes('export let ID')
-    || text.includes('export var ID')
-    || text.includes('export { ID }')
-  );
-}
-
+export const MANIFEST_NAME = "__nux__.js"
 
 export function findNuxRoot(path) {
 
-  if (fs.existsSync(`${path}/${ROOTNAME}`)) {
-    return `${path}/${ROOTNAME}`;
+  if (fs.existsSync(`${path}/${MANIFEST_NAME}`)) {
+    return `${path}/${MANIFEST_NAME}`
   }
 
-  const parentDir = path.substring(0, path.lastIndexOf('/'));
+  const parentDir = path.substring(0, path.lastIndexOf('/'))
   if (parentDir === '' || parentDir === path) {
-    throw new Error(`No ${ROOTNAME} file found in any parent directories`);
+    throw new Error(`No ${MANIFEST_NAME} file found in any parent directories`)
   }
 
-  return findNuxRoot(parentDir);
+  return findNuxRoot(parentDir)
+}
+
+// Print a warning about manifest IDs in active.json whose files no longer exist
+export function warnAboutStaleManifestIds() {
+  if (!fs.existsSync(ACTIVE_HASHES_PATH)) return
+  const active = JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+  const stale = Object.keys(active).filter(id => {
+    const p = id.startsWith('~/') ? (process.env.HOME || LOCAL_HOME) + id.slice(1) : id
+    return !fs.existsSync(p)
+  })
+  if (stale.length) {
+    console.log(dedent`
+			🚨 Warning: The following manifests seem to have moved or been deleted:
+			  ${stale.join('\n  ')}
+
+			Consider cleaning up with:
+			  ${stale.map(id => `nux delete ${id}`).join('\n  ')}
+    ` + "\n")
+  }
 }

@@ -14,13 +14,16 @@ import set from './set.js';
 
 import { loadHosts } from './hosts.js';
 import * as util from '../util.js';
+import { warnAboutStaleManifestIds } from '../apply/util.js'
 
 
 export default async function apply({
-  sourcePath = null,
-  // name="default", 
-  nuxId = null
+	sourcePath = null,
+	// name="default",
+	uninstall = false
 }) {
+  if (sourcePath === null)
+    throw new Error('apply requires a sourcePath')
   util.mkdir(LOCAL_NUX_PATH, true);
   util.mkdir(LOCAL_BIN_PATH, true);
   util.mkdir(LOCAL_STORE_PATH, true);
@@ -34,12 +37,31 @@ export default async function apply({
   loadHosts();
 
 
-  let module;
+  let module
+  let nuxId = null
 
-  if (nuxId === null) {
-    globalThis.nux = nux
-    module = await import(sourcePath);
-    nuxId = module.ID;
+  // Derive ID from absolute manifest path
+  nuxId = util.sh`realpath '${sourcePath}'`.trim()
+
+	// Only import and migrate in non-uninstall mode
+	if (!uninstall) {
+		globalThis.nux = nux
+		module = await import(sourcePath)
+		// Migration helper: if a manifest still exports an explicit ID,
+		// rename its key in active.json to the absolute path-based ID.
+		// Safe to delete this block once explicit IDs are no longer encountered.
+		if (module && module.ID) {
+      let active = util.exists(ACTIVE_HASHES_PATH)
+        ? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+        : {}
+      if (active[module.ID]) {
+        active[nuxId] = active[module.ID]
+        delete active[module.ID]
+        util.fileWrite(ACTIVE_HASHES_PATH, JSON.stringify(active))
+      }
+    }
+		// Warn about stale manifest IDs referencing missing files
+		warnAboutStaleManifestIds()
   }
 
 
@@ -59,16 +81,17 @@ export default async function apply({
   if(activeHashes.length != existingHashes.length) {
     console.log(dedent`
       🚨 Warning: active = ${activeHashes.length} != existing = ${existingHashes.length}
-    `)
+    ` + "\n")
     // process.exit(1)
   }
+
 
 
   // Initialize as empty; for delete (no sourcePath) we keep it empty
   let drvs = []
   let result = {}
 
-  if (sourcePath) {
+  if (!uninstall) {
 
     const runEffects = Object.entries(module.run || {}).map(([name, script]) => {
       let effect = typeof script === 'string' 
@@ -235,4 +258,3 @@ export default async function apply({
 
   return result;
 }
-
