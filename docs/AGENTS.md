@@ -4,7 +4,7 @@ These docs contain both hand-written as well as auto/AI-generated docs. Specific
 ## generate-docs-123
 When the user says "generate-docs-123" check the file `./last-updated` in this directory. If you find a commit hash in there you know that this is the last commit that this procedure has been applied to. If you find it empty, then it has never been applied.
 
-Use git to determine whether any files have changed in the target source directory since the last doc update. The go read all the relevant files and create or update the relevant docs.
+Use git to determine which files have changed in the target source directory since the last doc update. Then, read though all the relevant changes/files and create or update the respective docs. **Do not change things that don't have to be changed!**
 
 After you're finished write the latest commit hash into `./last-updated`
 
