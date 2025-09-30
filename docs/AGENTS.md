@@ -20,6 +20,6 @@ For classes/namespaces/objects maintain a separate file where their functions/pr
 
 Make use of links to point to the file/section whenever you reference something
 
-Provide links to the source files as well
+Provide links to the source files as well.
 
 The entry point in each dir should be named Readme.md.
