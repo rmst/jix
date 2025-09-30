@@ -19,7 +19,6 @@ import { warnAboutStaleManifestIds } from '../apply/util.js'
 
 export default async function apply({
 	sourcePath = null,
-	// name="default",
 	uninstall = false
 }) {
   if (sourcePath === null)
@@ -29,11 +28,6 @@ export default async function apply({
   util.mkdir(LOCAL_STORE_PATH, true);
   util.mkdir(`${LOCAL_NUX_PATH}/logs`, true);  // TODO: get rid of this safely
   
-  // console.log("install-raw")
-  // TODO: UPDATE HOSTS if the path is hosts.nux.js or sth
-  // let hosts = (await import(`${util.dirname(sourcePath)}/hosts.js`)).default
-  // if(hosts)
-  //   updateHosts(hosts)
   loadHosts();
 
 
@@ -244,10 +238,7 @@ export default async function apply({
 
   }
 
-
   // success - desired hashes were installed
-  // console.log("✅")
-
   // now we write to disk to remember to keep these hashes
   if (desiredForId.length === 0)
     delete activeHashesById[nuxId]
