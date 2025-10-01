@@ -24,6 +24,14 @@ git clone --recurse-submodules $PATH_TO_THIS_REPO
 make all
 ```
 
+
+### Design
+Why I chose Javascript for Nux:
+- Great multiline string and string interpolation support to embed shell scripts (and other scripts / config / text files)
+- Decent functional programming support (e.g. Python lacks multi-line anonymous functions)
+- Great dev tools support (e.g. VSCode support for JS is outstanding)
+- Great, super minimalist interpreter: Fabrice Bellard's Quickjs
+
 ### Goals
 Bootstrapability: nux is (and should remain) buildable (on Linux) with nothing other than `make` and `gcc`
 
