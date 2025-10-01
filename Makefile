@@ -2,6 +2,9 @@ BUILD_DIR ?= bin
 
 all: $(BUILD_DIR)/nux
 
+test:
+	@BUILD_DIR="${TMPDIR}/nux-build" ENGINE="${ENGINE}" bash test/readline/readline.sh
+
 # 	cp -R quickjs-x/node bin/modules/node
 
 $(BUILD_DIR)/nux: $(shell find quickjs-x -type f) $(shell find src -type f) Makefile
