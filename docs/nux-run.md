@@ -47,7 +47,7 @@ export const run = {
 
 When you execute `nux run <command-name>`, Nux performs the following steps:
 
-1.  **Finds Manifest**: Locates the `__nux__.js` file in the current directory.
+1.  **Finds Manifest**: Locates the `__nux__.js` file in the current directory (or a path provided via `-f/--file`).
 2.  **Resolves Script + Deps**: Looks up the selected entry under `export const run`, validates it is a string or `nux.script`, and infers only that script’s dependencies (e.g. interpolated helpers).
 3.  **Applies Scoped Effects**: Applies just the effects needed for this run script (scoped install), failing fast if stale state for the same run id is still active.
 4.  **Executes Command**: Runs the generated script via `/bin/sh`, forwarding any additional arguments.
@@ -59,6 +59,9 @@ When you execute `nux run <command-name>`, Nux performs the following steps:
 To run a command defined in the manifest, navigate to the directory containing the `__nux__.js` file and use `nux run`.
 
 ```bash
+# Run the default entry (if defined)
+$ nux run
+
 # Run the simple 'hello' command
 $ nux run hello
 Hello from your app!
@@ -68,3 +71,17 @@ $ nux run with-helper
 Running a command with a helper...
 I am a helper script!
 ```
+
+### Selecting a manifest with -f/--file
+
+You can point `nux run` at a specific manifest file or directory using `-f, --file`.
+
+```bash
+# Use a manifest located in a different directory
+$ nux run -f ./my-app hello
+
+# Or pass the file explicitly
+$ nux run --file ./my-app/__nux__.js with-helper
+```
+
+When a directory is provided, Nux looks for `<dir>/__nux__.js`. If the resolved file does not exist, the command prints an error and exits.

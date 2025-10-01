@@ -15,6 +15,5 @@ export const log = (...args) => {
 }
 
 export const error = (...args) => {
-	console.error(...args)
+	console.log(...args)
 }
-

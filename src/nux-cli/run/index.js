@@ -6,32 +6,36 @@ import { ACTIVE_HASHES_PATH } from '../../nux/context.js'
 import * as fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import process from 'node:process'
-import * as os from 'os'
 import { dedent } from '../../nux/dedent.js'
 import { withLogger } from '../logger.js'
 
 
-async function run(cmd, args, { verbose = false } = {}) {
-  const manifestPath = './__nux__.js'
+async function run(cmd, args, { verbose = false, file } = {}) {
+	let manifestPath = './__nux__.js'
+	const join = (a, b) => (a.endsWith('/') || a.endsWith('\\')) ? a + b : a + '/' + b
+	if (file) {
+		let candidate = file
+		if (!fs.existsSync(candidate)) {
+			console.log(`Specified path does not exist: ${candidate}`)
+			return
+		}
+		const stat = fs.statSync(candidate)
+		if (stat.isDirectory())
+			candidate = join(candidate, '__nux__.js')
+		manifestPath = candidate
+	}
 
-  if (!fs.existsSync(manifestPath)) {
-    console.log(`No __nux__.js manifest found in the current directory.`)
-    return
-  }
+	if (!fs.existsSync(manifestPath)) {
+		console.log(`Manifest not found: ${manifestPath}`)
+		return
+	}
 
   // The dynamic import in 'apply' needs an absolute path.
   const absoluteManifestPath = sh`realpath ${manifestPath}`.trim() // TODO: obvious get rid of this
 
-  // For listing, just read the manifest without applying anything
-  if (!cmd) {
-    // Manifests may expect globalThis.nux
-    globalThis.nux = nux
-    const module = await import(absoluteManifestPath)
-    const names = Object.keys(module.run || {})
-    console.log('Available commands:')
-    names.forEach(key => console.log(`- ${key}`))
-    return
-  }
+  // Default to the "default" entry if no name is provided
+  if (!cmd)
+    cmd = 'default'
 
 	const name = `run.${cmd}`
 	const nuxId = `${absoluteManifestPath}#${name}`
@@ -41,18 +45,13 @@ async function run(cmd, args, { verbose = false } = {}) {
     ? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
     : {}
   if (activeById[nuxId]) {
-    console.error(`Refusing to run: active.json already contains id ${nuxId}. Clean up leftover state first (it should be cleared after each run).`)
+    console.log(`Refusing to run: active.json already contains id ${nuxId}. Clean up leftover state first (it should be cleared after each run).`)
     process.exit(1)
   }
 
-  // Apply only the effects required for this specific run script
-  let scriptPath
-  try {
-    scriptPath = await withLogger({ verbose }, async () => await apply({ sourcePath: absoluteManifestPath, name }))
-  } catch (e) {
-    console.error(e.message || String(e))
-    return
-  }
+	// Apply only the effects required for this specific run script
+	let scriptPath
+	scriptPath = await withLogger({ verbose }, async () => await apply({ sourcePath: absoluteManifestPath, name }))
   console.log()
 
   let exitCode = 0
@@ -81,30 +80,33 @@ async function run(cmd, args, { verbose = false } = {}) {
 export default {
 	name: 'run',
 	description: 'Execute a nux script or command.',
-	usage: 'nux run <script> [args...]',
+	usage: 'nux run <command-name> [args...]',
 	help: dedent`
-	Run a script defined in the current directory's __nux__.js manifest.
+	Run a command defined in the current directory's __nux__.js manifest.
 
 	Arguments:
-	  <script>   Name of the script under export const run = {...}
+	  <command-name>  Name of the entry under export const run = {...}
 	  [args...]  Arguments forwarded to the invoked script
 
-	Options before <script>:
-	  -v, --verbose  Show Nux apply/uninstall logs for this run
+	Options before <command-name>:
+	  -v, --verbose        Show Nux apply/uninstall logs for this run
+	  -f, --file <path>    Use a specific manifest file or directory
 
 	Notes:
-	  - Only flags placed before <script> are consumed by Nux itself.
-	    Everything after <script> (or after a standalone "--") is forwarded
+	  - Only flags placed before <command-name> are consumed by Nux itself.
+	    Everything after <command-name> (or after a standalone "--") is forwarded
 	    unchanged to your script.
 
 	Examples:
+	  nux run
 	  nux run hello
 	  nux run --verbose build --release
-	  nux run -- hello --verbose
+	  nux run -- hello --debug
 	`,
 	async run(a) {
 		// Parse flags before the script name; support "--" sentinel
 		let verbose = false
+		let file
 		let i = 0
 		while (i < a.length) {
 			const tok = a[i]
@@ -114,6 +116,21 @@ export default {
 				return
 			}
 			if (tok === '--verbose' || tok === '-v') { verbose = true; i++; continue }
+			if (tok === '-f') {
+				file = a[i + 1]
+				i += 2
+				continue
+			}
+			if (tok.startsWith('--file=')) {
+				file = tok.slice('--file='.length)
+				i++
+				continue
+			}
+			if (tok === '--file') {
+				file = a[i + 1]
+				i += 2
+				continue
+			}
 			if (tok.startsWith('-')) { i++; continue }
 			break
 		}
@@ -121,6 +138,6 @@ export default {
 		const sub = a[i]
 		const rest = a.slice(i + 1)
 
-		await run(sub, rest, { verbose })
+		await run(sub, rest, { verbose, file })
 	}
 }

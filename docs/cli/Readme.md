@@ -92,15 +92,19 @@ Shows detailed information about the specified nux effect, including its configu
 Execute a nux script or command.
 
 ```
-nux run <script> [args...]
+nux run <command-name> [args...]
 ```
 
 **Parameters:**
-- `script` - The script or command to execute
+- `command-name` - The run entry name to execute (defaults to `default` if omitted)
 - `args` - Optional arguments to pass to the script
 
+**Options (before <command-name>):**
+- `-v, --verbose` Show apply/uninstall logs for this run
+- `-f, --file <path>` Use a specific manifest file or directory
+
 **Description:**
-Runs the specified script or command with the provided arguments in the nux environment.
+Runs the specified entry defined under `export const run = {...}` in a Nux manifest. By default, the manifest is `./__nux__.js`. Use `-f/--file` to point to a different manifest file or a directory containing one. If `<name>` is not provided, Nux runs the `default` entry.
 
 *Source: [src/nux-cli/main.js:63](../../src/nux-cli/main.js#L63)*
 
