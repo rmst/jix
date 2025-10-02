@@ -3,10 +3,10 @@ This is an unusual and non-trivial project. If you don't understand something as
 
 ### Important: At the start of every new conversation
 - Read all of the following documents:
-	- reference/nux/docs/how-nux-works.md
-	- reference/nux/docs/cli/Readme.md
-	- reference/nux/docs/api/Readme.md
-- Read through **all** examples in reference/nux/examples
+	- docs/how-nux-works.md
+	- docs/cli/Readme.md
+	- docs/api/Readme.md
+- Read through **all** examples in examples/
 - Check the last few git commits (and list the files changed) to get a feeling for what has been worked on recently.
 
 ### Nux CLI
