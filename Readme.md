@@ -1,84 +1,50 @@
 # Nux
-
-Declarative system configurations using Javascript
-
-
-
-### Usage
-
-`nux apply __nux__.js`
+Declarative development and system configurations using Javascript (or Typescript, maybe)
 
 
 #### Cluster management
 One use case for nux is to manage one or more machines based on a single git repository containing .js files describing the desired state of those machines.
 
 
-
-### Building
-
+### Install
+This repo contains everything to build Nux from source (including the Quickjs Javascript engine). It only requires `make` and a C compiler and should take less than a minute to build.
 ```bash
-git clone --recurse-submodules $PATH_TO_THIS_REPO
+git clone --recurse-submodules "https://github.com/rmst/nux"
+cd nux
+make install
 ```
 
-```bash
-make all
-```
+
+### Nux can replace the following tools
+- [o] Ansible
+- [o] docker compose (yes, but doesn't do health checks yet and maybe a few other things)
+- [o] nix home-manager (yes, but might have some goodies missing (TODO: check))
+- [ ] devenv (see issues what's missing)
+- [ ] direnv
 
 
 ### Design
 Why I chose Javascript for Nux:
 - Great multiline string and string interpolation support to embed shell scripts (and other scripts / config / text files)
-- Decent functional programming support (e.g. Python lacks multi-line anonymous functions)
+- Decent functional programming support (e.g. as opposed to Python, which lacks multi-line anonymous functions)
 - Great dev tools support (e.g. VSCode support for JS is outstanding)
 - Great, super minimalist interpreter: Fabrice Bellard's Quickjs
 
-### Goals
-Bootstrapability: nux is (and should remain) buildable (on Linux) with nothing other than `make` and `gcc`
+
+### Why was Nux built
+- Nix language is unfamiliar to most and poorly supported in editors
+- Nix seemed like a nightmare to install on MacOS
+  - needs to set up a new hard-drive partitition
+  - requires background services
+  - sometimes breaks on MacOS updates
+- With Nux: single binary built from source, all state is stored in `~/.nux`
+- On NixOS `nixos-rebuild switch` (required whenever updating anything) was too slow. E.g. trying to change a systemd service takes a few milliseconds when using systemd directly on Debian but on Nixos with `nixos-rebuild switch` it took/takes 15s or more. Now, with Nux (even on NixOS) it takes a few milliseconds again
+- It is non-trivial to build Nix from source without already having Nix
+
+
+### Additional goals
+Bootstrapability: Nux is (and should remain) buildable with nothing other than `make` and `gcc`
 
 
 ### Development
-
-To update quickjs-x submodule run
-```bash
-git submodule update --remote quickjs-x
-```
-
-Note that quickjs-x only provides a very minimal Node.js standard library shim. Most functions aren't implemented. If we're missing something add a comment in this section of the readme so we can fix it. 
-
-
-
-### The Effects System
-
-Two main types of effects:
-- pure effects: e.g. built packages and artifacts
-- impure effects: e.g. system configuration
-
-#### Rules and assumptions:
-
-For impure effects ordering must not matter, depending on previous configurations they can be applied in arbitrary order except that dependencies are always applied before (obviously)
-
-
-### VSCode Autocomplete
-
-The `compilerOptions` makes available `import nux from "nux"` while the `include` option makes available `nux` as a global variable.
-
-TODO: maybe autogenerate `jsconfig.json` as part of of `nux init` or sth
-
-jsconfig.json
-```json
-{
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "*": ["nux_modules/*"]
-    }
-  },
-  "include": [
-    "**/*",
-    "nux_modules/*"
-  ],
-  "exclude": [
-
-  ]
-}
-```
+The quickjs-x submodule provides a very incomplete Nodejs standard library shim but this allows us to write code that works both with Quickjs and Nodejs.
