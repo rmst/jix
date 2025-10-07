@@ -1,5 +1,3 @@
-// https://aistudio.google.com/prompts/1jyh57-eiFXNBwUADWEwzKSnVxxrdimQE
-
 /**
  * A central, private registry for active context values.
  * The Map holds a context's unique Symbol ID as a key and a stack (array) 

@@ -8,7 +8,6 @@ import { dedent } from '../nux/dedent';
 
 
 export function relpath(from, to) {
-	// https://chatgpt.com/c/677e8740-bb78-8013-8000-894d66c69cc8
 	const fromParts = from.split('/').filter(Boolean);
 	const toParts = to.split('/').filter(Boolean);
 

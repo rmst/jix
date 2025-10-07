@@ -37,10 +37,6 @@ export const jobsDir = db.stateDir("nux.jobs")
 	```
 */
 export const launchdJob = ({name, config, runscript, timeout=null}) => {
-	/* 
-		https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/4a977680-d227-4001-a228-5f4b65a19910
-	*/
-
 	name ?? (()=>{throw Error()})()
 	config ?? (()=>{throw Error()})()
 	runscript ?? (()=>{throw Error()})()
@@ -108,8 +104,6 @@ export const launchdJob = ({name, config, runscript, timeout=null}) => {
 	// let TARGET = "user/$(id -u)"
 
 	let load_unload = nux.effect({
-		// https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/2c6eb981-9987-4ac6-8cb3-48877d315b48
-
 		install: ["execShV1", nux.dedent`
 			# uninstall if launch agent already exists (to increase robustness)
 			launchctl list | grep -q ${label} && launchctl bootout ${TARGET}/${label} || true
