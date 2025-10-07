@@ -1,56 +1,35 @@
+### Fixes
 
-### Bugs
+feat(cli-gc): implement basic garbage collection by introducing the new `nux gc` command
 
+implement log rotation for nux.service logs
 
-we should create our own config and also create our own master socket directory (to make multiple connections fast), i.e.
-```
-Host *
-	ControlMaster auto
-	ControlPersist 3s
-	ControlPath /master/socket/dir/%r@%h:%p
-```
-
-no gc: implement garbage collection for unreferenced effects json files, currently they just accumulate. E.g. whenever an effect is uninstalled, we should add it to a gc.json, which records all uninstalled effects with an "unusedSince" date, and then all effects (and their .nux/out results) not used in over 30 days will be deleted.
+ui(MarkdownComponent): citations aren't visually distinct from normal text
 
 ### Improvements
 
+instead of adding `~/.nux/bin` to PATH in .bashrc do `source ~/.nux/shell_integration`
+
 cli: for the nux binary, instead of packaging as self-extracting script, try using quickjs compile (qjsc)
 
-cli qol: check direnv for in-project nux api
+maybe add `nux services` subcommand
 
-for sandboxing api inspiration you can check this https://www.youtube.com/watch?v=BV9467UDgDA
-
-store hashes and effects on target host. while this would be the right thing to do, this would also be a breaking change. we'd have to exclude the "target" host-user-tuple from the identity of each effect. i'm not sure if that is ideal either. another idea would be to duplicate them on both localhost and the target host.
-
-cli: Protect against simultaneous runs of `nux apply` (i.e. implement locking or sth)
+cli: Protect against simultaneous runs of `nux apply`, implement locking via mkdir (works across all posix systems since mkdir is atomic)
 
 Add tests (which could double as examples)
 
-cli: if nux install doesn't find an install path, i.e. we're looking at a nux library file, instead of failing, maybe check all the installed nux roots if they would be affected by the library change. This could be done either via static import analysis or by actually running all nux roots (since they should be side-effect free)
-
-nux should be embeddable into other applications and support completely contained operation with custom state directories, i.e. it should never hardcode stuff like `~/.nux`
-
-effect.check: In addition to install and uninstall, add a check function which can check if the effect is already (or still) in place. This would allow for re-checking the system but also make it more robust when first applying the effect
-
-effect.installCheck: In addition to install, uninstall and check add an installCheck function that checks whether basic criteria are met for the effect to be installed, e.g. to write a file we need to have write permission and a file of that name shouldn't already exist. This could probably avoid a lot of partially applied nux installs
+cli(nux apply): if nux install doesn't find an install path, i.e. we're looking at a nux library file, instead of failing, maybe check all the installed nux roots if they would be affected by the library change. This could be done either via static import analysis or by actually running all nux roots (since they should be side-effect free)
 
 eliminate all uses of quickjs std and os modules. use node shims instead
 
 ensure that nux system configuration evaluations are pure. we have to remove os and std and the ability to import binary libraries and maybe more. also we'd have to find a way to send the evaluation result (the effects graph) to the main nux cli. one way of handling this would be to implement the iframes-like feature in quickjs-x (see quickjs-x/Issues.md)
 
-
 Build processes should be sandboxed by default. escape hatch via buildImpure or sth
 
-Build process output could be hashed and that is used as the input to subsequent effects/derivations. This would require changing the nux install process quite a bit, we wouldn't know beforehand what we actually need to run
+(Side-effect free) effects should be run in parallel
 
-Make a job system that abstracts over launchd and systemd and provides options for health checks, and AI health checks and supervision (NODE: systemd dynamicuser https://aistudio.google.com/prompts/1Bm1yjwQX3JyUF99cuKAuFsvdhdVG2uDT)
+add way to extend MANPATH (so we can do `man nux` and `man :mycustomscript:`)
 
-Maybe make a sandbox that abstracts over sandbox-exec and firejail (or sth)
+Add typescript support (requires source map support in quickjs https://github.com/bellard/quickjs/issues/352)
 
-Maybe move to nix flakes?https://aistudio.google.com/prompts/10uvcPmlcnVG1LcWhBV8WU4-dZ6UuwQJk
-
-Side-effect free effects could be run in parallel (not a priority for me at the moment)
-
-cli: for nux install print how much bigger .nux/out, etc have gotten
-
-copy best features from uv, npm, cargo, pip (e.g. https://x.com/NielsRogge/status/1969064177470763337, https://docs.astral.sh/uv/pip/environments/)
+feat(advanced-gc): E.g. whenever an effect is uninstalled, we should add it to a gc.json, which records all uninstalled effects with an "unusedSince" date, and then all effects (and their .nux/out results) not used in over 30 days will be deleted.
