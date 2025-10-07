@@ -8,10 +8,6 @@ ui(MarkdownComponent): citations aren't visually distinct from normal text
 
 ### Improvements
 
-instead of adding `~/.nux/bin` to PATH in .bashrc do `source ~/.nux/shell_integration`
-
-cli: for the nux binary, instead of packaging as self-extracting script, try using quickjs compile (qjsc)
-
 maybe add `nux services` subcommand
 
 cli: Protect against simultaneous runs of `nux apply`, implement locking via mkdir (works across all posix systems since mkdir is atomic)

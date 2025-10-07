@@ -3,7 +3,7 @@ BUILD_DIR ?= bin
 all: $(BUILD_DIR)/nux
 
 test:
-	@BUILD_DIR="${TMPDIR}/nux-build" ENGINE="${ENGINE}" bash test/readline/readline.sh
+	@BUILD_DIR="${TMPDIR}/nux-build" ENGINE="${ENGINE}" sh test/readline/readline.sh
 
 # 	cp -R quickjs-x/node bin/modules/node
 
@@ -20,16 +20,14 @@ $(BUILD_DIR)/nux: $(shell find quickjs-x -type f) $(shell find src -type f) Make
 	$(BUILD_DIR)/quickjs-x/qjsx-compile $(BUILD_DIR)/nux $(BUILD_DIR)/modules '--unhandled-rejection %/nux-cli/main.js'
 
 
-install: $(HOME)/.nux/bin/nux
+install: $(BUILD_DIR)/quickjs-x/bin/qjsx
+	sh install.sh
 
-
-$(HOME)/.nux/bin/nux: $(BUILD_DIR)/nux
-	mkdir -p "${HOME}"/.nux/nux
-	rm -f "${HOME}"/.nux/nux/nux
-	cp $(BUILD_DIR)/nux "${HOME}"/.nux/nux/nux
-	chmod +x "${HOME}"/.nux/nux/nux
-	ln -sf "${HOME}"/.nux/nux/nux "${HOME}"/.nux/bin/nux
-	ln -sfn $(abspath src/nux) "${HOME}"/.nux/nux/lib
+$(BUILD_DIR)/quickjs-x/bin/qjsx:
+	mkdir -p $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)/quickjs-x
+	cp -R quickjs-x $(BUILD_DIR)/quickjs-x
+	cd $(BUILD_DIR)/quickjs-x && $(MAKE) bin/qjsx
 
 dev: $(BUILD_DIR)/nux update
 	rm -rf node_modules
