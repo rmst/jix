@@ -1,5 +1,4 @@
 # Nux
-This is an unusual and non-trivial project. If you don't understand something ask the user, he is the original author.
 
 ### Important: At the start of every new conversation
 - Read all of the following documents:

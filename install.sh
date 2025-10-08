@@ -31,7 +31,7 @@ cat > "${HOME}/.nux/nux/nux" << 'EOF'
 set -e
 
 # Run qjsx with module path set
-QJSXPATH="${HOME}/.nux/nux/modules" exec "${HOME}/.nux/nux/qjsx" --unhandled-rejection "${HOME}/.nux/nux/modules/nux-cli/main.js" "$@"
+QJSXPATH="${HOME}/.nux/nux/modules" exec "${HOME}/.nux/nux/qjsx" --no-unhandled-rejection "${HOME}/.nux/nux/modules/nux-cli/main.js" "$@"
 EOF
 
 chmod +x "${HOME}/.nux/nux/nux"

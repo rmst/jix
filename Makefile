@@ -17,17 +17,12 @@ $(BUILD_DIR)/nux: $(shell find quickjs-x -type f) $(shell find src -type f) Make
 	# Build qjsx in a dedicated copy under $(BUILD_DIR) so all artifacts live in BUILD_DIR
 	rm -rf $(BUILD_DIR)/quickjs-x
 	cp -R quickjs-x $(BUILD_DIR)/quickjs-x
-	$(BUILD_DIR)/quickjs-x/qjsx-compile $(BUILD_DIR)/nux $(BUILD_DIR)/modules '--unhandled-rejection %/nux-cli/main.js'
+	$(BUILD_DIR)/quickjs-x/qjsx-compile $(BUILD_DIR)/nux $(BUILD_DIR)/modules '--no-unhandled-rejection %/nux-cli/main.js'
 
 
-install: $(BUILD_DIR)/quickjs-x/bin/qjsx
+install:
+	$(MAKE) -C quickjs-x BIN_DIR=$(CURDIR)/$(BUILD_DIR)/quickjs-x/bin $(CURDIR)/$(BUILD_DIR)/quickjs-x/bin/qjsx
 	sh install.sh
-
-$(BUILD_DIR)/quickjs-x/bin/qjsx:
-	mkdir -p $(BUILD_DIR)
-	rm -rf $(BUILD_DIR)/quickjs-x
-	cp -R quickjs-x $(BUILD_DIR)/quickjs-x
-	cd $(BUILD_DIR)/quickjs-x && $(MAKE) bin/qjsx
 
 dev: $(BUILD_DIR)/nux update
 	rm -rf node_modules
