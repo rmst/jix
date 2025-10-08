@@ -10,24 +10,21 @@ import { HOME_PLACEHOLDER, NUX_DIR } from './context.js'
 import base from './base.js'
 import macos from './macos/index.js'
 import { nixosConfig } from './nixos/nixosConfig.js'
-import shelltools from './shelltools/index.js'
 import service from './servicectl/index.js'
 
 import nixos from './nixos'
 import nix from './nix'
 import git from './git'
 
-let nux = {  
+let nux = {
   Effect,
   TargetedEffect,
   AbstractEffect,
 
   ...base,
 
-  shelltools,
-
   ...macos,
-  
+
   service,
 
 

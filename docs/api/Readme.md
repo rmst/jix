@@ -23,15 +23,6 @@ Base class for effects with common functionality including string conversion and
 
 ## Namespaces
 
-### [shelltools](./shelltools.md)
-Shell utility scripts including:
-- `watch` - File watching script
-- `watchfile` - Watch specific file
-- `watchdir` - Watch directory
-- `aliasAll` - Create aliases for all shelltools
-
-*Source: [src/nux/shelltools/index.js](../../src/nux/shelltools/index.js)*
-
 ### [nix](./nix.md)
 Nix package management utilities:
 - `pkg(name, nixpkgsPath)` - Build a Nix package
