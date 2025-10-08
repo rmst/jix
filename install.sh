@@ -19,7 +19,7 @@ chmod +x "${HOME}/.nux/nux/qjsx"
 # Copy modules
 rm -rf "${HOME}/.nux/nux/modules"
 mkdir -p "${HOME}/.nux/nux/modules"
-cp -R "$SCRIPT_DIR/quickjs-x/node" "${HOME}/.nux/nux/modules/node"
+cp -R "$SCRIPT_DIR/quickjs-x/qjsx-node/node" "${HOME}/.nux/nux/modules/node"
 cp -R "$SCRIPT_DIR/src/nux" "${HOME}/.nux/nux/modules/nux"
 cp -R "$SCRIPT_DIR/src/nux-cli" "${HOME}/.nux/nux/modules/nux-cli"
 
