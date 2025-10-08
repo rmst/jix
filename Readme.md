@@ -15,12 +15,11 @@ make install
 ```
 
 
-### Nux can replace the following tools
-- [o] Ansible
-- [o] docker compose (yes, but doesn't do health checks yet and maybe a few other things)
-- [o] nix home-manager (yes, but might have some goodies missing (TODO: check))
-- [ ] devenv (see issues what's missing)
-- [ ] direnv
+### Nux might (partially) replace the following tools
+- nix home-manager
+- docker compose (yes, but doesn't do health checks yet)
+- Ansible
+- [ ] devenv (cli commands still missing)
 
 
 ### Design
