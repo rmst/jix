@@ -217,7 +217,7 @@ Create cross-platform services (uses launchd on macOS, systemd on Linux/NixOS).
 - **Parameters**: Object with `label`, `runscript`, `system`, `runOnInstall`, `noUninstall`
 - **Returns**: Platform-appropriate service [Effect](./Effect.md)
 
-*Source: [src/nux/servicectl/index.js](../../src/nux/servicectl/index.js)*
+*Source: [src/nux/service/index.js](../../src/nux/service/index.js)*
 
 ### nixosConfig(configPath)
 Deploy NixOS configuration from local directory.

@@ -8,9 +8,8 @@ import { AbstractEffect } from "./effectUtil.js"
 
 import { HOME_PLACEHOLDER, NUX_DIR } from './context.js'
 import base from './base.js'
-import macos from './macos/index.js'
 import { nixosConfig } from './nixos/nixosConfig.js'
-import service from './servicectl/index.js'
+import service from './service/index.js'
 
 import nixos from './nixos'
 import nix from './nix'
@@ -22,8 +21,6 @@ let nux = {
   AbstractEffect,
 
   ...base,
-
-  ...macos,
 
   service,
 
