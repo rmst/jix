@@ -1,4 +1,4 @@
 [submodule "quickjs-x"]
 	path = quickjs-x
-	url = ../quickjs-x
+	url = https://github.com/rmst/quickjs-x
 	ignore = dirty
