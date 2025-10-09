@@ -65,4 +65,4 @@ export const tempfiles = nux.dedent`
 
 
 
-export const sandboxed = nux.importScript(`${nux.dirname(import.meta.url)}/sandboxed`)
+export const sandboxed = nux.importScript(`${import.meta.dirname}/sandboxed`)

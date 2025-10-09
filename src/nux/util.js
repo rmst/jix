@@ -1,14 +1,3 @@
-// export const getRandomString = (len) => Array.from({ length: len }, () => 
-//     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-//     .charAt(Math.floor(Math.random() * 62))
-// ).join('');
-/**
-		gets the path of the directory for a file path or url, works with e.g.
-		```
-		dirname(import.meta.url)
-		```
- */
-
 
 export function dirname(path) {
 	const isFileURL = path.startsWith('file://');

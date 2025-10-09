@@ -1,14 +1,10 @@
 // This is the root of the nux API
 
-// import { dirname } from './util.js'
-// import { dedent } from './dedent.js'
-
 import { TargetedEffect, Effect } from './effect.js'
 import { AbstractEffect } from "./effectUtil.js"
 
 import { HOME_PLACEHOLDER, NUX_DIR } from './context.js'
 import base from './base.js'
-import { nixosConfig } from './nixos/nixosConfig.js'
 import service from './service/index.js'
 
 import nixos from './nixos'
@@ -26,7 +22,6 @@ let nux = {
 
 
   nix,
-  nixosConfig,
   nixos,
 
   git,
