@@ -1,5 +1,6 @@
 
 import * as fs from 'node:fs'
+import process from 'node:process'
 
 import nux from '../../nux'
 import { ACTIVE_HASHES_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH, LOCAL_BIN_PATH, EXISTING_HASHES_PATH } from "../../nux/context.js"
