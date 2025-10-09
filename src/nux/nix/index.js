@@ -7,8 +7,6 @@ https://nixos.org/guides/nix-pills/11-garbage-collector.html
 2. removing the result symlink will remove the GC root
 */
 
-// TODO: we need to add the built packages as a nix gc root (and remove the gc root on uninstall),
-
 /**
  * 
  * @param {*} name e.g. git
@@ -21,7 +19,7 @@ export const pkg = (name, nixpkgsPath=null) => {
 
 		let nixbuildPath = target.os == "nixos"
 			? "/run/current-system/sw/bin/nix-build"
-			: "/nix/var/nix/profiles/default/bin/nix-build"  // TODO: test this, this isn't actually verified
+			: "/nix/var/nix/profiles/default/bin/nix-build"
 
 		
 		let nixbuildArgs = nixpkgsPath
@@ -37,10 +35,12 @@ export const pkg = (name, nixpkgsPath=null) => {
 	})
 }
 
+
 export const pkgs = new Proxy({}, {
 	get: (_, name) => {
 		return new Proxy({}, {
 			get: (_, bin) => {
+				// TODO: maybe make nixpkgsPath controllable here via useContext
 				return nux.str`${pkg(name)}/bin/${bin}`
 			}
 		})

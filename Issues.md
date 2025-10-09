@@ -6,6 +6,8 @@ implement log rotation for nux.service logs
 
 ui(MarkdownComponent): citations aren't visually distinct from normal text
 
+nux.nix: create test using docker container with Nix installed to test Nix support on non-nixos os
+
 ### Improvements
 
 maybe add `nux services` subcommand
