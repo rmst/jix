@@ -20,11 +20,13 @@ let nux = {
 
   service,
 
-
   nix,
-  nixos,
 
   git,
+
+  experimental: {
+    nixos,
+  },
 
   HOME: HOME_PLACEHOLDER,
   NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,  // TODO: this should be independent of the user home
