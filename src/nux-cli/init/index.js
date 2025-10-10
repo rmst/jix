@@ -12,7 +12,8 @@ function initCmd() {
 	installJsConfig(wd)  // TODO: this function seems way to complicated
 	sh`mkdir -p '${wd}/.nux/modules'`
 	sh`echo 'modules' > '${wd}/.nux/.gitignore'`
-	sh`ln -sfn '${LOCAL_NUX_PATH}/nux/lib' '${wd}/.nux/modules/nux'`
+	sh`ln -sfn '${LOCAL_NUX_PATH}/nux/modules/nux' '${wd}/.nux/modules/nux'`
+	sh`ln -sfn '${LOCAL_NUX_PATH}/nux/modules/nux-cli' '${wd}/.nux/modules/nux-cli'`  // TODO: remove this once nux doesn't depend on nux-cli anymore (search for ../nux-cli/core/hosts.js)
 }
 
 export default {

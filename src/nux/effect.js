@@ -7,7 +7,8 @@ export const effectPlaceholderMap = new Map()
 
 import process from 'node:process';
 import { createHash } from 'node:crypto';
-import { hostInfo } from '../nux-cli/core/hosts.js';
+import { hostInfo } from '../nux-cli/core/hosts.js';  // TODO: we shouldn't import nux-cli from nux (api), instead, maybe we should trigger an event or sth
+
 // import { createHash } from 'node/crypto';
 
 
