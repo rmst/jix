@@ -29,11 +29,12 @@ export default async function apply({
   util.mkdir(LOCAL_BIN_PATH, true)
   util.mkdir(LOCAL_STORE_PATH, true)
   util.mkdir(`${LOCAL_NUX_PATH}/logs`, true)  // TODO: get rid of this safely
-  
+
   loadHosts()
 
   // Derive ID from absolute manifest path and scoped name
-  const manifestPath = sh`realpath '${sourcePath}'`.trim()
+  // When uninstall=true, sourcePath can be a manifest ID directly
+  const manifestPath = uninstall ? sourcePath : sh`realpath '${sourcePath}'`.trim()
   const nuxId = name === 'default' ? manifestPath : `${manifestPath}#${name}`
 
   // Prepare results and drvs

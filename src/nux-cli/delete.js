@@ -1,7 +1,10 @@
+import * as fs from 'node:fs'
 import apply from './core/apply.js'
 import { dedent } from '../nux/dedent.js'
-import { findNuxRoot } from './apply/util.js'
+import { MANIFEST_NAME } from './apply/util.js'
 import { sh } from './util.js'
+import { ACTIVE_HASHES_PATH } from '../nux/context.js'
+import * as util from './util.js'
 
 export default {
 	name: 'delete',
@@ -22,7 +25,22 @@ export default {
 			console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
 			return
 		}
-		const manifestPath = findNuxRoot(arg)
-		await apply({ sourcePath: manifestPath, uninstall: true })
+
+		const active = util.exists(ACTIVE_HASHES_PATH)
+			? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+			: {}
+
+		let id = arg
+
+		if(!active[id])
+			id = sh`realpath '${arg}' || true`.trim()
+			
+		if(!active[id])
+			id = `${id}/${MANIFEST_NAME}`
+
+		if(!active[id])
+			throw (`'${arg}' isn't a valid, active manifest path or id`)  // TODO: instead of throw we should print to stderr and process.exit(1), note: console.error is missing in Quickjs
+
+		await apply({ sourcePath: id, uninstall: true })
 	}
 }
