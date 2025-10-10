@@ -16,6 +16,24 @@ import { sh } from '../util.js'
 import { warnAboutStaleManifestIds } from '../apply/util.js'
 import { log } from '../logger.js'
 
+// Add QJSXPATH entries for all parent directories of a file
+// For /my/custom/path/__nux__.js, adds /my/custom/path/.nux/modules:/my/custom/.nux/modules:/my/.nux/modules
+function addQjsxPathForFile(filePath) {
+	const modulePaths = []
+	let current = filePath.substring(0, filePath.lastIndexOf('/'))
+
+	// Collect all parent directories
+	while (current && current !== '/') {
+		modulePaths.push(`${current}/.nux/modules`)
+		const lastSlash = current.lastIndexOf('/')
+		current = lastSlash > 0 ? current.substring(0, lastSlash) : ''
+	}
+
+	const qjsxPath = modulePaths.join(':')
+	const existingQjsxPath = process.env.QJSXPATH
+	process.env.QJSXPATH = existingQjsxPath ? `${qjsxPath}:${existingQjsxPath}` : qjsxPath
+}
+
 
 
 export default async function apply({
@@ -44,6 +62,7 @@ export default async function apply({
 	// Build effects (non-uninstall mode)
 	if (!uninstall) {
 		globalThis.nux = nux
+		addQjsxPathForFile(manifestPath)
 		const module = await import(sourcePath)
 		// Migration helper: if a manifest still exports an explicit ID,
 		// rename its key in active.json to the absolute path-based ID.

@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 /**
  * Creates or updates a jsconfig.json in the given directory to include
- * 'nux_modules' in the module resolution paths for VS Code.
+ * '.nux/modules' in the module resolution paths for VS Code.
  * This operation is synchronous.
  *
  * @param {string} projectDir The absolute or relative path to the project's root directory.
@@ -33,9 +33,9 @@ export function installJsConfig(projectDir) {
     const existingPaths = config.compilerOptions.paths['*'] || [];
 
     // Use a Set to add our paths and automatically handle duplicates.
-    // This ensures "nux_modules/*" is first
+    // This ensures ".nux/modules/*" is first
     const newPaths = new Set([
-      'nux_modules/*',
+      '.nux/modules/*',
       ...existingPaths,
     ]);
     

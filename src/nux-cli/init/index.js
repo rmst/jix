@@ -10,9 +10,9 @@ import { dedent } from "../../nux/dedent.js"
 function initCmd() {
 	let wd = process.cwd()
 	installJsConfig(wd)  // TODO: this function seems way to complicated
-	sh`mkdir -p '${wd}/nux_modules'`
-	sh`grep '^nux_modules$' .gitignore >/dev/null 2>&1 || { echo; echo 'nux_modules'; } >> .gitignore`
-	sh`ln -sfn '${LOCAL_NUX_PATH}/nux/lib' '${wd}/nux_modules/nux'`
+	sh`mkdir -p '${wd}/.nux/modules'`
+	sh`echo 'modules' > '${wd}/.nux/.gitignore'`
+	sh`ln -sfn '${LOCAL_NUX_PATH}/nux/lib' '${wd}/.nux/modules/nux'`
 }
 
 export default {
@@ -22,7 +22,7 @@ export default {
 	help: dedent`
 	Initialize nux support in the current working directory.
 
-	This sets up editor hints and links the nux libs locally.
+	This creates .nux/modules directory, sets up editor hints, and links the nux libs locally.
 
 	Example:
 	  nux init
