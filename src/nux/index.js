@@ -12,9 +12,6 @@ import nix from './nix'
 import git from './git'
 
 let nux = {
-  Effect,
-  TargetedEffect,
-  AbstractEffect,
 
   ...base,
 
@@ -24,13 +21,20 @@ let nux = {
 
   git,
 
+  HOME: HOME_PLACEHOLDER,
+
+  // NOTE: do not list experimental in the documentation
   experimental: {
     nixos,
   },
 
-  HOME: HOME_PLACEHOLDER,
-  NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,  // TODO: this should be independent of the user home
-
+  // NOTE: do not list _internal in the documentation
+  _internal: {
+    Effect,
+    TargetedEffect,
+    AbstractEffect,
+    NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,  // TODO: this should be independent of the user home
+  },
 }
 
 
