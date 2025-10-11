@@ -44,7 +44,7 @@ export default ({
 
 	const servicePath = system
 	? `/etc/systemd/system/${serviceName}`
-	: `${nux.ensureDir(`${target.home}/.config/systemd/user`)}/${serviceName}`;
+	: `${nux.dir(`${target.home}/.config/systemd/user`)}/${serviceName}`;
 
 	const systemctlFlags = system ? "" : "--user";
 

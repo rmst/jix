@@ -8,7 +8,7 @@ import { dedent } from './dedent.js';
 import context from './context.js';
 import { dirname, basename, shellEscape } from './util.js';
 
-import db from './db.js';
+import stateDir from './stateDir.js';
 
 export const HASH = HASH_PLACEHOLDER
 
@@ -30,36 +30,14 @@ export const importScript = (origin) => {
   return importFile(origin, '-w+x')
 }
 
-export const copy = (origin, path, mode = '-w') => {
-  // TODO: maybe cache the hash, don't read the file every time
-  // TODO: make permissions work
-  // TODO: use importFile
-  // TODO: is this even use, delete
-  let content = fs.readFileSync(origin, 'utf8');
-  return link(writeFile(mode)(content), path)
-};
-
-
-// export const importScript = (origin) => {
-//   // TODO: maybe cache the hash, don't read the file every time
-//   let content = util.fileRead(origin);
-//   return script`${content}`
-// }
-
-
-// ------ NEW SYSTEM ----
-
-
 export const link = (origin, path, symbolic=false) => effect( target => {
   // FIXME: we're not doing anythign to verify that path is something valid 
-  // TODO?: use builtin link functions
+
   let { values: [origin2, path2], dependencies } = parseEffectValues(target, [origin, path])
 
   if (path2.startsWith('~')) {
     path2 = path2.replace('~', target.home)  // replaces first (i.e. leading) tilde
   }
-
-  // console.log("AAAHHH", originT, pathT)
 
   return {
     install: [symbolic ? "symlinkV3" : "hardlinkV1", origin2, path2],
@@ -75,7 +53,7 @@ export const symlink = (origin, path) => link(origin, path, true)
 
 export const alias = (mapping) => {
   // TODO: add PATH check (to see if the login shell has .nux/bin in its path and warn if not (could be done via build script maybe?)
-  let binDir = ensureDir(context.BIN_PATH)
+  let binDir = dir(context.BIN_PATH)
   let links = Object.entries(mapping).map(([k, v]) => symlink(v, `${binDir}/${k}`))
 
   return links
@@ -101,8 +79,12 @@ export const run = ({install=null, uninstall=null, ...other}) => {
 }
 
 
-
-export const dir = (files) => {
+/**
+ * creates a directory containing files
+ * @param {Record<string,string|Effect>} files 
+ * @returns {Effect}
+ */
+export const buildDir = (files) => {
   const copyCommands = Object.entries(files)
     .map(([name, sourcePath]) => {
       const source = shellEscape(`${sourcePath}`)
@@ -117,24 +99,26 @@ export const dir = (files) => {
   `
 }
 
-export const ensureDir = (path, eff={}) => effect({
-  install: ["execV1", "mkdir", "-p", path],
-  path: path,
-  ...eff,
-})
+// export const dir = (path, eff={}) => effect({
+//   install: ["execV1", "mkdir", "-p", path],
+//   uninstall: ["execShV1", `rmdir -- "${path}" 2>/dev/null || true`],
+//   path: path,
+//   ...eff,
+// })
 
-export const mkdir = (path) => {
+export const dir = (path, extraArgs={}) => {
   return effect({
     install: ["execV1", "mkdir", "-p", path],
-    uninstall: ["execShV1", `[ ! -e "${path}" ] || rmdir "${path}"`],
+    uninstall: ["execShV1", `rmdir -- "${path}" 2>/dev/null || true`],
     path: path,
+    ...extraArgs,
   })
 }
 
 /**
 
  */
-export const scriptInTempdir = (...args) => {
+export const scriptWithTempdir = (...args) => {
   let inner = script(...args)
   // # export NUX_TEMP="$HOME"/${NUX_DIR}/tmp_drv/${HASH}
   return script`
@@ -173,7 +157,7 @@ export const str = (templateStrings, ...rawValues) => effect( target => {
 
 export const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
   return effect( target => {
-    // TODO: shouldn't we use the str function here?
+    
     var { values, dependencies } = parseEffectValues(target, rawValues)
     let text = dedent(templateStrings, ...values)
 
@@ -185,7 +169,7 @@ export const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
 }
 
 
-export const copyFile = (from, to) => effect({
+export const copy = (from, to) => effect({
   install: ["copyV2", from, to],
   uninstall: ["deleteFileV2", to],
   path: to,
@@ -195,17 +179,6 @@ export const copyFile = (from, to) => effect({
 export const textfile = writeFile()
 
 
-// TODO: this is dumb, instead users should be able to import non js files and reference them like any other built file
-// export const file = (path) => {
-//   path = path.replace('~', util.getEnv().HOME)  // TODO: use context home
-//   let data = fs.readFileSync(path)
-//   const fileHash = createHash().update(data).digest("hex");
-//   return derivation({
-//     build: ["copyV1", path, fileHash],
-//   })
-// };
-
-
 
 /**
  * Creates a runnable script.
@@ -213,37 +186,6 @@ export const textfile = writeFile()
  * @returns the derivation / out path of the script
  */
 export const script = (templateStrings, ...values) => writeFile('-w+x')(templateStrings, ...values)
-
-
-export const cleanScript = (templateStrings, ...values) => {
-  throw Error("This function is deprecated because it produces strange indentation. Fix it or use sth else")
-  let s
-  s = dedent(templateStrings, ...values)
-
-  s = s
-    .split('\n')
-    .filter(line => !line.trim().startsWith('#') || line.startsWith("#!"))  // comment lines
-    .filter(line => line.trim())  // empty lines
-    .join('\n')
-
-  return script(s)
-}
-
-/**
- * define a build script writing to $out (environment variable named "out")
- * @returns the derivation / out path of the built artefact
- */
-// export const build2 = (templateStrings, ...values) => {
-//   // TODO: dependencies in the build script should be separated from runtime dependencies
-  
-//   let buildScript = script(templateStrings, ...values)
-
-//   return derivation({
-//     build: ["buildV5", buildScript],
-//     dependencies: [buildScript],
-//   })
-// }
-
 
 
 /**
@@ -262,78 +204,36 @@ export const build = (templateStrings, ...values) => {
 }
 
 
-/**
- * @param {*} path 
- * @param {string} line 
- */
-export const appendTo = (path, line) => {
-  if(line.includes("\n"))
-    throw Error("Currently we only can append single line at a time")
-
-  line = shellEscape(line)
-
-  let removeLine = script`
-    #!/bin/sh
-    # Find the line number of the last exact, full-line match.
-    # grep -F: fixed string (no regex), -x: exact line match, -n: line number
-    line_to_del=$(grep -Fxn -- "$2" "$1" | tail -n 1 | cut -d: -f1)
-
-    if [ -n "$line_to_del" ]; then
-      # Use printf to pipe the "delete" command to ed.
-      # ed -s: run ed in silent mode.
-      printf '%s\n' "\${line_to_del}d" w | ed -s "$1"
-    fi
-  `
-
-  return run({
-    install: nux.dedent`
-      # add missing newline if necessary
-      [ -s '${path}' ] && [ -n "$(tail -c 1 '${path}')" ] && echo >> '${path}'
-      
-      # add line
-      echo ${line} >> '${path}'
-    `,
-    uninstall: `${removeLine} '${path}' ${line}`,
-  })
-}
-
-
 let base = {
-  dirname,
+  // dirname,
+
   dedent,
 
-  effect,
+  effect,  // TODO: maybe we should rename this to "generic effect"? creates untargeted effect
   target,
   
   build,
 
   importFile,
   importScript,
-  copy,
-  copyFile,
 
+  copy,
   link,
   symlink,
-  alias,
-  run,
 
+  alias,
+
+  run,  // TODO: maybe we should rename this to "install" or "custom effect"?
+
+  buildDir,
   dir,
-  mkdir,
-  ensureDir,
 
   str,
 
-  writeFile,
   textfile,
   script,
-  cleanScript,
-  scriptInTempdir,
 
-  appendTo,
-
-  ...db,
-
-  HASH,
+  stateDir,
 }
 
 

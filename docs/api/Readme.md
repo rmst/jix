@@ -127,7 +127,7 @@ Create a directory.
 
 *Source: [src/nux/base.js:125](../../src/nux/base.js#L125)*
 
-### ensureDir(path, eff)
+### dir(path, eff)
 Ensure a directory exists (creates if missing).
 - **Parameters**:
   - `path` - Directory path

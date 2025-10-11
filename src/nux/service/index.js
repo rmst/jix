@@ -1,10 +1,10 @@
 import nux from "../base.js"
-import db from "nux/db"
+import stateDir from "../stateDir.js"
 import launchdService from './launchd.js'
 import systemdService from './systemd.js'
 
-export const userServicesDir = db.stateDir("nux.services")
-export const systemServicesDir = db.stateDir("nux.system-services")
+export const userServicesDir = stateDir("nux.services")
+export const systemServicesDir = stateDir("nux.system-services")
 
 const serviceImplementations = {
 	macos: launchdService,
@@ -85,7 +85,7 @@ export default ({
 	`;
 
 	// this is just so MacOS shows a nice name in various UIs and not a hash
-	wrapperScript = `${nux.dir({[label]: wrapperScript })}/${label}`
+	wrapperScript = `${nux.buildDir({[label]: wrapperScript })}/${label}`
 
 	const serviceImplementation = serviceImplementations[target.os];
 

@@ -1,4 +1,4 @@
-import { HOME_PLACEHOLDER, HASH_PLACEHOLDER } from './context.js';
+import { HOME_PLACEHOLDER, HASH_PLACEHOLDER, MAGIC_STRING } from './context.js';
 import { NUX_DIR, LOCAL_USER } from './context.js';
 import { AbstractEffect } from './effectUtil.js';
 import { dedent } from './dedent.js';
@@ -345,7 +345,11 @@ export const parseEffectValues = (tgt, values) => {
           v = v.replaceAll(k, eff.str)
         }
       })
-      
+
+      if(v.includes(MAGIC_STRING)) {
+        throw Error(`Fatal error: The following value contains an unresolvable effect reference: ${v}`)
+      }
+
       return v
 
     } else if (v instanceof AbstractEffect) {

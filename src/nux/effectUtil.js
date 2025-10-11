@@ -1,4 +1,4 @@
-import { symlink, link, copyFile } from './base.js';
+import { symlink, link, copy } from './base.js';
 import { LOCAL_HOME, MAGIC_STRING } from './context.js';
 import { effectPlaceholderMap, effect } from './effect.js';
 
@@ -22,7 +22,7 @@ export class AbstractEffect {
   // convenience functions
   symlinkTo(path) { return symlink(this, path); }
   linkTo(path, symbolic = false) { return link(this, path, symbolic); }
-  copyTo(path) { return copyFile(this, path); }
+  copyTo(path) { return copy(this, path); }
 }
 
 

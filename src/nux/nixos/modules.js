@@ -57,7 +57,7 @@ export const importModules = (files, { core=false }={}) => {
 		}
 	`.copyTo("/etc/nixos/configuration.nix")					
 
-	let mdir = nux.ensureDir("/etc/nixos/modules")
+	let mdir = nux.dir("/etc/nixos/modules")
 
 
 	return nux.effect(target => {

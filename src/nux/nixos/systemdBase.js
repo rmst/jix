@@ -12,7 +12,7 @@ export const generator = ({
 		throw Error(`target.os should be "nixos" but we have: ${target.os}`)
 
 
-	let module = modules.importModules({ [`${name}-systemd-generator.nix`]:
+	let module = modules.importCoreModules({ [`${name}-systemd-generator.nix`]:
 		nux.textfile`
 			{ config, pkgs, lib, ... }:
 			{

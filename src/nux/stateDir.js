@@ -4,7 +4,7 @@ import { effect } from "./effect.js";
 import { dedent } from './dedent.js';
 import { NUX_DIR } from "./context.js";
 
-const stateDir = (id, owner=null) => effect(target => {
+export default (id, owner=null) => effect(target => {
 
 	let db = `${target.home}/${NUX_DIR}/db`
 	let dbInactive = `${target.home}/${NUX_DIR}/db-inactive`
@@ -53,10 +53,3 @@ const stateDir = (id, owner=null) => effect(target => {
 	})
 
 })
-
-
-
-
-export default {
-	stateDir,
-}

@@ -4,12 +4,13 @@ import { TargetedEffect, Effect } from './effect.js'
 import { AbstractEffect } from "./effectUtil.js"
 
 import { HOME_PLACEHOLDER, NUX_DIR } from './context.js'
-import base from './base.js'
+import base, { HASH, scriptWithTempdir, writeFile } from './base.js'
 import service from './service/index.js'
 
 import nixos from './nixos'
 import nix from './nix'
 import git from './git'
+import { appendToFile } from './appendToFile.js'
 
 let nux = {
 
@@ -26,6 +27,9 @@ let nux = {
   // NOTE: do not list experimental in the documentation
   experimental: {
     nixos,
+
+    appendToFile,
+    scriptWithTempdir,
   },
 
   // NOTE: do not list _internal in the documentation
@@ -34,6 +38,9 @@ let nux = {
     TargetedEffect,
     AbstractEffect,
     NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,  // TODO: this should be independent of the user home
+    HASH,
+
+    writeFile,
   },
 }
 

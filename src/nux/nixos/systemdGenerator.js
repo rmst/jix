@@ -1,12 +1,10 @@
 
-
 import nux from "../base"
-import db from "../db"
 import { AbstractEffect } from "../effectUtil"
+import stateDir from "../stateDir"
 import systemdBase from "./systemdBase"
 
-
-const unitDir = db.stateDir("nux.systemd")
+const unitDir = stateDir("nux.systemd")
 
 /**
 	This generates/copies systemd unit files at system startup and enables them
@@ -59,13 +57,13 @@ let bootstrapGenerator = systemdBase.generator({
 })
 
 /**
- * 
- * @param {{name: string, file: AbstractEffect, runOnInstall: boolean, noUninstall: boolean, dependencies: Array<AbstractEffect>}} param0 
+ *
+ * @param {{name: string, file: AbstractEffect, runOnInstall: boolean, noUninstall: boolean, dependencies: Array<AbstractEffect>}} param0
  * @returns {AbstractEffect}
  */
 export const enableUnit = ({
-	name, 
-	file, 
+	name,
+	file,
 	runOnInstall=false,
 	noUninstall=false,
 	dependencies=[],
@@ -86,7 +84,7 @@ export const enableUnit = ({
 				systemctl daemon-reload
 				${runOnInstall ? `systemctl restart ${name}` : ""}
 			`,
-			uninstall: noUninstall ? null : `systemctl stop ${name}`,
+			uninstall: noUninstall ? null : `systemctl stop ${name} || true`,
 			dependencies: [ ...dependencies, file ]
 		})
 
