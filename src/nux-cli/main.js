@@ -75,6 +75,9 @@ const main = async () => {
 
 main().then(null, e => {
 	console.log(`Error: ${e.message}`)
-	console.log(e.stack)
+	// Only show stack trace for unexpected errors, not user validation errors
+	if (e.name !== 'UserError') {
+		console.log(e.stack)
+	}
 	process.exit(1)
 })

@@ -5,6 +5,7 @@ import { LOCAL_NUX_PATH } from "../../nux/context"
 import { executeCmd } from "./installEffect";
 import { dedent } from "../../nux/dedent"
 import process from "node:process";
+import { UserError } from "./UserError.js"
 
 export const updateHosts = (hosts) => {
 	if (!fs.existsSync(LOCAL_NUX_PATH))
@@ -49,7 +50,7 @@ export const queryHostInfo = (host, user) => {
 	}
 
 	else {
-		throw Error(`${info.kernel_name} currently unsupported`)
+		throw new UserError(`${info.kernel_name} currently unsupported`)
 	}
 
 	return info
@@ -78,7 +79,7 @@ export const hostInfo = (host, user) => {
 
 	user = user ?? process.env.USER
 	if(!user)
-		throw Error("USER environment variable not set")
+		throw new UserError("USER environment variable not set")
 
 	// TODO: handle host === null (local user)
 	if(!globalThis.nuxHosts)

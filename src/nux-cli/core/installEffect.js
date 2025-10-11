@@ -7,6 +7,7 @@ import * as actions from './actions.js'
 import set from './set.js'
 import context from '../../nux/context.js'
 import { prettyPrintEffect } from '../prettyPrint.js'
+import { UserError } from './UserError.js'
 
 
 export const executeCmd = (c, host, user) => {
@@ -19,7 +20,10 @@ export const executeCmd = (c, host, user) => {
 
   if(host !== null) {
     if(!host)
-      throw Error(`Invalid host: ${host}`)
+      throw new UserError(`Invalid host: ${host}`)
+
+    if(!user)
+      throw new UserError(`User must be specified when connecting to remote host: ${host}`)
 
     // TODO: also switch to stdin-based approach for ssh, should be cleaner
 
