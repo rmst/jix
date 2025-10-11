@@ -203,9 +203,17 @@ export class TargetedEffect extends AbstractEffect {
 
     // process values in the arguments to install, uninstall, etc
     var { install, uninstall, build, str, path } = props
-    var [install, uninstall, build, [str, path]]
-      = [install, uninstall, build, [str, path]].map(x => {
-      if(!x) return x
+    var [install, uninstall, build, [str], [path]]
+      = [install, uninstall, build, [str], [path]].map(x => {
+
+      if(x === undefined || x === null)
+        return x
+
+      if(!Array.isArray(x))
+        throw Error(`Not an array: ${x} in Effect with props: ${props}`)
+
+      if(x.length == 1 && x[0] === undefined)
+        return x
 
       let {values, dependencies} = parseEffectValues(tgt, x)
       this.dependencies.push(...dependencies)
@@ -316,6 +324,11 @@ export const parseEffectValues = (tgt, values) => {
 
   let dependencies = [];
   values = values.map((v, i) => {
+    if(v === undefined)
+      throw Error("received undefined value")
+
+    if(v === null)
+      console.log("Warning: received null value")
 
     if (typeof v === "string") {
       // parse regular strings for placeholders, so we can track the dependencies, etc
