@@ -7,7 +7,7 @@ test:
 
 # 	cp -R quickjs-x/node bin/modules/node
 
-$(BUILD_DIR)/nux: $(shell find quickjs-x -type f) $(shell find src -type f) Makefile
+$(BUILD_DIR)/nux: $(shell find quickjs-x -type f -not -name '*:*') $(shell find src -type f -not -name '*:*') Makefile
 	mkdir -p $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)/modules
 	mkdir -p $(BUILD_DIR)/modules
