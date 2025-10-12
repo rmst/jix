@@ -39,7 +39,8 @@ function addQjsxPathForFile(filePath) {
 export default async function apply({
 	sourcePath,
 	uninstall = false,
-	name = 'default'
+	name = 'default',
+	dryRun = false
 }) {
 	if (!sourcePath)
 		throw new Error('apply requires a sourcePath')
@@ -162,10 +163,21 @@ export default async function apply({
     .list()
 
 
+  if (dryRun) {
+    console.log(dedent`
+      [DRY RUN] Would uninstall ${hashesToUninstall.length} of ${activeForId.length}:
+        ${[...hashesToUninstall].join('\n  ')}
+
+      [DRY RUN] Would install ${hashesToInstall.length} of ${desiredForId.length}:
+        ${[...hashesToInstall].join('\n  ')}
+    `)
+    return result
+  }
+
   log(dedent`
     Uninstalling ${hashesToUninstall.length} of ${activeForId.length}:
       ${[...hashesToUninstall].join('\n  ')}
-  `);
+  `)
 
 
   var failedUninstalls = hashesToUninstall
@@ -187,7 +199,7 @@ export default async function apply({
 
     process.exit(1)
   }
-  
+
   log(`Installing ${hashesToInstall.length} of ${desiredForId.length}`)
 
   let installedHashes = [...(function*(){
@@ -204,7 +216,7 @@ export default async function apply({
       ❌ Partial install: ${installedHashes.length} out of ${hashesToInstall.length} installed
 
       🧹 Trying to clean up partial install...
-      
+
     `)
 
     var failedUninstalls = installedHashes

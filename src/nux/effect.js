@@ -350,8 +350,8 @@ export const parseEffectValues = (tgt, values) => {
     if(v === undefined)
       throw Error("received undefined value")
 
-    if(v === null)
-      console.log("Warning: received null value")
+    // if(v === null)
+    //   console.log("Warning: received null value")  // TODO: either remove or make this a proper error
 
     if (typeof v === "string") {
       // parse regular strings for placeholders, so we can track the dependencies, etc
