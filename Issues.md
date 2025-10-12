@@ -14,13 +14,9 @@ maybe add `nux services` subcommand
 
 cli: Protect against simultaneous runs of `nux apply`, implement locking via mkdir (works across all posix systems since mkdir is atomic)
 
-Add tests (which could double as examples)
+for nux.nixos instead of always clearing out configuration.nix via context provider, add an option to integrated with an existing configuration.nix. in that case we'd just check if configuration.nix imports our root module (which then imports all modules in the modules dir)
 
 cli(nux apply): if nux install doesn't find an install path, i.e. we're looking at a nux library file, instead of failing, maybe check all the installed nux roots if they would be affected by the library change. This could be done either via static import analysis or by actually running all nux roots (since they should be side-effect free)
-
-eliminate all uses of quickjs std and os modules. use node shims instead
-
-ensure that nux system configuration evaluations are pure. we have to remove os and std and the ability to import binary libraries and maybe more. also we'd have to find a way to send the evaluation result (the effects graph) to the main nux cli. one way of handling this would be to implement the iframes-like feature in quickjs-x (see quickjs-x/Issues.md)
 
 Build processes should be sandboxed by default. escape hatch via buildImpure or sth
 
