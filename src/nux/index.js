@@ -1,6 +1,6 @@
 // This is the root of the nux API
 
-import { TargetedEffect, Effect } from './effect.js'
+import { TargetedEffect, Effect, withTarget, getTarget } from './effect.js'
 import { AbstractEffect } from "./effectUtil.js"
 
 import { HOME_PLACEHOLDER, NUX_DIR } from './context.js'
@@ -30,6 +30,9 @@ let nux = {
 
     appendToFile,
     scriptWithTempdir,
+
+    withTarget,
+    getTarget,
   },
 
   // NOTE: do not list _internal in the documentation

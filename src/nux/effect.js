@@ -8,6 +8,7 @@ export const effectPlaceholderMap = new Map()
 import process from 'node:process';
 import { createHash } from 'node:crypto';
 import { hostInfo } from '../nux-cli/core/hosts.js';  // TODO: we shouldn't import nux-cli from nux (api), instead, maybe we should trigger an event or sth
+import { createContext, useContext } from './useContext.js';
 
 // import { createHash } from 'node/crypto';
 
@@ -18,6 +19,15 @@ TODO: split into two types of effects:
 - build/derivation/artifact (no side effects all outputs in ~/nux/out/${hash}, build function)
 */
 
+
+const TARGET_CONTEXT = createContext(null)
+export const withTarget = (target, fn=null) => {
+  if(fn)
+    TARGET_CONTEXT.provide(target, fn)
+  else
+    TARGET_CONTEXT.defaultValue = target
+}
+export const getTarget = () => useContext(TARGET_CONTEXT)
 
 /**
  * @typedef {Object} EffectProps
@@ -67,11 +77,16 @@ TODO: split into two types of effects:
   Basic effect functions are defined under base.js and nux.js
 
   @param {EffectProps | Array | TargetFn} obj
-  @returns {Effect}
+  @returns {AbstractEffect}
 */
 export function effect (obj) {    
-  return new Effect(obj)
+  let tgt = getTarget()
+  let e = new Effect(obj)
+  if(tgt !== null)
+    e = target(tgt, e)
+  return e
 }
+
 
 
 /** 
@@ -97,7 +112,7 @@ export function target(tgt, obj) {
 
   let eff = (obj instanceof Effect) 
     ? obj 
-    : effect(obj)
+    : new Effect(obj)
   
   return eff.target({ host, user })
 
@@ -114,7 +129,15 @@ export class Effect extends AbstractEffect {
   }
 
   /**
+
+    NOTE: exclude this from the documenation
+
     Returns copy with additional dependencies
+
+    This is ugly and shouldn't be used (it's only used in one place right now)
+
+    TODO: remove this function and maybe replace with a withDependencies context provider
+
     @param {...(AbstractEffect)} others
     @returns {Effect}
   */
