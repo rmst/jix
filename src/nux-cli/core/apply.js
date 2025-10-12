@@ -15,6 +15,8 @@ import * as util from '../util.js'
 import { sh } from '../util.js'
 import { warnAboutStaleManifestIds } from '../apply/util.js'
 import { log } from '../logger.js'
+import { style } from '../prettyPrint.js'
+import { toSummaryString } from '../effectUtil.js'
 
 // Add QJSXPATH entries for all parent directories of a file
 // For /my/custom/path/__nux__.js, adds /my/custom/path/.nux/modules:/my/custom/.nux/modules:/my/.nux/modules
@@ -133,10 +135,26 @@ export default async function apply({
 
   // TODO: IMPORTANT: first we should ensure that there is no difference between activeHashes and existingHashes, and offer interactively to remove them
   if(!uninstall && activeHashes.length != existingHashes.length) {
+    let orphanedHashes = set(existingHashes).minus(activeHashes).list()
+
+    let orphanedSummaries = orphanedHashes.map(hash => {
+      let effectData = JSON.parse(fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8'))
+      return toSummaryString(effectData.path, effectData.user, effectData.host, hash)
+    })
+
     console.log(dedent`
-      🚨 Warning: active = ${activeHashes.length} != existing = ${existingHashes.length}
-    ` + "\n")
-    // process.exit(1)
+      ${style.red('Error:')} Found ${orphanedHashes.length} orphaned effects in the store (${activeHashes.length} active, ${existingHashes.length} in store)
+
+      ${orphanedSummaries.join('\n')}
+
+      Before continuing, please remove them via:
+
+        nux force-remove '
+        ${orphanedHashes.join('\n  ')}
+        '
+    `)
+
+    process.exit(1)
   }
 
 
@@ -163,22 +181,11 @@ export default async function apply({
     .list()
 
 
-  if (dryRun) {
-    console.log(dedent`
-      [DRY RUN] Would uninstall ${hashesToUninstall.length} of ${activeForId.length}:
-        ${[...hashesToUninstall].join('\n  ')}
+  log(`Effects: ${activeForId.length} ${style.red(`-${hashesToUninstall.length}`)} ${style.green(`+${hashesToInstall.length}`)}`)
 
-      [DRY RUN] Would install ${hashesToInstall.length} of ${desiredForId.length}:
-        ${[...hashesToInstall].join('\n  ')}
-    `)
+  if (dryRun) {
     return result
   }
-
-  log(dedent`
-    Uninstalling ${hashesToUninstall.length} of ${activeForId.length}:
-      ${[...hashesToUninstall].join('\n  ')}
-  `)
-
 
   var failedUninstalls = hashesToUninstall
     .slice().reverse()
@@ -189,9 +196,9 @@ export default async function apply({
 
   if (failedUninstalls.length > 0) {
     console.log(dedent`
-      ❌ ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed.
+      ${style.red('Error:')} ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed.
       Uninstall them manually, then delete them via
-      
+
         nux force-remove '
         ${failedUninstalls.join('\n  ')}
         '
@@ -199,8 +206,6 @@ export default async function apply({
 
     process.exit(1)
   }
-
-  log(`Installing ${hashesToInstall.length} of ${desiredForId.length}`)
 
   let installedHashes = [...(function*(){
     for (const hash of hashesToInstall) {
@@ -213,9 +218,9 @@ export default async function apply({
 
   if (installedHashes.length != hashesToInstall.length) {
     console.log(dedent`
-      ❌ Partial install: ${installedHashes.length} out of ${hashesToInstall.length} installed
+      ${style.red('Error:')} Partial install: ${installedHashes.length} out of ${hashesToInstall.length} installed
 
-      🧹 Trying to clean up partial install...
+      Trying to clean up partial install...
 
     `)
 
@@ -227,13 +232,13 @@ export default async function apply({
 
     if (failedUninstalls.length != 0) {
       console.log(dedent`
-        ❌ Leftover installed hashes ${failedUninstalls}/${installedHashes.length} 🤷‍♂️:
+        ${style.red('Error:')} Leftover installed hashes ${failedUninstalls}/${installedHashes.length}:
           ${failedUninstalls.join('\n  ')}
 
       `)
     }
 
-    console.log(`⏮️ Trying to restore old install...\n`)
+    console.log(`Trying to restore old install...\n`)
 
     let reinstalledHashes = [...(function*(){
       for (const hash of hashesToUninstall) {
@@ -249,7 +254,7 @@ export default async function apply({
         .list()
 
       console.log(dedent`
-        ❌ Partial re-install: ${reinstalledHashes.length} of the removed ${hashesToUninstall.length} re-installed. Missing ${missingHashes.length}:
+        ${style.red('Error:')} Partial re-install: ${reinstalledHashes.length} of the removed ${hashesToUninstall.length} re-installed. Missing ${missingHashes.length}:
           ${missingHashes.join('\n  ')}
       `)   
 

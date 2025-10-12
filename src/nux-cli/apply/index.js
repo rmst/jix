@@ -7,21 +7,22 @@ import { git } from './git.js'
 import apply from '../core/apply.js'
 import { findNuxRoot } from './util.js'
 import { dedent } from '../../nux/dedent.js'
+import { log } from '../logger.js'
 
 import process from 'node:process'
 
 export const install = async (path, dryRun = false) => {
 
   // NOTE: path can be any path inside of a git repo and doesn't necessarily have to point to a root.nux.js file
-  console.log("path", path)
+  // log("path", path)
 
   path = sh`realpath '${findNuxRoot(path)}'`.trim() // TODO: obviously get rid of this
-  console.log("nuxroot", path)
+  // log("nuxroot", path)
 
 
 
   let gitRoot = git.root(path)
-  console.log("gitroot", gitRoot)
+  // log("gitroot", gitRoot)
 
 
   if (process.env.NUX_GITCOMMIT && !git.isClean(gitRoot)) {

@@ -1,5 +1,6 @@
+import process from 'node:process'
 
-const colors = {
+let colors = {
 	reset: "\x1b[0m",
 	bold: "\x1b[1m",
 	dim: "\x1b[2m",
@@ -9,7 +10,11 @@ const colors = {
 	blue: "\x1b[34m",
 	magenta: "\x1b[35m",
 	cyan: "\x1b[36m",
-};
+}
+
+if (!process.stdout?.isTTY) {
+	Object.keys(colors).forEach(key => colors[key] = "")
+}
 
 export const style = {
 	key: (text) => `${colors.bold}${colors.cyan}${text}:${colors.reset}`,
@@ -20,6 +25,8 @@ export const style = {
 	failure: (text) => `${colors.red}${text}${colors.reset}`,
 	info: (text) => `${colors.blue}${text}${colors.reset}`,
 	hash: (text) => `${colors.magenta}${text}${colors.reset}`,
+	red: (text) => `${colors.red}${text}${colors.reset}`,
+	green: (text) => `${colors.green}${text}${colors.reset}`,
 };
 export function prettyPrintEffect(effect) {
 	const indent = (str, amount = 1) => str.split('\n').map(line => `${'  '.repeat(amount)}${line}`).join('\n');

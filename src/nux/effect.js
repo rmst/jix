@@ -315,24 +315,6 @@ export class TargetedEffect extends AbstractEffect {
       .update(JSON.stringify(this.normalize()))
       .digest('hex')
 
-    // debug information
-    // TODO: this is a massive hack: debug info isn't part of the hash calculation (and shouldn't be) so therefore it will only be captured the first time an effect with a certain hash is defined. It might still be temporarily useful since usually newly defined effects fail (though of course not exclusively).
-    let debugInfo = {
-      debug: {
-        date: (new Date()).toString(),
-        stack: (new Error()).stack,
-      }
-    }
-
-    this.serialize = () => {
-      return JSON.stringify(
-        {
-          ...this.normalize(),
-          ...debugInfo,
-        }
-      ).replaceAll(HASH_PLACEHOLDER, this.hash)
-    }
-
     let outPath = `${tgt.home}/${NUX_DIR}/out/${this.hash}`
 
     this.path = path
@@ -342,6 +324,17 @@ export class TargetedEffect extends AbstractEffect {
     this.str = str
       ? targetizeString(tgt, str.replaceAll(HASH_PLACEHOLDER, this.hash))
       : this.path
+
+    this.serialize = () => {
+      return JSON.stringify(
+        {
+          ...this.normalize(),
+          path: this.path,  // TODO: this is basically debugging information and should be stored externally, maybe together with a stack trace
+        },
+        null,
+        2
+      ).replaceAll(HASH_PLACEHOLDER, this.hash)
+    }
 
     this.flatten = () => {
       let deps = this.dependencies.map(d => d.flatten())
@@ -361,6 +354,7 @@ export class TargetedEffect extends AbstractEffect {
       hash: ${this.hash.slice(0, 5)}
     `
   }
+
 }
 
 
