@@ -117,7 +117,9 @@ export function target(tgt, obj) {
   return eff.target({ host, user })
 
 }
-  
+
+
+export class TargetingError extends Error {}
 
 export class Effect extends AbstractEffect {
   /**
@@ -126,6 +128,7 @@ export class Effect extends AbstractEffect {
   constructor (obj) {
     super()
     this.obj = obj
+    this._stack = (new Error()).stack.split('\n').slice(2).join("\n")
   }
 
   /**
@@ -172,32 +175,60 @@ export class Effect extends AbstractEffect {
         // throw Error("Alternative local users are not supported yet")
       }
     }
-    
-    let info = hostInfo(x.host, x.user)
 
-    x = {
-      ...x,
-      ...info,
-      ...info.users[x.user ?? process.env.USER],
-    }
-    
-    let r = (typeof this.obj === 'function')
-      ? this.obj(x)
-      : this.obj
-    
-    if(r instanceof TargetedEffect)
-      return r
-    
-    else if(r instanceof Effect)
-      return r.target(x)
-    
-    else {
-      if (Array.isArray(r))
-        r = { dependencies: r }
+    try {
+      let info = hostInfo(x.host, x.user)
 
-      return new TargetedEffect(x, r)
+      x = {
+        ...x,
+        ...info,
+        ...info.users[x.user ?? process.env.USER],
+      }
+      
+      let r = (typeof this.obj === 'function')
+        ? this.obj(x)
+        : this.obj
+      
+      if(r instanceof TargetedEffect)
+        return r
+      
+      else if(r instanceof Effect)
+        return r.target(x)
+      
+      else {
+        if (Array.isArray(r))
+          r = { dependencies: r }
+
+        return new TargetedEffect(x, r)
+      }
+
+    } catch (e) {
+      if(e instanceof TargetingError)
+        throw e
+
+      let stack = e.stack
+
+      if(stack.split("\n").length > 4) {
+        stack = stack.split("\n")
+        stack = [
+          stack[0], 
+          "    ...", 
+          ...stack.slice(-4)
+        ].join("\n")
+      }
+
+      if(stack.endsWith("\n"))
+        stack = stack.slice(0, -1)
+
+      throw new TargetingError(dedent`
+        ${e.message}
+        ${stack}
+          ----------------------------
+          with effect created
+        ${this._stack}
+      `)
+
     }
-  
   }
 }
 

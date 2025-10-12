@@ -11,6 +11,7 @@ import showCmd from './show.js'
 import forceRemoveCmd from './forceRemove.js'
 import deleteCmd from './delete.js'
 import hostInfoCmd from './host-info.js'
+import { TargetingError } from '../nux/effect.js'
 
 
 const main = async () => {
@@ -76,7 +77,7 @@ const main = async () => {
 main().then(null, e => {
 	console.log(`Error: ${e.message}`)
 	// Only show stack trace for unexpected errors, not user validation errors
-	if (e.name !== 'UserError') {
+	if (e.name !== 'UserError' && !e instanceof TargetingError) {
 		console.log(e.stack)
 	}
 	process.exit(1)
