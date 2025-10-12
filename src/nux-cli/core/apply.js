@@ -9,6 +9,7 @@ import { dedent } from '../../nux/dedent.js'
 
 import { tryInstallEffect, tryUninstallEffect } from './installEffect.js'
 import set from './set.js'
+import { checkOrphanedEffects } from './util.js'
 
 import { loadHosts } from './hosts.js'
 import * as util from '../util.js'
@@ -16,7 +17,6 @@ import { sh } from '../util.js'
 import { warnAboutStaleManifestIds } from '../apply/util.js'
 import { log } from '../logger.js'
 import { style } from '../prettyPrint.js'
-import { toSummaryString } from '../effectUtil.js'
 
 // Add QJSXPATH entries for all parent directories of a file
 // For /my/custom/path/__nux__.js, adds /my/custom/path/.nux/modules:/my/custom/.nux/modules:/my/.nux/modules
@@ -132,29 +132,8 @@ export default async function apply({
     ? set(JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, 'utf8'))).list()
     : []
 
-
-  // TODO: IMPORTANT: first we should ensure that there is no difference between activeHashes and existingHashes, and offer interactively to remove them
-  if(!uninstall && activeHashes.length != existingHashes.length) {
-    let orphanedHashes = set(existingHashes).minus(activeHashes).list()
-
-    let orphanedSummaries = orphanedHashes.map(hash => {
-      let effectData = JSON.parse(fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8'))
-      return toSummaryString(effectData.path, effectData.user, effectData.host, hash)
-    })
-
-    console.log(dedent`
-      ${style.red('Error:')} Found ${orphanedHashes.length} orphaned effects in the store (${activeHashes.length} active, ${existingHashes.length} in store)
-
-      ${orphanedSummaries.join('\n')}
-
-      Before continuing, please remove them via:
-
-        nux force-remove '
-        ${orphanedHashes.join('\n  ')}
-        '
-    `)
-
-    process.exit(1)
+  if(!uninstall) {
+    checkOrphanedEffects()
   }
 
 
