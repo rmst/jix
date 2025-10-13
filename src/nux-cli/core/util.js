@@ -20,12 +20,12 @@ export function checkOrphanedEffects() {
 		? set(db.existing.read()).list()
 		: []
 
-	if(activeHashes.length != existingHashes.length) {
+	if(activeHashes.length < existingHashes.length) {
 		let orphanedHashes = set(existingHashes).minus(activeHashes).list()
 
 		let orphanedSummaries = orphanedHashes.map(hash => {
 			let effectData = db.store.read(hash)
-			return toSummaryString(effectData.path, effectData.user, effectData.host, hash)
+			return toSummaryString({ ...effectData, hash })
 		})
 
 		console.log(dedent`
