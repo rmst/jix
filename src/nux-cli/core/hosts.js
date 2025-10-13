@@ -6,20 +6,20 @@ import { executeCmd } from "./installEffect";
 import { dedent } from "../../nux/dedent"
 import process from "node:process";
 import { UserError } from "./UserError.js"
+import db from "../db/index.js"
 
 export const updateHosts = (hosts) => {
 	if (!fs.existsSync(LOCAL_NUX_PATH))
 		throw Error(`Nux path doesn't exist: ${LOCAL_NUX_PATH}`)
 
-  fs.writeFileSync(`${LOCAL_NUX_PATH}/hosts.json`, JSON.stringify(hosts, null, 2), 'utf8');
+  db.hosts.write(hosts);
   loadHosts();
 };
 
 export const loadHosts = () => {
-  const hostsPath = `${LOCAL_NUX_PATH}/hosts.json`;
   let hosts = {};
-  if (fs.existsSync(hostsPath)) {
-    hosts = JSON.parse(fs.readFileSync(hostsPath, 'utf8'));
+  if (db.hosts.exists()) {
+    hosts = db.hosts.read();
   }
   // console.log("LOAD HOSTS", hosts)
   context.hosts = hosts;

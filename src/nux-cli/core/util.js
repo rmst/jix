@@ -7,23 +7,24 @@ import * as util from '../util.js'
 import { style } from '../prettyPrint.js'
 import { toSummaryString } from '../effectUtil.js'
 import set from './set.js'
+import db from '../db/index.js'
 
 export function checkOrphanedEffects() {
-	let activeHashesById = util.exists(ACTIVE_HASHES_PATH)
-		? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+	let activeHashesById = db.active.exists()
+		? db.active.read()
 		: {}
 
 	let activeHashes = set(Object.values(activeHashesById).flat()).list()
 
-	let existingHashes = util.exists(EXISTING_HASHES_PATH)
-		? set(JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, 'utf8'))).list()
+	let existingHashes = db.existing.exists()
+		? set(db.existing.read()).list()
 		: []
 
 	if(activeHashes.length != existingHashes.length) {
 		let orphanedHashes = set(existingHashes).minus(activeHashes).list()
 
 		let orphanedSummaries = orphanedHashes.map(hash => {
-			let effectData = JSON.parse(fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8'))
+			let effectData = db.store.read(hash)
 			return toSummaryString(effectData.path, effectData.user, effectData.host, hash)
 		})
 

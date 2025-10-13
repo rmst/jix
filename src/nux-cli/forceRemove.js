@@ -1,21 +1,18 @@
 import * as fs from 'node:fs'
 import { EXISTING_HASHES_PATH } from '../nux/context'
 import { dedent } from '../nux/dedent.js'
+import db from './db/index.js'
 
 
 export function forceRemove(drvs) {
   const lines = drvs.split('\n').map(line => line.trim()).filter(line => line !== '')
-  let existing = JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, 'utf8'))
+  let existing = db.existing.read()
   console.log('Before:', existing.length, 'derivations')
 
   existing = existing.filter(item => !lines.includes(item))
   console.log('After:', existing.length, 'derivations')
 
-  fs.writeFileSync(
-    EXISTING_HASHES_PATH,
-    JSON.stringify(existing, null, 2),
-    'utf8'
-  )
+  db.existing.write(existing)
 }
 
 export default {

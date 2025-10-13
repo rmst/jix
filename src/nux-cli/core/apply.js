@@ -17,6 +17,7 @@ import { sh } from '../util.js'
 import { warnAboutStaleManifestIds } from '../apply/util.js'
 import { log } from '../logger.js'
 import { style } from '../prettyPrint.js'
+import db from '../db/index.js'
 
 // Add QJSXPATH entries for all parent directories of a file
 // For /my/custom/path/__nux__.js, adds /my/custom/path/.nux/modules:/my/custom/.nux/modules:/my/.nux/modules
@@ -46,10 +47,7 @@ export default async function apply({
 }) {
 	if (!sourcePath)
 		throw new Error('apply requires a sourcePath')
-  util.mkdir(LOCAL_NUX_PATH, true)
-  util.mkdir(LOCAL_BIN_PATH, true)
-  util.mkdir(LOCAL_STORE_PATH, true)
-  util.mkdir(`${LOCAL_NUX_PATH}/logs`, true)  // TODO: get rid of this safely
+  db.init()
 
   loadHosts()
 
@@ -71,13 +69,13 @@ export default async function apply({
 		// rename its key in active.json to the absolute path-based ID.
 		// Safe to delete this block once explicit IDs are no longer encountered.
 		if (module && module.ID) {
-      let active = util.exists(ACTIVE_HASHES_PATH)
-        ? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+      let active = db.active.exists()
+        ? db.active.read()
         : {}
       if (active[module.ID]) {
         active[nuxId] = active[module.ID]
         delete active[module.ID]
-        util.fileWrite(ACTIVE_HASHES_PATH, JSON.stringify(active))
+        db.active.write(active)
       }
     }
 		// Warn about stale manifest IDs referencing missing files
@@ -122,14 +120,14 @@ export default async function apply({
 
 
 
-  let activeHashesById = util.exists(ACTIVE_HASHES_PATH)
-    ? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+  let activeHashesById = db.active.exists()
+    ? db.active.read()
     : {}
 
   let activeHashes = set(Object.values(activeHashesById).flat()).list()
-  
-  let existingHashes = util.exists(EXISTING_HASHES_PATH)
-    ? set(JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, 'utf8'))).list()
+
+  let existingHashes = db.existing.exists()
+    ? set(db.existing.read()).list()
     : []
 
   if(!uninstall) {
@@ -139,9 +137,8 @@ export default async function apply({
 
   // write derivations to disk
   drvs.map(d => {
-    let p = `${LOCAL_STORE_PATH}/${d.hash}`
-    if (!util.exists(p))
-      util.fileWrite(p, d.serialize())
+    if (!db.store.exists(d.hash))
+      db.store.write(d.hash, d.serialize())
   })
 
   let desiredForId = set(drvs.map(d => d.hash)).list()
@@ -252,7 +249,7 @@ export default async function apply({
     delete activeHashesById[nuxId]
   else
     activeHashesById[nuxId] = desiredForId
-  util.fileWrite(ACTIVE_HASHES_PATH, JSON.stringify(activeHashesById))
+  db.active.write(activeHashesById)
 
 
   return result

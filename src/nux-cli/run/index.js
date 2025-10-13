@@ -8,6 +8,7 @@ import { execFileSync } from 'node:child_process'
 import process from 'node:process'
 import { dedent } from '../../nux/dedent.js'
 import { withLogger } from '../logger.js'
+import db from '../db/index.js'
 
 
 async function run(cmd, args, { verbose = false, file } = {}) {
@@ -41,8 +42,8 @@ async function run(cmd, args, { verbose = false, file } = {}) {
 	const nuxId = `${absoluteManifestPath}#${name}`
 
   // Fail fast if there is a leftover active entry for this run id
-  const activeById = util.exists(ACTIVE_HASHES_PATH)
-    ? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+  const activeById = db.active.exists()
+    ? db.active.read()
     : {}
   if (activeById[nuxId]) {
     console.log(`Refusing to run: active.json already contains id ${nuxId}. Clean up leftover state first (it should be cleared after each run).`)

@@ -19,25 +19,21 @@ export const install = async (path, dryRun = false) => {
   path = sh`realpath '${findNuxRoot(path)}'`.trim() // TODO: obviously get rid of this
   // log("nuxroot", path)
 
+  if (process.env.NUX_GITCOMMIT) {
+    let gitRoot = git.root(path)
+    // log("gitroot", gitRoot)
 
-
-  let gitRoot = git.root(path)
-  // log("gitroot", gitRoot)
-
-
-  if (process.env.NUX_GITCOMMIT && !git.isClean(gitRoot)) {
-    // TODO: this should be configurable between {autocommit, fail on dirty, ignore dirty}
-    // throw Error(`Uncommited changes in ${path}`)
-    // console.log(`git not clean ${path}`)
-    sh`
+    if (!git.isClean(gitRoot)) {
+      // TODO: this should be configurable between {autocommit, fail on dirty, ignore dirty}
+      // throw Error(`Uncommited changes in ${path}`)
+      // console.log(`git not clean ${path}`)
+      sh`
 			cd ${gitRoot}
 			git add .
 			git commit -m nux_update
-  	`;
+  		`;
+    }
   }
-
-  let commit = git.latestCommitHash(gitRoot)
-  // console.log(`Installing ${path} from ${gitRoot}:${commit}`)
 
   await apply({sourcePath: path, dryRun})
 }

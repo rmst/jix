@@ -8,6 +8,7 @@ import set from './set.js'
 import context from '../../nux/context.js'
 import { prettyPrintEffect } from '../prettyPrint.js'
 import { UserError } from './UserError.js'
+import db from '../db/index.js'
 
 
 export const executeCmd = (c, host, user) => {
@@ -54,7 +55,7 @@ export const executeCmd = (c, host, user) => {
 
 
 export const tryInstallEffect = (hash) => {
-  let effectData = JSON.parse(fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8'))
+  let effectData = db.store.read(hash)
 
   var { install = null, build = null, host, user, debug = {} } = effectData
 
@@ -102,22 +103,18 @@ export const tryInstallEffect = (hash) => {
 
 
   // success - immedately add effect hash to .nux/applied
-  fs.writeFileSync(
-    EXISTING_HASHES_PATH,
-    JSON.stringify([...set(
-      fs.existsSync(EXISTING_HASHES_PATH)
-      ? JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, "utf8"))
-      : []
-    ).plus([hash])]), 
-    'utf8'
-  )
+  db.existing.write([...set(
+    db.existing.exists()
+    ? db.existing.read()
+    : []
+  ).plus([hash])])
 
   return null
 }
 
 
 export const tryUninstallEffect = (hash) => {
-  let effectData = JSON.parse(fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8'))
+  let effectData = db.store.read(hash)
 
   let { uninstall = null, host, user } = effectData
 
@@ -140,13 +137,9 @@ export const tryUninstallEffect = (hash) => {
 
 
   // success - immedately remove effect hash from .nux/applied
-  fs.writeFileSync(
-    EXISTING_HASHES_PATH,
-    JSON.stringify([...set(
-      JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, "utf8"))
-    ).minus([hash])]),
-    'utf8'
-  )
+  db.existing.write([...set(
+    db.existing.read()
+  ).minus([hash])])
 
   return null
 }

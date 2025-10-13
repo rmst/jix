@@ -5,6 +5,7 @@ import { MANIFEST_NAME } from './apply/util.js'
 import { sh } from './util.js'
 import { ACTIVE_HASHES_PATH } from '../nux/context.js'
 import * as util from './util.js'
+import db from './db/index.js'
 
 export default {
 	name: 'delete',
@@ -26,8 +27,8 @@ export default {
 			return
 		}
 
-		const active = util.exists(ACTIVE_HASHES_PATH)
-			? JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
+		const active = db.active.exists()
+			? db.active.read()
 			: {}
 
 		let id = arg

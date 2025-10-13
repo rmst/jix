@@ -1,10 +1,5 @@
 import { execFileSync } from "node:child_process";
-
-import * as std from 'std';
-import * as os from 'os';
 import { dedent } from '../nux/dedent';
-
-// TODO: move away from these functions towards the node/fs functions
 
 
 export function relpath(from, to) {
@@ -18,69 +13,6 @@ export function relpath(from, to) {
 
 	const up = '../'.repeat(fromParts.length);
 	return up + toParts.join('/');
-}
-
-
-// Function to write content to a file
-export const fileWrite = (path, content) => {
-	const file = std.open(path, 'w');
-	if (!file) {
-		throw new Error(`Unable to open file for writing, ${path}`);
-	}
-	try {
-		file.puts(content); // Write the content to the file
-	} finally {
-		file.close(); // Always close the file handle
-	}
-}
-
-// export const fileWriteWithPermissions = (path, content, permissions) => {
-//   fileDelete(path, true)
-//   fileWrite(path, content)
-//   sh`chmod ${permissions} ${path}`
-// }
-
-// Function to read content from a file
-// TODO: delete this, it's unused
-export const fileRead = (path) => {
-	const file = std.open(path, 'r');
-	if (!file) {
-		throw new Error(`Unable to open file for reading, ${path}`);
-	}
-	try {
-		return file.readAsString(); // Read the content as a string
-	} finally {
-		file.close(); // Always close the file handle
-	}
-}
-
-export const dirRead = (path) => {
-	// TODO: is this the correct way to handle errors?
-	let [files, err] = os.readdir(path)
-	if(err)
-		throw new Error(`Unable to read dir ${path}`)
-
-	return files
-}
-
-
-export const fileDelete = (path, ignoreNonexisting=false) => {
-	if(ignoreNonexisting && !exists(path))
-		return
-
-	if(os.remove(path) != 0)
-		throw new Error(`Unable to delete file: ${path}`);
-}
-
-export const exists = (path) => {
-	return os.lstat(path)[0] != null
-}
-
-
-export const mkdir = (path, ignoreExists=false) => {
-	if (!ignoreExists || !exists(path)) {
-		os.mkdir(path);
-	}
 }
 
 
