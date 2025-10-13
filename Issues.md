@@ -10,6 +10,8 @@ nux.nix: create test using docker container with Nix installed to test Nix suppo
 
 ### Improvements
 
+Nux directory path (.nux) is hardcoded throughout the codebase - should be configurable
+
 maybe add `nux services` subcommand
 
 cli: Protect against simultaneous runs of `nux apply`, implement locking via mkdir (works across all posix systems since mkdir is atomic)

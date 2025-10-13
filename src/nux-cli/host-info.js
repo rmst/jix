@@ -27,7 +27,8 @@ export default {
 		const host = a[0] || null
 		const user = a[1] || null
 		console.log(JSON.stringify(queryHostInfo(host, user), null, 2))
-		console.log(JSON.stringify(queryUserInfo(host, user), null, 2))
+		const userInfo = queryUserInfo(host, user)
+		console.log(JSON.stringify(userInfo, null, 2))
 
 		// Show applied effects for this target
 		if (db.active.exists()) {
@@ -48,13 +49,16 @@ export default {
 
 			console.log(`\nApplied effects: ${effectsForTarget.length}`)
 
-			let effectsWithValidPaths = effectsForTarget.filter(effectData => effectData.path)
+			const hostNuxDir = `${userInfo.home}/.nux/`
+			let effectsWithValidPaths = effectsForTarget
+				.filter(effectData => effectData.path)
+				.filter(effectData => !effectData.path.startsWith(hostNuxDir))
 
 			if (effectsWithValidPaths.length > 0) {
 				console.log('\nApplied effects with valid paths:')
 				effectsWithValidPaths.forEach(effectData => {
 					let path = shortPath(effectData.hash)
-					console.log(`${path}\t${effectData.path}`)
+					console.log(`${path} ${effectData.path}`)
 				})
 			}
 		}
