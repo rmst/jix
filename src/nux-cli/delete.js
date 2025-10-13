@@ -40,7 +40,7 @@ export default {
 			id = `${id}/${MANIFEST_NAME}`
 
 		if(!active[id])
-			throw (`'${arg}' isn't a valid, active manifest path or id`)  // TODO: instead of throw we should print to stderr and process.exit(1), note: console.error is missing in Quickjs
+			throw new Error(`'${arg}' isn't a valid, active manifest path or id`)  // TODO: instead of throw we should print to stderr and process.exit(1), note: console.error is missing in Quickjs
 
 		await apply({ sourcePath: id, uninstall: true })
 	}
