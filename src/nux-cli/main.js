@@ -11,6 +11,7 @@ import showCmd from './show.js'
 import forceRemoveCmd from './forceRemove.js'
 import deleteCmd from './delete.js'
 import hostInfoCmd from './host-info.js'
+import gcCmd from './gc.js'
 import { TargetingError } from '../nux/effect.js'
 
 
@@ -32,6 +33,7 @@ const main = async () => {
 		apply: applyCmd,
 		delete: deleteCmd,
 		'force-remove': forceRemoveCmd,
+		gc: gcCmd,
 		'host-info': hostInfoCmd,
 		show: showCmd,
 		run: runCmd,

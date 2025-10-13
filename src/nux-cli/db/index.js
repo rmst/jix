@@ -1,7 +1,6 @@
 import * as fs from 'node:fs'
 import { ACTIVE_HASHES_PATH, LOCAL_STORE_PATH, EXISTING_HASHES_PATH, LOCAL_NUX_PATH, LOCAL_BIN_PATH } from '../../nux/context.js'
 import { UserError } from '../core/UserError.js'
-import { sh } from '../util.js'
 import set from '../core/set.js'
 
 const HOSTS_PATH = `${LOCAL_NUX_PATH}/hosts.json`
@@ -21,13 +20,13 @@ function syncShortPaths() {
 
 	// Remove symlinks that are no longer needed
 	currentLinks.minus(existingShortHashes).list().map(link =>
-		sh`rm ${SHORT_PATH_DIR}/${link}`
+		fs.unlinkSync(`${SHORT_PATH_DIR}/${link}`)
 	)
 
 	// Create symlinks for new hashes
 	existingHashes
 		.filter(hash => !currentLinks.has(hash.slice(0, 7)))
-		.map(hash => sh`ln -s ../store/${hash} ${SHORT_PATH_DIR}/${hash.slice(0, 7)}`)
+		.map(hash => fs.symlinkSync(`../store/${hash}`, `${SHORT_PATH_DIR}/${hash.slice(0, 7)}`))
 }
 
 export default {
@@ -77,7 +76,14 @@ export default {
 				throw new UserError(`Failed to read effect ${hash}: ${e.message}. Store may be corrupted.`)
 			}
 		},
-		write: (hash, data) => fs.writeFileSync(`${LOCAL_STORE_PATH}/${hash}`, data, 'utf8')
+		write: (hash, data) => fs.writeFileSync(`${LOCAL_STORE_PATH}/${hash}`, data, 'utf8'),
+		list: () => {
+			if (!fs.existsSync(LOCAL_STORE_PATH)) return []
+			return fs.readdirSync(LOCAL_STORE_PATH)
+		},
+		delete: (hash) => {
+			fs.rmSync(`${LOCAL_STORE_PATH}/${hash}`, { force: true })
+		}
 	},
 
 	hosts: {
