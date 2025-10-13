@@ -23,7 +23,7 @@ export const generator = ({
 	
 	// NOTE: nixos seems to start these on install by default
 	return nux.run({
-		// install: runOnInstall ? `systemctl start ${name}` : null,
+		// install: `systemctl daemon-reload`,
 		dependencies: [ module ]
 	}).target({host: target.host, user: "root"})
 

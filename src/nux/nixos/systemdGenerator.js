@@ -85,12 +85,11 @@ export const enableUnit = ({
 				${runOnInstall ? `systemctl restart ${name}` : ""}
 			`,
 			uninstall: noUninstall ? null : `systemctl stop ${name} || true`,
-			dependencies: [ ...dependencies, file ]
+			dependencies: [ ...dependencies, file, bootstrapGenerator ]
 		})
 
 		return nux.effect({
 			dependencies: [ 
-				bootstrapGenerator, 
 				install,
 			]
 		})
