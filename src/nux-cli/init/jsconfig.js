@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { UserError } from '../core/UserError.js';
 
 /**
  * Creates or updates a jsconfig.json in the given directory to include
@@ -16,7 +17,11 @@ export function installJsConfig(projectDir) {
 
     if (existed) {
       // File exists, read and parse it.
-      config = JSON.parse(readFileSync(configPath, 'utf8'));
+      try {
+        config = JSON.parse(readFileSync(configPath, 'utf8'));
+      } catch (err) {
+        throw new UserError(`Failed to parse ${configPath}: ${err.message}`);
+      }
     }
 
     // --- Safely navigate and modify the config object ---
@@ -37,7 +42,12 @@ export function installJsConfig(projectDir) {
     // Check if .nux/modules/* is already in the paths
     const alreadyHasNuxPath = existingPaths.includes('.nux/modules/*')
 
-    if (!alreadyHasNuxPath || needsBaseUrl) {
+    // Ensure include array exists with the desired patterns
+    const desiredInclude = ['**/*.js', './.nux/**/*.js']
+    const existingInclude = config.include || []
+    const hasCorrectInclude = desiredInclude.every(pattern => existingInclude.includes(pattern))
+
+    if (!alreadyHasNuxPath || needsBaseUrl || !hasCorrectInclude) {
       // Use a Set to add our paths and automatically handle duplicates.
       // This ensures ".nux/modules/*" is first
       const newPaths = new Set([
@@ -47,6 +57,9 @@ export function installJsConfig(projectDir) {
 
       // Assign the updated, unique list back to the config.
       config.compilerOptions.paths['*'] = [...newPaths];
+
+      // Set the include array
+      config.include = desiredInclude
 
       // --- Write the updated config back to disk ---
       const content = JSON.stringify(config, null, 2);
@@ -58,8 +71,9 @@ export function installJsConfig(projectDir) {
     return null
 
   } catch (error) {
-    // console.log(`Failed to update ${configPath}:`, error);
-    // You could re-throw the error if the caller needs to handle it.
-    throw error;
+    if (error instanceof UserError) {
+      throw error;
+    }
+    throw new UserError(`Failed to update ${configPath}: ${error.message}`);
   }
 }
