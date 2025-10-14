@@ -9,6 +9,7 @@ import process from 'node:process'
 import { dedent } from '../../nux/dedent.js'
 import { withLogger } from '../logger.js'
 import db from '../db/index.js'
+import { style } from '../prettyPrint.js'
 
 
 async function run(cmd, args, { verbose = false, file } = {}) {
@@ -46,7 +47,7 @@ async function run(cmd, args, { verbose = false, file } = {}) {
     ? db.active.read()
     : {}
   if (activeById[nuxId]) {
-    console.log(`Refusing to run: active.json already contains id ${nuxId}. Clean up leftover state first (it should be cleared after each run).`)
+    console.log(`${style.red('Error:')} The last call to \`nux run\` did not exit gracefully. Before continuing, clean up leftover state by running:\n\nnux delete ${nuxId}`)
     process.exit(1)
   }
 
@@ -54,6 +55,29 @@ async function run(cmd, args, { verbose = false, file } = {}) {
 	let scriptPath
 	scriptPath = await withLogger({ verbose }, async () => await apply({ sourcePath: absoluteManifestPath, name }))
   console.log()
+
+	// Cleanup function to uninstall effects
+	const cleanup = async () => {
+		console.log()
+		try {
+			await withLogger({ verbose }, async () => await apply({ sourcePath: absoluteManifestPath, uninstall: true, name }))
+		} catch (_) {
+			// Best effort cleanup
+		}
+	}
+
+	// Handle signals to ensure cleanup on Ctrl+C
+	let signalReceived = false
+	const handleSignal = (signal) => {
+		if (signalReceived) return
+		signalReceived = true
+		cleanup().then(() => {
+			process.exit(signal === 'SIGINT' ? 130 : 143)
+		})
+	}
+
+	process.on('SIGINT', () => handleSignal('SIGINT'))
+	process.on('SIGTERM', () => handleSignal('SIGTERM'))
 
   let exitCode = 0
   try {
@@ -65,13 +89,13 @@ async function run(cmd, args, { verbose = false, file } = {}) {
     // A more robust solution might inspect the error object.
     exitCode = e.status || 1
   } finally {
-    console.log()
-    // Always uninstall effects installed for this run
-    try {
-      await withLogger({ verbose }, async () => await apply({ sourcePath: absoluteManifestPath, uninstall: true, name }))
-    } catch (_) {
-      // Best effort cleanup; errors here should not mask the original exit code
-    }
+		// Remove signal handlers
+		process.removeAllListeners('SIGINT')
+		process.removeAllListeners('SIGTERM')
+
+		if (!signalReceived) {
+			await cleanup()
+		}
   }
 
   if (exitCode !== 0)
