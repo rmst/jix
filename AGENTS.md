@@ -12,7 +12,7 @@
 The nux CLI entry point is `src/nux-cli/main.js` and is, in addition to writing their own nux code, the main way users interact with nux.
 
 ### Node API
-If you do something requiring Node API imports (e.g. `node:fs`), look at `quickjs-x/qjsx-node/node/*` first, to see what is available.
+We're using a Quickjs-based Javascript engine with a very incomplete Node.js API shim. If you do something requiring Node API imports (e.g. `node:fs`), look at `quickjs-x/qjsx-node/node/*` first, to see what is available.
 
 ### Building
 Important: Read `Makefile`. **Always** use `$TMPDIR/nux-build` as BUILD_DIR (never use the default).
