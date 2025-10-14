@@ -11,12 +11,16 @@
 ### Nux CLI
 The nux CLI entry point is `src/nux-cli/main.js` and is, in addition to writing their own nux code, the main way users interact with nux.
 
+### Node API
+If you do something requiring Node API imports (e.g. `node:fs`), look at `quickjs-x/qjsx-node/node/*` first, to see what is available.
+
 ### Building
 Important: Read `Makefile`. **Always** use `$TMPDIR/nux-build` as BUILD_DIR (never use the default).
 
 ### General Instructions
 - Use tabs instead of spaces for indentation
 - Omit end-of-line semicolons in js/jsx/ts/tsx
+- Prefer Array map over for-loops
 
 ### Code comments
 Never write comments describing what changed compared the previous version of the code. Comments should always describe the current situation. Change notes go in the commit message.
