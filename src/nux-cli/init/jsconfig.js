@@ -12,8 +12,9 @@ export function installJsConfig(projectDir) {
 
   try {
     let config = {};
+    const existed = existsSync(configPath)
 
-    if (existsSync(configPath)) {
+    if (existed) {
       // File exists, read and parse it.
       config = JSON.parse(readFileSync(configPath, 'utf8'));
     }
@@ -25,26 +26,36 @@ export function installJsConfig(projectDir) {
     config.compilerOptions.paths = config.compilerOptions.paths || {};
 
     // Ensure baseUrl is set, as it's required for paths to work.
-    if (!config.compilerOptions.baseUrl) {
+    const needsBaseUrl = !config.compilerOptions.baseUrl
+    if (needsBaseUrl) {
       config.compilerOptions.baseUrl = ".";
     }
 
     // Get the existing list for the "*" wildcard, or an empty array.
     const existingPaths = config.compilerOptions.paths['*'] || [];
 
-    // Use a Set to add our paths and automatically handle duplicates.
-    // This ensures ".nux/modules/*" is first
-    const newPaths = new Set([
-      '.nux/modules/*',
-      ...existingPaths,
-    ]);
-    
-    // Assign the updated, unique list back to the config.
-    config.compilerOptions.paths['*'] = [...newPaths];
+    // Check if .nux/modules/* is already in the paths
+    const alreadyHasNuxPath = existingPaths.includes('.nux/modules/*')
 
-    // --- Write the updated config back to disk ---
-    const content = JSON.stringify(config, null, 2);
-    writeFileSync(configPath, content, 'utf8');
+    if (!alreadyHasNuxPath || needsBaseUrl) {
+      // Use a Set to add our paths and automatically handle duplicates.
+      // This ensures ".nux/modules/*" is first
+      const newPaths = new Set([
+        '.nux/modules/*',
+        ...existingPaths,
+      ]);
+
+      // Assign the updated, unique list back to the config.
+      config.compilerOptions.paths['*'] = [...newPaths];
+
+      // --- Write the updated config back to disk ---
+      const content = JSON.stringify(config, null, 2);
+      writeFileSync(configPath, content, 'utf8');
+
+      return existed ? 'updated' : 'created'
+    }
+
+    return null
 
   } catch (error) {
     // console.log(`Failed to update ${configPath}:`, error);
