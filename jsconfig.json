@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "*": [
+        ".nux/modules/*"
+      ]
+    },
+    "baseUrl": "."
+  }
+}

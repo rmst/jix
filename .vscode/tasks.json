@@ -1,0 +1,29 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "nux apply",
+			"type": "shell",
+			"command": "nux apply ${file}",
+			"group": {
+				"kind": "build"
+			}
+		},
+		{
+			"label": "nux apply --dry-run",
+			"type": "shell",
+			"command": "nux apply --dry-run ${file}",
+			"group": {
+				"kind": "build"
+			}
+		},
+		{
+			"label": "nux run",
+			"type": "shell",
+			"command": "nux run -f ${file}",
+			"group": {
+				"kind": "build"
+			}
+		}
+	]
+}
