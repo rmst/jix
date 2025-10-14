@@ -11,6 +11,7 @@ import nixos from './nixos'
 import nix from './nix'
 import git from './git'
 import { appendToFile } from './appendToFile.js'
+import shelltools from './shelltools'
 
 let nux = {
 
@@ -27,6 +28,7 @@ let nux = {
   // NOTE: do not list experimental in the documentation
   experimental: {
     nixos,
+    shelltools,
 
     appendToFile,
     scriptWithTempdir,

@@ -1,0 +1,151 @@
+#!/bin/sh
+
+# --- A truly robust, portable script to watch a path and restart a command. ---
+
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
+# 1. Argument Check and Flag Parsing
+WAIT_FOR_COMPLETION=false
+RECURSIVE=false
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --wait)
+      WAIT_FOR_COMPLETION=true
+      shift
+      ;;
+    -r|--recursive)
+      RECURSIVE=true
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [ $# -lt 2 ]; then
+  echo "Usage: $0 [-r] [--wait] <path_to_watch> <command> [args...]"
+  echo "Options:"
+  echo "  -r, --recursive  Show which file changed (useful for directories)"
+  echo "  --wait           Wait for command to complete before checking for new changes"
+  echo "Example: $0 ./src npm run dev"
+  exit 1
+fi
+
+PATH_TO_WATCH="$1"
+shift
+
+# 2. Platform-Specific Setup (reserved for future use)
+
+# 3. Get Newest Mtime Function
+get_newest_mtime() {
+  [ ! -e "$1" ] && echo "" && return
+
+  if [ "$RECURSIVE" = "false" ]; then
+    # Watch the path itself (file or directory)
+    if [ "$(uname)" = "Darwin" ]; then
+      stat -f "%m" "$1" 2>/dev/null
+    else
+      stat -c "%Y" "$1" 2>/dev/null
+    fi
+  else
+    # Watch files recursively
+    if [ "$(uname)" = "Darwin" ]; then
+      find "$1" -type f -exec stat -f "%m" {} + 2>/dev/null | sort -rn | head -1
+    else
+      find "$1" -type f -printf "%T@\n" 2>/dev/null | sort -rn | head -1
+    fi
+  fi
+}
+
+# 3b. Show the file with the newest mtime
+show_changed_file() {
+  [ ! -e "$1" ] && echo "" && return
+  if [ "$(uname)" = "Darwin" ]; then
+    find "$1" -type f -exec stat -f "%m %N" {} + 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-
+  else
+    find "$1" -type f -printf "%T@ %p\n" 2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-
+  fi
+}
+
+# 3c. Get mtime of a specific file
+get_file_mtime() {
+  [ ! -e "$1" ] && echo "" && return
+  if [ "$(uname)" = "Darwin" ]; then
+    stat -f "%m" "$1" 2>/dev/null
+  else
+    stat -c "%Y" "$1" 2>/dev/null
+  fi
+}
+
+# 3d. Format Unix timestamp as yyyy-mm-dd hh:mm:ss
+format_timestamp() {
+  [ -z "$1" ] && echo "" && return
+  date -d "@$1" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || date -r "$1" "+%Y-%m-%d %H:%M:%S" 2>/dev/null
+}
+
+# 4. PORTABLE Process Killing Function
+get_all_descendants() {
+  local parent_pid="$1"
+  local children=$(ps -ef | awk -v ppid="$parent_pid" '$3 == ppid { print $2 }')
+
+  for child_pid in $children; do
+    echo "$child_pid"
+    get_all_descendants "$child_pid"
+  done
+}
+
+# 5. Cleanup Function and Trap
+child_pid=""
+cleanup() {
+  if [ -n "$child_pid" ]; then
+    echo # Newline for cleaner exit
+    echo "Signal caught. Stopping process tree starting from PID $child_pid..."
+    pids_to_kill="$(get_all_descendants "$child_pid") $child_pid"
+    kill $pids_to_kill 2>/dev/null || true
+  fi
+  exit 0
+}
+
+trap cleanup INT TERM
+
+# 6. Main Loop
+last_mtime=""
+
+while true; do
+  current_mtime=$(get_newest_mtime "$PATH_TO_WATCH")
+
+  if [ "$current_mtime" != "$last_mtime" ] || ([ -z "$child_pid" ] && [ -n "$current_mtime" ]); then
+    if [ -t 1 ]; then clear; fi
+
+    echo "Watching:\t$PATH_TO_WATCH"
+    echo "Last change:\t$(format_timestamp "$current_mtime")"
+    if [ "$RECURSIVE" = "true" ]; then
+      example_file=$(show_changed_file "$PATH_TO_WATCH")
+      echo "Changed file:\t$example_file"
+    fi
+    echo "Command:\t$@"
+    echo ""
+
+    if [ -n "$child_pid" ]; then
+      pids_to_kill="$(get_all_descendants "$child_pid") $child_pid"
+      kill $pids_to_kill 2>/dev/null || true
+      wait "$child_pid" 2>/dev/null || true
+    fi
+
+    "$@" &
+    child_pid=$!
+
+    if [ "$WAIT_FOR_COMPLETION" = "true" ]; then
+      wait "$child_pid" 2>/dev/null || true
+      last_mtime=$(get_newest_mtime "$PATH_TO_WATCH")
+      child_pid="dummy"
+    else
+      last_mtime=$current_mtime
+    fi
+  fi
+
+  sleep 1
+done

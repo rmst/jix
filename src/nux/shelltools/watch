@@ -1,0 +1,83 @@
+#!/bin/sh
+#
+# pwatch - A simple, POSIX-compliant script to run a command repeatedly.
+# Mimics the basic functionality of the 'watch' command.
+#
+
+# --- Function to display usage information and exit ---
+# Uses `basename` to show the actual name of the script file.
+usage() {
+    echo "Usage: $(basename "$0") [-h] [-n seconds] command"
+    echo "  -h           Display this help message and exit."
+    echo "  -n seconds   Specify the interval in seconds. Default is 1."
+    echo "  command      The command to execute."
+    exit 1
+}
+
+# --- Function to clean up and exit gracefully ---
+cleanup() {
+    tput cnorm # Restore the cursor to be visible
+    echo       # Print a newline to not mess up the user's prompt
+    exit 0
+}
+
+# --- Set default interval ---
+interval=1
+
+# --- Parse options using POSIX-standard getopts ---
+# Added 'h' to the options string. It doesn't have a ':' so it takes no argument.
+while getopts "n:h" opt; do
+    case "$opt" in
+        h)
+            usage
+            ;;
+        n)
+            # Use a portable 'case' statement to validate the interval.
+            case "$OPTARG" in
+                ''|*[!0-9]*)
+                    echo "Error: Interval '$OPTARG' is not a positive integer." >&2
+                    usage
+                    ;;
+                *)
+                    interval="$OPTARG"
+                    ;;
+            esac
+            ;;
+        \?)
+            # Handle unknown options
+            usage
+            ;;
+    esac
+done
+
+# Remove the parsed options, leaving only the command in the arguments ($@).
+shift $((OPTIND - 1))
+
+# --- Check if a command was provided ---
+if [ -z "$1" ]; then
+    echo "Error: No command specified." >&2
+    usage
+fi
+
+# Join all remaining arguments into a single command string.
+command_str="$*"
+
+# --- Trap signals to ensure cleanup runs on exit ---
+trap cleanup INT TERM # INT is Ctrl+C, TERM is from `kill`
+
+# --- Main Loop ---
+tput civis # Hide the cursor
+
+while true; do
+    tput clear # Clear the screen
+
+    # A simple, clean header using printf.
+    printf "Every %ss: %s\t\t%s\n\n" "$interval" "$command_str" "$(date)"
+
+    # Execute the command using `sh -c` to correctly handle
+    # pipes, quotes, or other special characters.
+    sh -c "$command_str"
+
+    # Wait for the specified interval.
+    sleep "$interval"
+done
