@@ -1,5 +1,5 @@
 
-import { run } from "./base.js";
+import { customEffect } from "./base.js";
 import { effect } from "./effect.js";
 import { dedent } from './dedent.js';
 import { NUX_DIR } from "./context.js";
@@ -15,7 +15,7 @@ export default (id, owner=null) => effect(target => {
 		? `chown -R ${owner} "${state}"`
 		: ""
 		
-	return run({
+	return customEffect({
 		install: dedent`
 			mkdir -p "${db}"
 

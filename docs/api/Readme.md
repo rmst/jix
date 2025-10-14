@@ -163,7 +163,7 @@ Remove common leading whitespace from template strings.
 
 *Source: [src/nux/dedent.js](../../src/nux/dedent.js)*
 
-### run(options)
+### customEffect(options)
 Execute shell commands for install/uninstall.
 - **Parameters**: Object with `install`, `uninstall` strings and other properties
 - **Returns**: [Effect](./Effect.md)

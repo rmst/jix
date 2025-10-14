@@ -78,7 +78,7 @@ export const enableUnit = ({
 
 	return nux.effect(target => {
 
-		let install = nux.run({
+		let install = nux.customEffect({
 			install: nux.dedent`
 				${bootstrapGeneratorScript} /run/systemd/generator
 				systemctl daemon-reload

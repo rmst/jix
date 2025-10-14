@@ -38,7 +38,7 @@ export const importModules = (files, { core=false }={}) => {
 	})
 	
 
-	let clearRoot = nux.run({
+	let clearRoot = nux.customEffect({
 		install: nux.dedent`
 			rm -f /etc/nixos/configuration.nix.backup
 			mv /etc/nixos/configuration.nix /etc/nixos/configuration.nix.backup || true

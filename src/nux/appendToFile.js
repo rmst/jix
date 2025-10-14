@@ -1,4 +1,4 @@
-import { script, run } from './base';
+import { script, customEffect } from './base';
 import { shellEscape } from './util';
 
 /**
@@ -24,7 +24,7 @@ export const appendToFile = (path, line) => {
     fi
   `;
 
-  return run({
+  return customEffect({
     install: nux.dedent`
       # add missing newline if necessary
       [ -s '${path}' ] && [ -n "$(tail -c 1 '${path}')" ] && echo >> '${path}'

@@ -61,10 +61,10 @@ export const alias = (mapping) => {
 
 
 
-/** 
+/**
   @param {{install?: string, uninstall?: string, dependencies?: Array, path?: string, str?: string}} obj
 */
-export const run = ({install=null, uninstall=null, ...other}) => {
+export const customEffect = ({install=null, uninstall=null, ...other}) => {
   let extraLines = dedent`
     set -e  # error script if single command fails
     set -o pipefail  # error on piped command fails
@@ -223,7 +223,7 @@ let base = {
 
   alias,
 
-  run,  // TODO: maybe we should rename this to "install" or "custom effect"?
+  customEffect,
 
   buildDir,
   dir,

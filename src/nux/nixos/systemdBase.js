@@ -22,7 +22,7 @@ export const generator = ({
 	})
 	
 	// NOTE: nixos seems to start these on install by default
-	return nux.run({
+	return nux.customEffect({
 		// install: `systemctl daemon-reload`,
 		dependencies: [ module ]
 	}).target({host: target.host, user: "root"})
@@ -71,7 +71,7 @@ export const unit = ({
 	})
 	
 	// NOTE: nixos seems to start these on install by default
-	return nux.run({
+	return nux.customEffect({
 		// install: runOnInstall ? `systemctl start ${name}` : null,
 		dependencies: [ module ]
 	}).target({host: target.host, user: "root"})
