@@ -12,8 +12,12 @@ echo "📦 Installing to ~/.nux/nux..."
 mkdir -p "${HOME}/.nux/nux"
 mkdir -p "${HOME}/.nux/bin"
 
-# Copy qjsx binary
-cp "$BUILD_DIR/quickjs-x/bin/qjsx" "${HOME}/.nux/nux/qjsx"
+# Copy qjsx binary (use -c on macOS to preserve code signature)
+if [ "$(uname)" = "Darwin" ]; then
+	cp -c "$BUILD_DIR/quickjs-x/bin/qjsx" "${HOME}/.nux/nux/qjsx"
+else
+	cp "$BUILD_DIR/quickjs-x/bin/qjsx" "${HOME}/.nux/nux/qjsx"
+fi
 chmod +x "${HOME}/.nux/nux/qjsx"
 
 # Copy modules
