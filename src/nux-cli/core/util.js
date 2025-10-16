@@ -35,9 +35,9 @@ export function checkOrphanedEffects() {
 
 			Before continuing, please remove them via:
 
-				nux force-remove '
-				${orphanedHashes.join('\n  ')}
-				'
+			nux force-remove '
+			${orphanedHashes.join('\n')}
+			'
 		`)
 
 		process.exit(1)

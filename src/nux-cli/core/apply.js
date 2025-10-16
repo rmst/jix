@@ -175,9 +175,9 @@ export default async function apply({
       ${style.red('Error:')} ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed.
       Uninstall them manually, then delete them via
 
-        nux force-remove '
-        ${failedUninstalls.join('\n  ')}
-        '
+      nux force-remove '
+      ${failedUninstalls.join('\n')}
+      '
     `)
 
     process.exit(1)
