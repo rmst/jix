@@ -16,6 +16,10 @@ export function relpath(from, to) {
 }
 
 
+/**
+ * @param  {...any} args 
+ * @returns {string}
+ */
 export const sh = (...args) => {
 	let command = dedent(...args)
 	return execFileSync("/bin/sh", ["-c", command])

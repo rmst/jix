@@ -1,5 +1,6 @@
 
 import nux from "../base"
+import { shellEscape } from "../util"
 
 
 const instanceofAbstractEffect = (obj) => {
@@ -21,7 +22,7 @@ export const rebuild = (e) => nux.effect(target => {
 })
 	
 	
-export const importModules = (files, { core=false }={}) => {
+export const importModules = (files, { core=false, keep=false }={}) => {
 	
 	files = !Array.isArray(files)
 		? Object.entries(files)
@@ -38,16 +39,15 @@ export const importModules = (files, { core=false }={}) => {
 	})
 	
 
-	let clearRoot = nux.customEffect({
-		install: nux.dedent`
-			rm -f /etc/nixos/configuration.nix.backup
-			mv /etc/nixos/configuration.nix /etc/nixos/configuration.nix.backup || true
-		`
-	})
+	// let clearRoot = nux.customEffect({
+	// 	install: nux.dedent`
+	// 		rm -f /etc/nixos/configuration.nix.backup
+	// 		mv /etc/nixos/configuration.nix /etc/nixos/configuration.nix.backup || true
+	// 	`
+	// })
 
 	let root = nux.textfile`
-		# Hack to insert this as a dependency: ${clearRoot}
-
+		# nux-autoimport
 		{ lib, ... }:
 
 		{
@@ -55,10 +55,22 @@ export const importModules = (files, { core=false }={}) => {
 				(name: type: type == "regular" && lib.hasSuffix ".nix" name)
 				(builtins.readDir ./modules)));
 		}
-	`.copyTo("/etc/nixos/configuration.nix")					
+	`
 
-	let mdir = nux.dir("/etc/nixos/modules")
+	root = nux.customEffect({
+		install: nux.dedent`
+			f=/etc/nixos/configuration.nix
+			[ -f "$f" ] && ! grep -q "nux-autoimport" "$f" && { echo "Error: File exists" >&2; exit 1; }
+			
+			cp -f '${root}' /etc/nixos/configuration.nix
+		`,
+		path: "/etc/nixos/configuration.nix",
+	})
 
+	let mdir = nux.customEffect({
+		install: "mkdir -p /etc/nixos/modules",
+		path: "/etc/nixos/modules",
+	})
 
 	return nux.effect(target => {
 
@@ -92,10 +104,12 @@ export const importModules = (files, { core=false }={}) => {
 			if(!name.endsWith(".nix"))
 				throw Error(`Module name has to end in ".nix", instead we have: ${name}`)
 
-
-			let configFile = targetedFile
-				.copyTo(`${mdir}/${name}`)
-				.dependOn(uninstall)
+			
+			let configFile = keep
+				? nux.customEffect({install: `cp -f '${targetedFile}' ${mdir}/${name}`})
+				: targetedFile
+					.copyTo(`${mdir}/${name}`)
+					.dependOn(uninstall)
 
 			return configFile
 		})

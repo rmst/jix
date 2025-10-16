@@ -69,6 +69,11 @@ export default {
 
 	store: {
 		exists: (hash) => fs.existsSync(`${LOCAL_STORE_PATH}/${hash}`),
+
+		/**
+		 * @param {string} hash 
+		 * @returns {{install: [], uninstall: [], build: [], host: string, user: string, debug: any}}
+		 */
 		read: (hash) => {
 			try {
 				return JSON.parse(fs.readFileSync(`${LOCAL_STORE_PATH}/${hash}`, 'utf8'))

@@ -7,7 +7,7 @@ export const effectPlaceholderMap = new Map()
 
 import process from 'node:process';
 import { createHash } from 'node:crypto';
-import { hostInfo } from '../nux-cli/core/hosts.js';  // TODO: we shouldn't import nux-cli from nux (api), instead, maybe we should trigger an event or sth
+import { hostInfoWithUser } from '../nux-cli/core/hosts.js';  // TODO: we shouldn't import nux-cli from nux (api), instead, maybe we should trigger an event or sth
 import { createContext, useContext } from './useContext.js';
 
 // import { createHash } from 'node/crypto';
@@ -33,10 +33,16 @@ export const getTarget = () => useContext(TARGET_CONTEXT)
  * @typedef {Object} EffectProps
  * @property {Array} [install]
  * @property {Array} [uninstall]
+ * @property {Array} [build]
  * @property {string} [path]
  * @property {string} [str]
+ * @property {string} [hash]
  * @property {Array} [dependencies]
  */
+
+
+
+// TODO: this type is super cursed, clean it up
 
 /**
  * @typedef {Object} TargetInfo - Detailed information about the target host and user.
@@ -113,9 +119,9 @@ export function target(tgt, obj) {
   let eff = (obj instanceof Effect) 
     ? obj 
     : new Effect(obj)
-  
-  return eff.target({ host, user })
 
+  let teff = eff.target({ host, user })
+  return teff
 }
 
 
@@ -160,46 +166,62 @@ export class Effect extends AbstractEffect {
     }
   }
 
-  /** 
-    @param {{ host: string, user: string, home?: string }} x
+  /**
+    @param {{ machineId?: string, host?: string|null, user?: string|null, home?: string }} x - Friendly host name (or null for localhost), user (or null to use current)
     @returns {TargetedEffect}
   */
-  target (x) {
-    // TODO: assert host, user
-    if(!x.host) {
-      if(!x.user) {
-        // x.user = LOCAL_USER  // TODO: we should do this but this will trigger mass rebuilds
-        // throw Error("Not a valid target")
-      }
-      else {
-        // throw Error("Alternative local users are not supported yet")
-      }
-    }
-
+  target(x) {
     try {
-      let info = hostInfo(x.host, x.user)
+      let machineIdOrFriendlyName, user
 
-      x = {
-        ...x,
-        ...info,
-        ...info.users[x.user ?? process.env.USER],
+      if(x.machineId) {
+        machineIdOrFriendlyName = x.machineId
+        user = x.user
+
+      } 
+      else {
+        // Require user to be explicitly set for remote targets
+        if (!x.user && x.host !== null && x.host !== undefined) {
+          throw new Error("user must be specified for remote targets")
+        }
+        machineIdOrFriendlyName = x.host ?? "localhost"
+        user = x.user ?? process.env.USER
       }
-      
+
+      if (!user)
+        throw new Error(`User missing in ${x}`)
+
+      let info = hostInfoWithUser(machineIdOrFriendlyName, user)
+
+      if(!info.friendlyName || !info.users || !info.users[user])
+        throw Error(`${info}`)
+
+      // TODO: this type is super cursed
       let r = (typeof this.obj === 'function')
-        ? this.obj(x)
+        ? this.obj({
+          ...info,
+          host: info.friendlyName,
+          user,
+          users: info.users,
+          ...info.users[user],
+        })
         : this.obj
-      
+
       if(r instanceof TargetedEffect)
         return r
-      
+
       else if(r instanceof Effect)
         return r.target(x)
-      
+
       else {
         if (Array.isArray(r))
           r = { dependencies: r }
 
-        return new TargetedEffect(x, r)
+        return new TargetedEffect({
+          machineId: info.machineId,
+          user: user,
+          home: info.users[user].home,
+        }, r)
       }
 
     } catch (e) {
@@ -208,7 +230,7 @@ export class Effect extends AbstractEffect {
 
       let stack = e.stack
 
-      if(stack.split("\n").length > 4) {
+      if(stack.split("\n").length > 400) {
         stack = stack.split("\n")
         stack = [
           stack[0], 
@@ -241,14 +263,16 @@ export class TargetedEffect extends AbstractEffect {
   dependencies
 
   /**
-   * 
-   * @param {{ host: string, user: string}} tgt 
-   * @param {EffectProps}} [props]
+   * @param {Object} tgt - Target specification
+   * @param {string} tgt.machineId - Machine ID (required, never null)
+   * @param {string} tgt.user - User name (required, never null)
+   * @param {string} tgt.home - User home directory (required for path resolution)
+   * @param {EffectProps} [props] - Effect properties
    */
   constructor(tgt, props={}) {
     super()
 
-    this.dependencies = props.dependencies?.flat(Infinity) ?? []
+    const dependencies = props.dependencies?.flat(Infinity) ?? []
     
     // TODO: delete this, instead we're doing assert x instanceof AbstractEffect 
     // this.dependencies =  this.dependencies.map(x => {
@@ -257,6 +281,8 @@ export class TargetedEffect extends AbstractEffect {
 
     // process values in the arguments to install, uninstall, etc
     var { install, uninstall, build, str, path } = props
+
+    // @ts-ignore  TODO: fix by adding type to parseEffectValues
     var [install, uninstall, build, [str], [path]]
       = [install, uninstall, build, [str], [path]].map(x => {
 
@@ -269,15 +295,15 @@ export class TargetedEffect extends AbstractEffect {
       if(x.length == 1 && x[0] === undefined)
         return x
 
-      let {values, dependencies} = parseEffectValues(tgt, x)
-      this.dependencies.push(...dependencies)
+      let {values, dependencies: newDeps} = parseEffectValues(tgt, x)
+      dependencies.push(...newDeps)
 
       return values
     })
     
 
     // process dependencies  
-    this.dependencies = this.dependencies.map(x => {
+    this.dependencies = dependencies.map(x => {
       if(x instanceof TargetedEffect)
         return x
 
@@ -285,20 +311,17 @@ export class TargetedEffect extends AbstractEffect {
         return x.target(tgt)  // TODO: maybe pass tgt copy instead?
 
       else {
-        // console.log(x)
         let t = `${typeof x} || ${x?.constructor?.name}`
         throw Error(`Effect: ${x} of type ${t} is not a proper dependency`)
       }
     })
 
 
-    Object.assign(this, {
-      install,
-      uninstall,
-      build,
-      host: tgt.host,
-      user: tgt.user,
-    })
+    this.install = install
+    this.uninstall = uninstall
+    this.build = build
+    this.host = tgt.machineId
+    this.user = tgt.user
 
     
     this.normalize = () => ({
@@ -341,7 +364,6 @@ export class TargetedEffect extends AbstractEffect {
       return [...deps, this].flat()  // flatten the nested list
     }
 
-    // console.log(`\n${this.toDebugString()}\n`)
   }
 
   toDebugString() {

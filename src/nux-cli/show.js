@@ -3,12 +3,23 @@ import { LOCAL_NUX_PATH, ACTIVE_HASHES_PATH, EXISTING_HASHES_PATH } from '../nux
 import { style, prettyPrintEffect } from './prettyPrint.js'
 import { dedent } from '../nux/dedent.js'
 import db from './db/index.js'
+import { sh } from './util.js'
+import { shellEscape } from '../nux/util.js'
 
+/**
+ * @param {string} effectHash 
+ */
 export function showEffect(effectHash) {
-	const path = `${LOCAL_NUX_PATH}/store/${effectHash}`;
+	const path = effectHash.includes("/")
+		? effectHash
+		: effectHash.length < 14
+		? `${LOCAL_NUX_PATH}/s/${effectHash}`
+		: `${LOCAL_NUX_PATH}/store/${effectHash}`
 
 	console.log(`${style.title('Inspecting effect:')} ${style.path(path)}\n`)
 
+	effectHash = sh`basename "$(realpath ${shellEscape(path)})"`
+	
 	const effectData = db.store.read(effectHash)
 	prettyPrintEffect(effectData)
 

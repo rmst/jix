@@ -6,38 +6,45 @@ import { EXISTING_HASHES_PATH, LOCAL_STORE_PATH, NUX_DIR } from '../../nux/conte
 import * as actions from './actions.js'
 import set from './set.js'
 import context from '../../nux/context.js'
-import { prettyPrintEffect } from '../prettyPrint.js'
+import { prettyPrintEffect, style } from '../prettyPrint.js'
 import { UserError } from './UserError.js'
 import db from '../db/index.js'
+import { resolveEffectTarget } from './hosts.js'
+import { shellEscape } from '../../nux/util.js'
 
 
-export const executeCmd = (c, host, user) => {
+/**
+ * @param {*} command
+ * @param {*} address
+ * @param {*} user 
+ * @returns {string} the stdout of the command
+ */
+export const executeCmd = (command, address, user) => {
   
-  if(c === null)  // noop
+  if(command === null)  // noop
     return
 
-  let options = c.verbose ? { stdout: 'inherit', stderr: 'inherit' } : {}
-  let { cmd, args } = c
+  let options = command.verbose ? { stdout: 'inherit', stderr: 'inherit' } : {}
+  let { cmd, args } = command
 
-  if(host !== null) {
-    if(!host)
-      throw new UserError(`Invalid host: ${host}`)
+  if(address !== "localhost") {
+    if(!address)
+      throw new UserError(`Invalid host: ${address}`)
 
     if(!user)
-      throw new UserError(`User must be specified when connecting to remote host: ${host}`)
+      throw new UserError(`User must be specified when connecting to remote host: ${address}`)
 
     // TODO: also switch to stdin-based approach for ssh, should be cleaner
 
     // console.log("RC", host, user)
     // TODO: add a check here on first ssh connection whether the user home matches context.hosts
-    host = context.hosts?.[host]?.address ?? host
     args = [cmd, ...args]
 
     // TODO: maybe use nux/util.js shellEscape, both are correct though
     args = args.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)  // escape all args
 
     cmd = "ssh"
-    args = [`${user}@${host}`, "--", ...args]
+    args = [`${user}@${address}`, "--", ...args]
   }
 
   else if ( user && user != process.env.USER ) {
@@ -48,6 +55,8 @@ export const executeCmd = (c, host, user) => {
     cmd = "sudo"
     args = [ "-i", "-u", user, "--", "/bin/sh" ]
   }
+  
+  // console.log(style.red("C:"), [cmd, ...args].map(x => shellEscape(x)).join(" "))
 
   return execFileSync(cmd, args, options)
 }
@@ -59,14 +68,16 @@ export const tryInstallEffect = (hash) => {
 
   var { install = null, build = null, host, user, debug = {} } = effectData
 
+  var { address: host, user } = resolveEffectTarget(host, user)
+
   if (build) {
     // check if the out file exists (works both locally and over ssh)
-    let exists = executeCmd({
+    const existsString = executeCmd({
       cmd: "/bin/sh",
       args: ["-c", `[ -e "$HOME/${NUX_DIR}/out/${hash}" ] && echo "y" || echo "n"`],
     }, host, user);
 
-    exists = (exists === "y");
+    const exists = (existsString === "y");
 
     if (!exists) {
       var [f, ...args] = build;
@@ -116,7 +127,8 @@ export const tryInstallEffect = (hash) => {
 export const tryUninstallEffect = (hash) => {
   let effectData = db.store.read(hash)
 
-  let { uninstall = null, host, user } = effectData
+  var { uninstall = null, host, user } = effectData
+  var { address: host, user } = resolveEffectTarget(host, user)
 
   if (uninstall) {
     let [f, ...args] = uninstall;

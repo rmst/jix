@@ -1,8 +1,9 @@
-import { queryHostInfo, queryUserInfo } from './core/hosts.js'
+import { queryHostInfo, queryUserInfo, hostInfoWithUser } from './core/hosts.js'
 import { dedent } from '../nux/dedent.js'
 import db from './db/index.js'
 import set from './core/set.js'
 import { shortPath } from './effectUtil.js'
+import process from 'node:process'
 
 export default {
 	name: 'host-info',
@@ -24,10 +25,12 @@ export default {
 			console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
 			return
 		}
-		const host = a[0] || null
-		const user = a[1] || null
-		console.log(JSON.stringify(queryHostInfo(host, user), null, 2))
-		const userInfo = queryUserInfo(host, user)
+		const host = a[0] || "localhost"
+		const user = a[1] || process.env.USER
+		
+		let hostInfo = hostInfoWithUser(host, user, true)
+		console.log(JSON.stringify({...hostInfo, users: undefined}, null, 2))
+		const userInfo = hostInfo.users[user]
 		console.log(JSON.stringify(userInfo, null, 2))
 
 		// Show applied effects for this target
@@ -35,17 +38,16 @@ export default {
 			let activeHashesById = db.active.read()
 			let activeHashes = set(Object.values(activeHashesById).flat()).list()
 
+			// Get the machineId for the requested host
+			const targetHostInfo = hostInfoWithUser(host, user)
+			const targetMachineId = targetHostInfo.machineId
+
 			let effectsForTarget = activeHashes
 				.map(hash => {
 					let effectData = db.store.read(hash)
 					return { ...effectData, hash }
 				})
-				.filter(effectData => {
-					// Filter by target
-					let matchesHost = (host === null && !effectData.host) || effectData.host === host
-					let matchesUser = (user === null && !effectData.user) || effectData.user === user
-					return matchesHost && matchesUser
-				})
+				.filter(x => (x.host === targetMachineId && x.user === user))
 
 			console.log(`\nApplied effects: ${effectsForTarget.length}`)
 

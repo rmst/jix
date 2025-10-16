@@ -1,4 +1,3 @@
-
 import * as fs from "node:fs"
 import context from "../../nux/context"
 import { LOCAL_NUX_PATH } from "../../nux/context"
@@ -8,59 +7,145 @@ import process from "node:process";
 import { UserError } from "./UserError.js"
 import db from "../db/index.js"
 
-export const updateHosts = (hosts) => {
+
+/**
+ * Describes the properties of a single system user.
+ * @typedef {object} UserInfo
+ * @property {string} uid - The user ID.
+ * @property {string} gid - The primary group ID.
+ * @property {string} home - The path to the user's home directory.
+ * @property {string} shell - The path to the user's default shell.
+ */
+
+/**
+ * Represents detailed information about a host machine.
+ * @typedef {object} HostInfo
+ * @property {string} address - The IP address of the host.
+ * @property {'macos' | 'nixos' | 'linux'} os - The name of the operating system (e.g., "nixos").
+ * @property {'Linux' | 'Darwin'} kernel_name - The name of the kernel (e.g., "Linux").
+ * @property {string} hostname - The hostname of the machine.
+ * @property {string} architecture - The system architecture (e.g., "x86_64").
+ * @property {string} os_version - The version of the operating system.
+ * @property {Object<string, UserInfo>} [users] - A dictionary of system users, where the key is the username.
+ * @property {string} machineId - A unique identifier for the machine.
+ * @property {string} [friendlyName]
+ */
+
+/**
+ * @global
+ * @type {[HostInfo]}
+ */
+globalThis.nuxHosts
+
+
+/**
+ * @argument {[HostInfo]} hosts 
+ */
+const writeHosts = (hosts) => {
 	if (!fs.existsSync(LOCAL_NUX_PATH))
 		throw Error(`Nux path doesn't exist: ${LOCAL_NUX_PATH}`)
 
-  db.hosts.write(hosts);
-  loadHosts();
-};
+  db.hosts.write(hosts)
+  loadHosts()
+}
 
-export const loadHosts = () => {
-  let hosts = {};
+
+/**
+ * @returns {[HostInfo]}
+ */
+const loadHosts = () => {
+	// TODO: don't export this, maybe?
+  let hosts = []
   if (db.hosts.exists()) {
-    hosts = db.hosts.read();
+    hosts = db.hosts.read()
   }
   // console.log("LOAD HOSTS", hosts)
-  context.hosts = hosts;
+  // context.hosts = hosts  // TODO: is this used anywhere?
+
 	return hosts
 };
 
 
-export const queryHostInfo = (host, user) => {
+/**
+ * Query host OS information.
+ *
+ * @param {string} address - Host address ("localhost" for local, IP/hostname for remote)
+ * @param {string} user
+ * @returns {Omit<HostInfo, "users">}
+ */
+export const queryHostInfo = (address, user) => {
+
 	let sh = (...args) => executeCmd({
-		cmd: "/bin/sh", 
+		cmd: "/bin/sh",
 		args: ["-c", dedent(...args)]
-	}, host, user)
+	}, address, user)
 
-	let info = {
-		kernel_name: sh`uname -s`,  // e.g. Linux, Darwin, FreeBSD
-		hostname: sh`uname -n`,  //
-		architecture: sh`uname -m`,  // e.g. x86_64, arm64, aarch64
+	const kernel_name = sh`uname -s`  // e.g. Linux, Darwin, FreeBSD
+
+	/** @type {string} */
+	let os 
+	/** @type {string} */
+	let os_version
+	/** @type {string} */
+	let machineId
+
+	if(kernel_name === "Linux") {
+		os = sh`grep "^ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"'`
+		os_version = sh`grep "^VERSION_ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"'`
+
+		// Get machine ID for Linux with systemd
+		try {
+			machineId = sh`cat /etc/machine-id`.trim()
+			if (!machineId) {
+				throw new UserError("Failed to obtain machine ID from /etc/machine-id")
+			}
+		} catch (e) {
+			throw new UserError(`Failed to obtain machine ID: ${e.message}`)
+		}
 	}
 
-	if(info.kernel_name === "Linux") {
-		info.os = sh`grep "^ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"'`
-		info.os_version = sh`grep "^VERSION_ID=" /etc/os-release | cut -d'=' -f2 | tr -d '"'`
-	}
-	
-	else if (info.kernel_name === "Darwin") {
-		info.os = "macos"
-		info.os_version = sh`sw_vers -productVersion`
+	else if (kernel_name === "Darwin") {
+		os = "macos"
+		os_version = sh`sw_vers -productVersion`
+
+		// Get machine ID for macOS using Volume UUID
+		try {
+			machineId = sh`diskutil info / | awk '/Volume UUID/ {print $3}'`.trim()
+			if (!machineId) {
+				throw new UserError("Failed to obtain machine ID using diskutil")
+			}
+		} catch (e) {
+			throw new UserError(`Failed to obtain machine ID: ${e.message}`)
+		}
 	}
 
 	else {
-		throw new UserError(`${info.kernel_name} currently unsupported`)
+		throw new UserError(`${kernel_name} currently unsupported`)
 	}
 
-	return info
+	return {
+		hostname: sh`uname -n`,
+		architecture: sh`uname -m`,  // e.g. x86_64, arm64, aarch64
+		os,
+		os_version,
+		machineId,
+		address,
+		kernel_name,
+	}
+
 }
 
-export const queryUserInfo = (host, user) => {
+
+/**
+ * @param {string} address
+ * @param {string} user
+ * @returns {UserInfo} 
+ */
+export const queryUserInfo = (address, user) => {
 	let sh = (...args) => executeCmd({
-		cmd: "/bin/sh", 
+		cmd: "/bin/sh",
 		args: ["-c", dedent(...args)]
-	}, host, user)
+	}, address, user)
 
 	return {
 		// name: sh`whoami`,
@@ -73,45 +158,127 @@ export const queryUserInfo = (host, user) => {
 }
 
 
-export const hostInfo = (host, user) => {
+/**
+ * 
+ * @param {string} machineIdOrFriendlyName 
+ * @returns {HostInfo}
+ */
+const getHostInfo = (machineIdOrFriendlyName) => {
+	if (machineIdOrFriendlyName === null)
+		throw Error("Arg can't be null")
+
 	if(!globalThis.nuxHosts)
 		globalThis.nuxHosts = loadHosts()
+	
+	for (const hostInfo of globalThis.nuxHosts) {
+		if (hostInfo.machineId === machineIdOrFriendlyName)
+			return hostInfo
+	}
 
-	user = user ?? process.env.USER
-	if(!user)
-		throw new UserError("USER environment variable not set")
+	// TODO: Backward compatibility - remove in future
+	// Try to find by old friendly name (e.g., "home")
+	for (const hostInfo of globalThis.nuxHosts) {
+		if (hostInfo.friendlyName === machineIdOrFriendlyName)
+			return hostInfo
+	}
 
-	// TODO: handle host === null (local user)
+	throw Error(`Host ${machineIdOrFriendlyName} not found`)
+}
+
+
+/**
+ * @param {HostInfo} hostInfo
+ */
+const setHostInfo = (hostInfo) => {
 	if(!globalThis.nuxHosts)
-		globalThis.nuxHosts = {}
+		globalThis.nuxHosts = loadHosts()
+	
+	if(!hostInfo.friendlyName)
+		throw Error(`"friendlyName" missing from ${hostInfo}`)
 
-	if(!globalThis.nuxHosts[host ?? "null"])
-		globalThis.nuxHosts[host ?? "null"] = {}
+	// TODO: later we'll match via address, I think
+	let idx = globalThis.nuxHosts.findIndex(x => x.friendlyName === hostInfo.friendlyName)
 
-	if(!globalThis.nuxHosts[host ?? "null"].kernel_name) {
-		console.log(`Updating OS info for ${host}`)
-		globalThis.nuxHosts[host ?? "null"] = {
-			...globalThis.nuxHosts[host ?? "null"],
-			...queryHostInfo(host, user),
-		}
+	if(idx === -1)
+		throw Error(`${hostInfo.friendlyName} not in hosts.json`)
+
+	globalThis.nuxHosts[idx] = hostInfo
+
+	writeHosts(globalThis.nuxHosts)
+}
+
+
+/**
+ * @param {string|null} machineIdOrFriendlyName
+ * @param {string|null} userMayBeNull
+ * @returns {{address: string, user: string}}
+ */
+export const resolveEffectTarget = (
+	machineIdOrFriendlyName, 
+	userMayBeNull
+) => {
+	
+	// TODO: Backward compatibility - remove in future
+	// Handle old null user -> use current user
+	if (!userMayBeNull) {
+		if(machineIdOrFriendlyName)
+			throw Error(`User can only be null for localhost not ${machineIdOrFriendlyName}`)
+		userMayBeNull = process.env.USER
 	}
 
-	if(!globalThis.nuxHosts[host ?? "null"].users)
-		globalThis.nuxHosts[host ?? "null"].users = {}
-
-	if(!globalThis.nuxHosts[host ?? "null"].users[user])
-		globalThis.nuxHosts[host ?? "null"].users[user] = {}
-
-	if(!globalThis.nuxHosts[host ?? "null"].users[user].uid) {
-		console.log(`Updating user info for ${user}@${host ?? "localhost"}`)
-
-		globalThis.nuxHosts[host ?? "null"].users[user] = {
-			...globalThis.nuxHosts[host ?? "null"].users[user],
-			...queryUserInfo(host, user),
-		}
+	if (!userMayBeNull) {
+		throw new UserError("Could not determine user (USER environment variable not set)")
 	}
 
-	updateHosts(globalThis.nuxHosts)
+	// TODO: Backward compatibility - remove in future
+	// Handle old null machineId -> localhost
+	if (!machineIdOrFriendlyName) {
+		return { address: "localhost", user: userMayBeNull }
+	}
 
-	return globalThis.nuxHosts[host ?? "null"]
+	const hostData = getHostInfo(machineIdOrFriendlyName)
+
+	if (!hostData.address) {
+		throw new UserError(`Host ${machineIdOrFriendlyName} has no address configured`)
+	}
+
+	return { address: hostData.address, user: userMayBeNull }
+}
+
+/**
+ * @param {string} machineIdOrFriendlyName
+ * @param {string} user
+ * @param {boolean} [update]
+ * @returns {HostInfo}
+ */
+export const hostInfoWithUser = (machineIdOrFriendlyName, user, update=false) => {
+	if(!user)
+		throw new UserError(`hostInfo requires non-null user (got user: ${user})`)
+
+	let hostInfo = getHostInfo(machineIdOrFriendlyName)
+	
+	if(update || !hostInfo.machineId) {
+		console.log(`Updating OS info for ${hostInfo.address}`)
+
+		hostInfo = {
+			...hostInfo,
+			...queryHostInfo(hostInfo.address, user),
+		}
+
+		setHostInfo(hostInfo)
+	}
+
+	if(!hostInfo?.users?.[user]) {
+		console.log(`Updating user info for ${user}@${hostInfo.address}`)
+		const userInfo = queryUserInfo(hostInfo.address, user)
+
+		hostInfo = {
+			...hostInfo,
+			users: {...(hostInfo.users || {}), user: userInfo},
+		}
+
+		setHostInfo(hostInfo)
+	}
+
+	return hostInfo
 }

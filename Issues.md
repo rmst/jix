@@ -10,6 +10,8 @@ nux.nix: create test using docker container with Nix installed to test Nix suppo
 
 ### Improvements
 
+When printing effect info, resolve host to sth more meaninful than its machineId
+
 Nux directory path (.nux) is hardcoded throughout the codebase - should be configurable
 
 maybe add `nux services` subcommand

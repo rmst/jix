@@ -12,14 +12,14 @@ export const generator = ({
 		throw Error(`target.os should be "nixos" but we have: ${target.os}`)
 
 
-	let module = modules.importCoreModules({ [`${name}-systemd-generator.nix`]:
+	let module = modules.importModules({ [`${name}-systemd-generator.nix`]:
 		nux.textfile`
 			{ config, pkgs, lib, ... }:
 			{
 				systemd.generators."${name}" = "${file}";
 			}
 		`,
-	})
+	}, { core: true, keep: true })
 	
 	// NOTE: nixos seems to start these on install by default
 	return nux.customEffect({

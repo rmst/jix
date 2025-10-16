@@ -11,7 +11,7 @@ import { tryInstallEffect, tryUninstallEffect } from './installEffect.js'
 import set from './set.js'
 import { checkOrphanedEffects } from './util.js'
 
-import { loadHosts } from './hosts.js'
+// import { loadHosts } from './hosts.js'
 import * as util from '../util.js'
 import { sh } from '../util.js'
 import { warnAboutStaleManifestIds } from '../apply/util.js'
@@ -49,7 +49,7 @@ export default async function apply({
 		throw new Error('apply requires a sourcePath')
   db.init()
 
-  loadHosts()
+  // loadHosts()
 
   // Derive ID from absolute manifest path and scoped name
   // When uninstall=true, sourcePath can be a manifest ID directly

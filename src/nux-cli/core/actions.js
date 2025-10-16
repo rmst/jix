@@ -1,5 +1,6 @@
 import { dedent } from '../../nux/dedent.js';
 import { NUX_DIR } from '../../nux/context.js';
+import { shellEscape } from '../../nux/util.js';
 
 const exx = (cmd, ...args) => {
 	// execFileSync(cmd, args)
@@ -114,7 +115,12 @@ export const writeOutFileV2 = (content, mode, hash) => {
 export const writeOutFileV3 = writeOutFileV2
 
 export const copyV2 = (from, to, hash) => {
-	// TODO: check path against file hash
+	// TODO: check path against file hash, maybe?
 	// TODO: make it work with MacOS' copy on write
-	return exx("cp", "-rf", from, to)
+	to = shellEscape(to)
+	from = shellEscape(from)
+	return exx("/bin/sh", "-c", dedent`
+		[ -e ${to} ] && { echo "Error: Destination exists." >&2; exit 1; }
+		cp -R ${from} ${to}
+	`)
 }
