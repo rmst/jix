@@ -5,6 +5,7 @@ import set from '../core/set.js'
 
 const HOSTS_PATH = `${LOCAL_NUX_PATH}/hosts.json`
 const SHORT_PATH_DIR = `${LOCAL_NUX_PATH}/s`
+const LOCAL_OUT_PATH = `${LOCAL_NUX_PATH}/out`
 
 function syncShortPaths() {
 	const existingHashes = fs.existsSync(EXISTING_HASHES_PATH)
@@ -34,6 +35,7 @@ export default {
 		if (!fs.existsSync(LOCAL_NUX_PATH)) fs.mkdirSync(LOCAL_NUX_PATH, { recursive: true })
 		if (!fs.existsSync(LOCAL_BIN_PATH)) fs.mkdirSync(LOCAL_BIN_PATH, { recursive: true })
 		if (!fs.existsSync(LOCAL_STORE_PATH)) fs.mkdirSync(LOCAL_STORE_PATH, { recursive: true })
+		if (!fs.existsSync(LOCAL_OUT_PATH)) fs.mkdirSync(LOCAL_OUT_PATH, { recursive: true })
 		if (!fs.existsSync(SHORT_PATH_DIR)) fs.mkdirSync(SHORT_PATH_DIR, { recursive: true })
 		if (!fs.existsSync(`${LOCAL_NUX_PATH}/logs`)) fs.mkdirSync(`${LOCAL_NUX_PATH}/logs`, { recursive: true })  // TODO: get rid of this safely
 
@@ -88,6 +90,16 @@ export default {
 		},
 		delete: (hash) => {
 			fs.rmSync(`${LOCAL_STORE_PATH}/${hash}`, { force: true })
+		}
+	},
+
+	out: {
+		list: () => {
+			if (!fs.existsSync(LOCAL_OUT_PATH)) return []
+			return fs.readdirSync(LOCAL_OUT_PATH)
+		},
+		delete: (hash) => {
+			fs.rmSync(`${LOCAL_OUT_PATH}/${hash}`, { force: true, recursive: true })
 		}
 	},
 

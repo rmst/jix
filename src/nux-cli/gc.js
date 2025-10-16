@@ -4,10 +4,10 @@ import db from './db/index.js'
 
 export default {
 	name: 'gc',
-	description: 'Delete unreferenced effect files from the store.',
+	description: 'Delete unreferenced build outputs and effect files.',
 	usage: 'nux gc [--dry-run]',
 	help: dedent`
-	Remove all effect files from the nux store that are not referenced in active or existing hashes.
+	Remove all unreferenced build outputs (~/.nux/out) and effect files (~/.nux/store) that are not referenced in active or existing hashes.
 
 	Options:
 	  --dry-run  Show what would be deleted without actually deleting
@@ -39,26 +39,25 @@ export default {
 		// Union of active and existing hashes
 		const referencedHashes = activeHashes.plus(existingHashes)
 
-		// List all files in the store directory
-		const filesInStore = db.store.list()
+		// List entries in store and out directories
+		const storeEntries = db.store.list()
+		const outEntries = db.out.list()
 
-		// Find files to delete (in store but not in referenced hashes)
-		const filesToDelete = filesInStore.filter(file => !referencedHashes.has(file))
+		// Compute unreferenced entries
+		const storeToDelete = storeEntries.filter(x => !referencedHashes.has(x))
+		const outToDelete = outEntries.filter(x => !referencedHashes.has(x))
 
-		if (filesToDelete.length === 0) {
+		if (storeToDelete.length === 0 && outToDelete.length === 0) {
 			console.log('No unreferenced effects found.')
 			return
 		}
 
 		if (dryRun) {
-			console.log(`Would delete ${filesToDelete.length} unreferenced effect(s)`)
+			console.log(`Would delete ${storeToDelete.length} store item(s) and ${outToDelete.length} out item(s)`) 
 		} else {
-			// Delete unreferenced files from the store
-			filesToDelete.forEach(file => {
-				db.store.delete(file)
-			})
-
-			console.log(`Deleted ${filesToDelete.length} unreferenced effect(s)`)
+			storeToDelete.forEach(x => db.store.delete(x))
+			outToDelete.forEach(x => db.out.delete(x))
+			console.log(`Deleted ${storeToDelete.length} store item(s) and ${outToDelete.length} out item(s)`) 
 		}
 	}
 }
