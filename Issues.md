@@ -8,7 +8,11 @@ ui(MarkdownComponent): citations aren't visually distinct from normal text
 
 nux.nix: create test using docker container with Nix installed to test Nix support on non-nixos os
 
+for each effect store its stacktrace to ~/.nux/debug or sth (maybe should be separated for each manifest id?)
+
 ### Improvements
+
+In addition to specifying dependencies as array allow specifying them as objects (mapping from name to dependency). this would help debuggability
 
 When printing effect info, resolve host to sth more meaninful than its machineId
 
