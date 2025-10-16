@@ -15,7 +15,7 @@ const exxVerbose = (cmd, ...args) => {
 
 
 const exxSsh = (host, ...cmd) => {
-	// we need to escape our command and args because ssh can't actually execute commands without first passing the through a shell
+	// we need to escape our command and args because ssh can't actually execute commands without first passing them through a shell
 	cmd = cmd.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)
 	return exx("ssh", `${host}`, "--", ...cmd)
 }
@@ -122,5 +122,44 @@ export const copyV2 = (from, to, hash) => {
 	return exx("/bin/sh", "-c", dedent`
 		[ -e ${to} ] && { echo "Error: Destination exists." >&2; exit 1; }
 		cp -R ${from} ${to}
+	`)
+}
+
+
+
+export const stateDirInstallV1 = (id) => {
+	// TODO: the db-inactive backwards compatibility code can probably be deleted soon
+	id = shellEscape(id)
+	return exx("/bin/sh", "-c", dedent`
+		ND="$HOME"/${shellEscape(NUX_DIR)}
+		LINKDIR="$ND"/d
+		SD="$ND"/db/${id}
+		SD_INACTIVE="$ND"/db-inactive/${id}
+
+		mkdir -p "$LINKDIR"
+
+		if [ -d "$SD" ]; then
+			exit 0  # we'll just accept that as the correct state dir
+		else
+			# for backwards compatibility
+			rm -f "$SD"  # no error even if it doesn't exist
+			if [ -d "$SD_INACTIVE" ]; then
+				mv -f "$SD_INACTIVE" "$SD"  # reactivate old state dir
+			else
+				mkdir -p "$SD"  # new empty directory
+			fi
+		fi
+
+		ln -sf '..'/db/${id} "$LINKDIR"/${id}  # mark as active
+	`)
+}
+
+export const stateDirUninstallV1 = (id) => {
+	id = shellEscape(id)
+	return exx("/bin/sh", "-c", dedent`
+		ND="$HOME"/${shellEscape(NUX_DIR)}
+		LINKDIR="$ND"/d
+
+		rm -f "$LINKDIR"/${id}
 	`)
 }

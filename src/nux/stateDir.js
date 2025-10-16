@@ -1,55 +1,20 @@
 
-import { customEffect } from "./base.js";
 import { effect } from "./effect.js";
-import { dedent } from './dedent.js';
 import { NUX_DIR } from "./context.js";
 
-export default (id, owner=null) => effect(target => {
+/**
+ * @param {string} id
+ */
+export default (id) => effect(target => {
 
-	let db = `${target.home}/${NUX_DIR}/db`
-	let dbInactive = `${target.home}/${NUX_DIR}/db-inactive`
-	let state = `${db}/${id}`
-	let stateInactive = `${dbInactive}/${id}`
+	if(typeof id !== 'string' || id.length === 0)
+		throw Error(`Need non-empty string, got: ${id}`)
 
-	let maybeChangeOwner = owner
-		? `chown -R ${owner} "${state}"`
-		: ""
-		
-	return customEffect({
-		install: dedent`
-			mkdir -p "${db}"
+	let path = `${target.home}/${NUX_DIR}/db/${id}`
 
-			# check if target state dir already is a directory
-			if [ -d "${state}" ]; then
-				exit 0  # we'll just accept that as the correct state dir
-			else
-				rm -f "${state}"  # no error even if it doesn't exist
-				if [ -d "${stateInactive}" ]; then
-					mv -f "${stateInactive}" "${state}"  # reactivate old state dir
-				else
-					mkdir -p "${state}"  # new empty directory
-				fi
-			fi
-
-			${maybeChangeOwner}
-		`,
-		uninstall: dedent`
-			mkdir -p "${dbInactive}"
-
-			if [ -d "${state}" ]; then
-				if [ -d "${stateInactive}" ]; then
-					rm -rf "${stateInactive}"  # dir exists, remove it
-				fi
-
-				rm -f "${stateInactive}"  # file exists, remove it
-
-				mv -f "${state}" "${stateInactive}"  # move state dir to inactive
-			else 
-				exit 0  # nothing to be done
-			fi
-		`,
-
-		path: state,
-	})
-
+	return {
+		install: ["stateDirInstallV1", id],
+		uninstall: ["stateDirUninstallV1", id],
+		path,
+	}
 })
