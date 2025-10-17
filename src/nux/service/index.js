@@ -20,6 +20,12 @@ export default ({
 	noUninstall = false,
 }) => nux.effect(target => {
 
+	if(typeof label !== "string" || !label)
+		throw Error(`Invalid arg "label": ${label}`)
+
+	if(runscript === null || runscript === undefined)
+		throw Error(`Invalid arg "runscript": null/undefined`)
+	
   const servicesDir = system ? systemServicesDir : userServicesDir
   
   const PATH = target.os === "nixos"
@@ -107,5 +113,6 @@ export default ({
 	} else {
 		throw new Error(`Unsupported platform: ${target.os}`);
 	}
-});
+
+})
 

@@ -230,7 +230,7 @@ export class Effect extends AbstractEffect {
 
       let stack = e.stack
 
-      if(stack.split("\n").length > 400) {
+      if(stack.split("\n").length > 4) {
         stack = stack.split("\n")
         stack = [
           stack[0], 
