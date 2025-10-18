@@ -2,7 +2,7 @@
 
 The `nux run` command provides a powerful way to execute ad-hoc scripts and commands within the context of a Nux manifest. It is conceptually similar to `npm run`, but with the added benefit of Nux's automatic dependency management.
 
-Before executing a command, `nux run` applies only the effects required for the selected run script (scoped install), ensuring they are built and available. After the command finishes, those effects are uninstalled, and the original exit code is preserved.
+Before executing a command, `nux run` installs only the effects required for the selected run script (scoped install), ensuring they are built and available. After the command finishes, those effects are uninstalled, and the original exit code is preserved.
 
 
 ## The `run` Export
@@ -49,7 +49,7 @@ When you execute `nux run <command-name>`, Nux performs the following steps:
 
 1.  **Finds Manifest**: Locates the `__nux__.js` file in the current directory (or a path provided via `-f/--file`).
 2.  **Resolves Script + Deps**: Looks up the selected entry under `export const run`, validates it is a string or `nux.script`, and infers only that script’s dependencies (e.g. interpolated helpers).
-3.  **Applies Scoped Effects**: Applies just the effects needed for this run script (scoped install), failing fast if stale state for the same run id is still active.
+3.  **Installs Scoped Effects**: Installs just the effects needed for this run script (scoped install), failing fast if stale state for the same run id is still active.
 4.  **Executes Command**: Runs the generated script via `/bin/sh`, forwarding any additional arguments.
 5.  **Cleans Up**: Uninstalls effects installed for this run, preserving and returning the script’s exit code.
 

@@ -4,12 +4,12 @@ import process from 'node:process'
 import * as util from './util.js'
 util.monkeyPatchObjectToString()
 
-import applyCmd from './apply'
+import installCmd from './install'
 import runCmd from './run/index.js'
 import initCmd from './init/index.js'
 import showCmd from './show.js'
 import forceRemoveCmd from './forceRemove.js'
-import deleteCmd from './delete.js'
+import uninstallCmd from './uninstall.js'
 import hostInfoCmd from './host-info.js'
 import gcCmd from './gc.js'
 import { TargetingError } from '../nux/effect.js'
@@ -30,8 +30,8 @@ const main = async () => {
 	}
 
 	const commands = {
-		apply: applyCmd,
-		delete: deleteCmd,
+		install: installCmd,
+		uninstall: uninstallCmd,
 		'force-remove': forceRemoveCmd,
 		gc: gcCmd,
 		'host-info': hostInfoCmd,

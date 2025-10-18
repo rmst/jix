@@ -1,16 +1,16 @@
 import * as fs from 'node:fs'
-import apply from './core/apply.js'
+import apply from './core/install.js'
 import { dedent } from '../nux/dedent.js'
-import { MANIFEST_NAME } from './apply/util.js'
+import { MANIFEST_NAME } from './install/util.js'
 import { sh } from './util.js'
 import { ACTIVE_HASHES_PATH } from '../nux/context.js'
 import * as util from './util.js'
 import db from './db/index.js'
 
 export default {
-	name: 'delete',
-	description: 'Delete/uninstall a nux manifest by its path.',
-	usage: 'nux delete <path>',
+	name: 'uninstall',
+	description: 'Uninstall a nux manifest by its path.',
+	usage: 'nux uninstall <path>',
 	help: dedent`
 	Uninstall all effects currently active for a given nux manifest.
 
@@ -18,7 +18,7 @@ export default {
 	  <path>  A path inside the project containing __nux__.js or the path to __nux__.js itself
 
 	Example:
-	  nux delete ~/work/my-tools/__nux__.js
+	  nux uninstall ~/work/my-tools/__nux__.js
 	`,
 	async run(a) {
 		const arg = a[0]

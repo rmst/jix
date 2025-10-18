@@ -4,7 +4,7 @@ import * as dirnameJs from '../../nux/util.js'
 import * as util from '../util.js'
 import { sh } from '../util.js'
 import { git } from './git.js'
-import apply from '../core/apply.js'
+import apply from '../core/install.js'
 import { findNuxRoot } from './util.js'
 import { dedent } from '../../nux/dedent.js'
 import { log } from '../logger.js'
@@ -39,11 +39,11 @@ export const install = async (path, dryRun = false) => {
 }
 
 export default {
-	name: 'apply',
-	description: 'Apply/install a nux configuration or effect.',
-	usage: 'nux apply [--dry-run] <path>',
+	name: 'install',
+	description: 'Install/apply a nux configuration or effect.',
+	usage: 'nux install [--dry-run] <path>',
 	help: dedent`
-	Apply a nux manifest located at <path>.
+	Install a nux manifest located at <path>.
 
 	Arguments:
 	  <path>  Path to a file or any path inside a git repo containing __nux__.js
@@ -52,9 +52,9 @@ export default {
 	  --dry-run  Show what would be installed/uninstalled without making changes
 
 	Examples:
-	  nux apply ./my-tools
-	  nux apply ~/work/project/__nux__.js
-	  nux apply --dry-run ./my-tools
+	  nux install ./my-tools
+	  nux install ~/work/project/__nux__.js
+	  nux install --dry-run ./my-tools
 	`,
 	async run(a) {
 		const dryRun = a.includes('--dry-run')

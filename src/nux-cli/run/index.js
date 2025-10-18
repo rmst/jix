@@ -1,4 +1,4 @@
-import apply from '../core/apply.js'
+import apply from '../core/install.js'
 import { sh } from '../util.js'
 import nux from '../../nux'
 import * as util from '../util.js'
@@ -47,7 +47,7 @@ async function run(cmd, args, { verbose = false, file } = {}) {
     ? db.active.read()
     : {}
   if (activeById[nuxId]) {
-    console.log(`${style.red('Error:')} The last call to \`nux run\` did not exit gracefully. Before continuing, clean up leftover state by running:\n\nnux delete ${nuxId}`)
+    console.log(`${style.red('Error:')} The last call to \`nux run\` did not exit gracefully. Before continuing, clean up leftover state by running:\n\nnux uninstall ${nuxId}`)
     process.exit(1)
   }
 
@@ -113,9 +113,9 @@ export default {
 	  <command-name>  Name of the entry under export const run = {...}
 	  [args...]  Arguments forwarded to the invoked script
 
-	Options before <command-name>:
-	  -v, --verbose        Show Nux apply/uninstall logs for this run
-	  -f, --file <path>    Use a specific manifest file or directory
+		Options before <command-name>:
+		  -v, --verbose        Show Nux install/uninstall logs for this run
+		  -f, --file <path>    Use a specific manifest file or directory
 
 	Notes:
 	  - Only flags placed before <command-name> are consumed by Nux itself.

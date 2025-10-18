@@ -12,11 +12,11 @@ nux <command> [arguments...]
 
 ## Commands
 
-### apply
-Apply/install a nux configuration or effect.
+### install
+Install/apply a nux configuration or effect.
 
 ```
-nux apply [--dry-run] <path>
+nux install [--dry-run] <path>
 ```
 
 **Parameters:**
@@ -30,18 +30,18 @@ Apply a nux manifest located at the specified path. The path can point to a `__n
 
 **Examples:**
 ```
-nux apply ./my-tools
-nux apply ~/work/project/__nux__.js
-nux apply --dry-run ./my-tools
+nux install ./my-tools
+nux install ~/work/project/__nux__.js
+nux install --dry-run ./my-tools
 ```
 
-*Source: [src/nux-cli/apply/index.js](../../src/nux-cli/apply/index.js)*
+*Source: [src/nux-cli/install/index.js](../../src/nux-cli/install/index.js)*
 
-### delete
-Delete/uninstall a nux manifest by its path.
+### uninstall
+Uninstall a nux manifest by its path.
 
 ```
-nux delete <path>
+nux uninstall <path>
 ```
 
 **Parameters:**
@@ -52,10 +52,10 @@ Uninstall all effects currently active for a given nux manifest. The path is res
 
 **Example:**
 ```
-nux delete ~/work/my-tools/__nux__.js
+nux uninstall ~/work/my-tools/__nux__.js
 ```
 
-*Source: [src/nux-cli/delete.js](../../src/nux-cli/delete.js)*
+*Source: [src/nux-cli/uninstall.js](../../src/nux-cli/uninstall.js)*
 
 ### force-remove
 Forcefully remove derivations.
@@ -131,7 +131,7 @@ nux run [options] [command-name] [args...]
 - `args` - Arguments forwarded to the invoked script
 
 **Options (before command-name):**
-- `-v, --verbose` - Show Nux apply/uninstall logs for this run
+- `-v, --verbose` - Show Nux install/uninstall logs for this run
 - `-f, --file <path>` - Use a specific manifest file or directory
 
 **Description:**
@@ -182,7 +182,7 @@ Show help for a specific command, or show an overview of all available commands 
 **Examples:**
 ```
 nux help
-nux help apply
+nux help install
 ```
 
 *Source: [src/nux-cli/main.js](../../src/nux-cli/main.js)*

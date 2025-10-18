@@ -36,7 +36,7 @@ export function warnAboutStaleManifestIds() {
 			  ${stale.join('\n  ')}
 
 			Consider cleaning up with:
-			  ${stale.map(id => `nux delete ${id}`).join('\n  ')}
+			  ${stale.map(id => `nux uninstall ${id}`).join('\n  ')}
     ` + "\n")
   }
 }

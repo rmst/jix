@@ -20,11 +20,11 @@ Nux directory path (.nux) is hardcoded throughout the codebase - should be confi
 
 maybe add `nux services` subcommand
 
-cli: Protect against simultaneous runs of `nux apply`, implement locking via mkdir (works across all posix systems since mkdir is atomic)
+cli: Protect against simultaneous runs of `nux install`, implement locking via mkdir (works across all posix systems since mkdir is atomic)
 
 for nux.nixos instead of always clearing out configuration.nix via context provider, add an option to integrated with an existing configuration.nix. in that case we'd just check if configuration.nix imports our root module (which then imports all modules in the modules dir)
 
-cli(nux apply): if nux install doesn't find an install path, i.e. we're looking at a nux library file, instead of failing, maybe check all the installed nux roots if they would be affected by the library change. This could be done either via static import analysis or by actually running all nux roots (since they should be side-effect free)
+cli(nux install): if nux install doesn't find an install path, i.e. we're looking at a nux library file, instead of failing, maybe check all the installed nux roots if they would be affected by the library change. This could be done either via static import analysis or by actually running all nux roots (since they should be side-effect free)
 
 Build processes should be sandboxed by default. escape hatch via buildImpure or sth
 

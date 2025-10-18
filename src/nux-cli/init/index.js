@@ -17,15 +17,15 @@ function setupVSCodeTasks(wd) {
 		version: "2.0.0",
 		tasks: [
 			{
-				label: "nux apply",
+				label: "nux install",
 				type: "shell",
-				command: "nux apply ${file}",
+				command: "nux install ${file}",
 				group: { kind: "build" }
 			},
 			{
-				label: "nux apply --dry-run",
+				label: "nux install --dry-run",
 				type: "shell",
-				command: "nux apply --dry-run ${file}",
+				command: "nux install --dry-run ${file}",
 				group: { kind: "build" }
 			},
 			{

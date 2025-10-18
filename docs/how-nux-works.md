@@ -47,12 +47,12 @@ In the example above:
 5. **`nux.alias`**: The main script is then symlinked to `~/.nux/bin/my_command`, making it easily accessible (assuming `~/.nux/bin` is in PATH).
 
 
-## How to apply it
+## How to install it
 
-Assuming the manifest file is located at `./my-tools/__nux__.js` you can apply it via
+Assuming the manifest file is located at `./my-tools/__nux__.js` you can install it via
 
 ```bash
-nux apply ./my-tools
+nux install ./my-tools
 ```
 
 You can then run the resulting command `my_command` with the expected output:
