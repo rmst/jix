@@ -26,7 +26,7 @@ Important: Read `Makefile`. **Always** use `$TMPDIR/nux-build` as BUILD_DIR (nev
 Never write comments describing what changed compared the previous version of the code. Comments should always describe the current situation. Change notes go in the commit message.
 
 ### Git commits
-Never commit without being explicitly asked to. When making a commit, always add "Co-Authored-By AI" (no colon) as the last line of the commit message. Before making a commit check if the commit fixed a bug or implemented a feature listed in Issues.md (and if so remove it as part of the commit). Don't include trivial details. All commit messages should with a type such "feat" or "fix". Be careful not to include \n charaters instead of proper newlines.
+Never commit without being explicitly asked to. When making a commit, always add `Co-Authored-By: ai <noreply@ai.simonramstedt.com>` as the last line of the commit message. Before making a commit check if the commit fixed a bug or implemented a feature listed in Issues.md (and if so remove it as part of the commit). Don't include trivial details. All commit messages should with a type such "feat" or "fix". Be careful not to include \n charaters instead of proper newlines.
 
 ### Commands
 When the user says "generate-docs-123" read docs/AGENTS.md and follow the instructions.
