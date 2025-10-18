@@ -1,9 +1,7 @@
 
-import * as fs from 'node:fs'
 import process from 'node:process'
 
 import nux from '../../nux'
-import { ACTIVE_HASHES_PATH, LOCAL_NUX_PATH, LOCAL_STORE_PATH, LOCAL_BIN_PATH, EXISTING_HASHES_PATH } from "../../nux/context.js"
 import { TargetedEffect } from '../../nux/effect.js'
 import { dedent } from '../../nux/dedent.js'
 
@@ -11,8 +9,6 @@ import { tryInstallEffect, tryUninstallEffect } from './installEffect.js'
 import set from './set.js'
 import { checkOrphanedEffects } from './util.js'
 
-// import { loadHosts } from './hosts.js'
-import * as util from '../util.js'
 import { sh } from '../util.js'
 import { warnAboutStaleManifestIds } from '../install/util.js'
 import { UserError } from './UserError.js'
@@ -40,14 +36,14 @@ function addQjsxPathForFile(filePath) {
 
 
 
-export default async function apply({
+export default async function install({
 	sourcePath,
 	uninstall = false,
 	name = 'default',
 	dryRun = false
 }) {
 	if (!sourcePath)
-		throw new Error('apply requires a sourcePath')
+		throw new Error('install requires a sourcePath')
   db.init()
 
   // loadHosts()

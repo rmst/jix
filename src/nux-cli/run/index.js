@@ -1,8 +1,5 @@
-import apply from '../core/install.js'
+import install from '../core/install.js'
 import { sh } from '../util.js'
-import nux from '../../nux'
-import * as util from '../util.js'
-import { ACTIVE_HASHES_PATH } from '../../nux/context.js'
 import * as fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import process from 'node:process'
@@ -45,7 +42,7 @@ async function run(cmd, args, { verbose = false, file } = {}) {
 	// If there is leftover state for this run id, try a full uninstall first
 	if (db.active.read()[nuxId]) {
 		try {
-			await withLogger({ verbose }, async () => await apply({ sourcePath: nuxId, uninstall: true }))
+			await withLogger({ verbose }, async () => await install({ sourcePath: nuxId, uninstall: true }))
 		} catch (e) {
 			console.log(`${style.red('Error:')} Detected leftover effects from a previous 'nux run'. Tried to auto-clean them but failed. Specifically:\n`)
 			console.log(e.message)
@@ -55,14 +52,14 @@ async function run(cmd, args, { verbose = false, file } = {}) {
 
 	// Apply only the effects required for this specific run script
 	let scriptPath
-	scriptPath = await withLogger({ verbose }, async () => await apply({ sourcePath: absoluteManifestPath, name }))
+	scriptPath = await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, name }))
   console.log()
 
 	// Cleanup function to uninstall effects
 	const cleanup = async () => {
 		console.log()
 		try {
-			await withLogger({ verbose }, async () => await apply({ sourcePath: absoluteManifestPath, uninstall: true, name }))
+			await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, uninstall: true, name }))
 		} catch (_) {
 			// Best effort cleanup
 		}
@@ -130,13 +127,13 @@ export default {
 	  nux run --verbose build --release
 	  nux run -- hello --debug
 	`,
-	async run(a) {
+	async run(args) {
 		// Parse flags before the script name; support "--" sentinel
 		let verbose = false
 		let file
 		let i = 0
-		while (i < a.length) {
-			const tok = a[i]
+		while (i < args.length) {
+			const tok = args[i]
 			if (tok === '--') { i++; break }
 			if (tok === '--help' || tok === '-h') {
 				console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
@@ -144,7 +141,7 @@ export default {
 			}
 			if (tok === '--verbose' || tok === '-v') { verbose = true; i++; continue }
 			if (tok === '-f') {
-				file = a[i + 1]
+				file = args[i + 1]
 				i += 2
 				continue
 			}
@@ -154,7 +151,7 @@ export default {
 				continue
 			}
 			if (tok === '--file') {
-				file = a[i + 1]
+				file = args[i + 1]
 				i += 2
 				continue
 			}
@@ -162,8 +159,8 @@ export default {
 			break
 		}
 
-		const sub = a[i]
-		const rest = a.slice(i + 1)
+		const sub = args[i]
+		const rest = args.slice(i + 1)
 
 		await run(sub, rest, { verbose, file })
 	}
