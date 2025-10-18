@@ -15,6 +15,7 @@ import { checkOrphanedEffects } from './util.js'
 import * as util from '../util.js'
 import { sh } from '../util.js'
 import { warnAboutStaleManifestIds } from '../install/util.js'
+import { UserError } from './UserError.js'
 import { log } from '../logger.js'
 import { style } from '../prettyPrint.js'
 import db from '../db/index.js'
@@ -171,16 +172,14 @@ export default async function apply({
 
 
   if (failedUninstalls.length > 0) {
-    console.log(dedent`
-      ${style.red('Error:')} ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed.
-      Uninstall them manually, then delete them via
+    throw new UserError(dedent`
+      ${failedUninstalls.length} out of ${hashesToUninstall.length} uninstalls failed.
+      Try to uninstall them again via
 
       nux force-remove '
       ${failedUninstalls.join('\n')}
       '
     `)
-
-    process.exit(1)
   }
 
   let installedHashes = [...(function*(){
@@ -239,7 +238,7 @@ export default async function apply({
       console.log(`Successfully restored previous install`)
     }
 
-    process.exit(1)  // exit with error
+    throw new UserError('Partial install encountered; attempted restore. See logs above for details.')
 
   }
 
