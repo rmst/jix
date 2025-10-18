@@ -45,6 +45,7 @@ export default {
 	active: {
 		exists: () => fs.existsSync(ACTIVE_HASHES_PATH),
 		read: () => {
+			if (!fs.existsSync(ACTIVE_HASHES_PATH)) return {}
 			try {
 				return JSON.parse(fs.readFileSync(ACTIVE_HASHES_PATH, 'utf8'))
 			} catch (e) {
@@ -57,6 +58,7 @@ export default {
 	existing: {
 		exists: () => fs.existsSync(EXISTING_HASHES_PATH),
 		read: () => {
+			if (!fs.existsSync(EXISTING_HASHES_PATH)) return []
 			try {
 				return JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, 'utf8'))
 			} catch (e) {

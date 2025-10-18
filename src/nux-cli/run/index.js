@@ -42,14 +42,16 @@ async function run(cmd, args, { verbose = false, file } = {}) {
 	const name = `run.${cmd}`
 	const nuxId = `${absoluteManifestPath}#${name}`
 
-  // Fail fast if there is a leftover active entry for this run id
-  const activeById = db.active.exists()
-    ? db.active.read()
-    : {}
-  if (activeById[nuxId]) {
-    console.log(`${style.red('Error:')} The last call to \`nux run\` did not exit gracefully. Before continuing, clean up leftover state by running:\n\nnux uninstall ${nuxId}`)
-    process.exit(1)
-  }
+	// If there is leftover state for this run id, try a full uninstall first
+	if (db.active.read()[nuxId]) {
+		try {
+			await withLogger({ verbose }, async () => await apply({ sourcePath: nuxId, uninstall: true }))
+		} catch (e) {
+			console.log(`${style.red('Error:')} Detected leftover effects from a previous 'nux run'. Tried to auto-clean them but failed. Specifically:\n`)
+			console.log(e.message)
+			process.exit(1)
+		}
+	}
 
 	// Apply only the effects required for this specific run script
 	let scriptPath

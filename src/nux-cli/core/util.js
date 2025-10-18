@@ -10,18 +10,26 @@ import set from './set.js'
 import db from '../db/index.js'
 
 export function checkOrphanedEffects() {
-	let activeHashesById = db.active.exists()
-		? db.active.read()
-		: {}
+	let activeHashesById = db.active.read()
 
 	let activeHashes = set(Object.values(activeHashesById).flat()).list()
 
-	let existingHashes = db.existing.exists()
-		? set(db.existing.read()).list()
-		: []
+	let existingHashes = set(db.existing.read()).list()
 
 	if(activeHashes.length < existingHashes.length) {
 		let orphanedHashes = set(existingHashes).minus(activeHashes).list()
+
+		// Auto-clean orphaned effects that have no uninstall action
+		const removable = orphanedHashes.filter(h => !db.store.read(h).uninstall)
+		if (removable.length)
+			db.existing.write(set(db.existing.read()).minus(removable).list())
+
+		// Recompute after auto-clean
+		existingHashes = set(db.existing.read()).list()
+		orphanedHashes = set(existingHashes).minus(activeHashes).list()
+
+		if (orphanedHashes.length === 0)
+			return
 
 		let orphanedSummaries = orphanedHashes.map(hash => {
 			let effectData = db.store.read(hash)
