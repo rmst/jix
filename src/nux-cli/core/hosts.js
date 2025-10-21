@@ -159,30 +159,43 @@ export const queryUserInfo = (address, user) => {
 
 
 /**
- * 
- * @param {string} machineIdOrFriendlyName 
- * @returns {HostInfo}
- */
-const getHostInfo = (machineIdOrFriendlyName) => {
-	if (machineIdOrFriendlyName === null)
-		throw Error("Arg can't be null")
+	@param {
+		  {address: string}
+		| {machineId: string} 
+		| {friendlyName: string}
+	} x 
+	@returns {HostInfo}
+*/
+const getHostInfo = (x) => {
 
 	if(!globalThis.nuxHosts)
 		globalThis.nuxHosts = loadHosts()
 	
-	for (const hostInfo of globalThis.nuxHosts) {
-		if (hostInfo.machineId === machineIdOrFriendlyName)
-			return hostInfo
+	if("address" in x) {
+		for (const hostInfo of globalThis.nuxHosts) {
+			if (hostInfo.address === x.address)
+				return hostInfo
+		}
+	}
+	else if("machineId" in x) {
+		for (const hostInfo of globalThis.nuxHosts) {
+			if (hostInfo.machineId === x.machineId)
+				return hostInfo
+		}
+	}
+	else if("friendlyName" in x) {
+		// TODO: Backward compatibility - maybe remove in future
+		// Tries to find by old friendly name (e.g., "home")
+		for (const hostInfo of globalThis.nuxHosts) {
+			if (hostInfo.friendlyName === x.friendlyName)
+				return hostInfo
+		}
+	}
+	else {
+		throw Error(`Argument can't be: ${x}`)
 	}
 
-	// TODO: Backward compatibility - remove in future
-	// Try to find by old friendly name (e.g., "home")
-	for (const hostInfo of globalThis.nuxHosts) {
-		if (hostInfo.friendlyName === machineIdOrFriendlyName)
-			return hostInfo
-	}
-
-	throw Error(`Host ${machineIdOrFriendlyName} not found`)
+	throw Error(`Host not found with property: ${x}`)
 }
 
 
@@ -246,16 +259,20 @@ export const resolveEffectTarget = (
 }
 
 /**
- * @param {string} machineIdOrFriendlyName
- * @param {string} user
- * @param {boolean} [update]
- * @returns {HostInfo}
+	@param {
+		  {address: string}
+		| {machineId: string} 
+		| {friendlyName: string}
+	} host
+	@param {string} user
+	@param {boolean} [update]
+	@returns {HostInfo}
  */
-export const hostInfoWithUser = (machineIdOrFriendlyName, user, update=false) => {
+export const hostInfoWithUser = (host, user, update=false) => {
 	if(!user)
 		throw new UserError(`hostInfo requires non-null user (got user: ${user})`)
 
-	let hostInfo = getHostInfo(machineIdOrFriendlyName)
+	let hostInfo = getHostInfo(host)
 	
 	if(update || !hostInfo.machineId) {
 		console.log(`Updating OS info for ${hostInfo.address}`)

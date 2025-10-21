@@ -88,14 +88,14 @@ export const getTarget = () => useContext(TARGET_CONTEXT)
 export function effect (obj) {    
   let tgt = getTarget()
   let e = new Effect(obj)
-  if(tgt !== null)
-    e = target(tgt, e)
-  return e
+  return tgt === null
+    ? e
+    : e.target(tgt)
 }
 
 
-
-/** 
+/**
+  @deprecated
   @param {string | Array | {host: string, user: string} | null} tgt - e.g. `root@home`
   @param {TargetFn | Effect | Array} obj
   @returns {TargetedEffect}
@@ -167,32 +167,43 @@ export class Effect extends AbstractEffect {
   }
 
   /**
-    @param {{ machineId?: string, host?: string|null, user?: string|null, home?: string }} x - Friendly host name (or null for localhost), user (or null to use current)
-    @returns {TargetedEffect}
+  @param {
+      {address: string, user: string}
+    | {machineId: string, user: string}
+    | {host: string|null, user: string|null}
+  } x
+  @returns {TargetedEffect}
   */
   target(x) {
+    // TODO: decide if this function should be publically exposed at all. If so, we should have a cleaner signature.` 
+
     try {
-      let machineIdOrFriendlyName, user
+      
+      let host, user
 
-      if(x.machineId) {
-        machineIdOrFriendlyName = x.machineId
+      if ("address" in x) {
+        host = { address: x.address}
         user = x.user
-
+      }
+      else if("machineId" in x) {
+        host = { machineId: x.machineId }
+        user = x.user
       } 
       else {
         // Require user to be explicitly set for remote targets
         if (!x.user && x.host !== null && x.host !== undefined) {
           throw new Error("user must be specified for remote targets")
         }
-        machineIdOrFriendlyName = x.host ?? "localhost"
+        host = { friendlyName: x.host ?? "localhost" }
         user = x.user ?? process.env.USER
       }
 
       if (!user)
         throw new Error(`User missing in ${x}`)
 
-      let info = hostInfoWithUser(machineIdOrFriendlyName, user)
+      let info = hostInfoWithUser(host, user)
 
+      // sanity check
       if(!info.friendlyName || !info.users || !info.users[user])
         throw Error(`${info}`)
 
@@ -200,7 +211,8 @@ export class Effect extends AbstractEffect {
       let r = (typeof this.obj === 'function')
         ? this.obj({
           ...info,
-          host: info.friendlyName,
+          host: info.friendlyName,  // TODO: we expect this in some legacy user space code, but this is wrong
+          // host: info.machineId,  // NOTE: this would currently break legacy userspace, because it is passed on to other nux.target calls (in a few cases)
           user,
           users: info.users,
           ...info.users[user],
