@@ -8,6 +8,9 @@
 - Read through **all** examples in examples/
 - Check the last few git commits (and list the files changed) to get a feeling for what has been worked on recently.
 
+### Building vs. Discussing
+Only start to modify files and act if you are absolutely confident. If the user asks you to do something that is not really possible, don't try to make best-effort modifications or implement workarounds. Instead get back to the user and explain the situation to him and the possible options and then let the user decide how to proceed.
+
 ### Nux CLI
 The nux CLI entry point is `src/nux-cli/main.js` and is, in addition to writing their own nux code, the main way users interact with nux.
 
