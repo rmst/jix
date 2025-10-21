@@ -12,6 +12,7 @@ import nix from './nix'
 import git from './git'
 import { appendToFile } from './appendToFile.js'
 import shelltools from './shelltools'
+import { Host, User } from './targets.js'
 
 let nux = {
 
@@ -47,6 +48,9 @@ let nux = {
 
     writeFile,
   },
+
+  Host,
+  User,
 }
 
 
@@ -60,4 +64,4 @@ else
 
 globalThis.nux = nux
 
-export default nux 
+export default nux
