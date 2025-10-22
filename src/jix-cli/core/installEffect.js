@@ -2,7 +2,7 @@ import * as fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import process from 'node:process'
 
-import { EXISTING_HASHES_PATH, LOCAL_STORE_PATH, NUX_DIR } from '../../jix/context.js'
+import { EXISTING_HASHES_PATH, LOCAL_STORE_PATH, JIX_DIR } from '../../jix/context.js'
 import * as actions from './actions.js'
 import set from './set.js'
 import context from '../../jix/context.js'
@@ -74,7 +74,7 @@ export const tryInstallEffect = (hash) => {
     // check if the out file exists (works both locally and over ssh)
     const existsString = executeCmd({
       cmd: "/bin/sh",
-      args: ["-c", `[ -e "$HOME/${NUX_DIR}/out/${hash}" ] && echo "y" || echo "n"`],
+      args: ["-c", `[ -e "$HOME/${JIX_DIR}/out/${hash}" ] && echo "y" || echo "n"`],
     }, host, user);
 
     const exists = (existsString === "y");

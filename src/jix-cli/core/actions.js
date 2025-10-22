@@ -1,5 +1,5 @@
 import { dedent } from '../../jix/dedent.js';
-import { NUX_DIR } from '../../jix/context.js';
+import { JIX_DIR } from '../../jix/context.js';
 import { shellEscape } from '../../jix/util.js';
 
 const exx = (cmd, ...args) => {
@@ -70,13 +70,13 @@ export const buildV6 = (script, hash) => {
 		"/bin/sh", 
 		"-c", 
 		dedent`
-			tmp="$HOME"/${NUX_DIR}/tmp_drv/${hash}
+			tmp="$HOME"/${JIX_DIR}/tmp_drv/${hash}
 
-			mkdir -p "$HOME"/${NUX_DIR}/out
+			mkdir -p "$HOME"/${JIX_DIR}/out
 			mkdir -p "$tmp"
 			cd "$tmp"
 			
-			export out="$HOME"/${NUX_DIR}/out/${hash}
+			export out="$HOME"/${JIX_DIR}/out/${hash}
 			export NUX_HASH=${hash}
 			/bin/sh -c "$1"  # for build script string
 			# "$1"  # for build script path
@@ -93,8 +93,8 @@ export const buildV6 = (script, hash) => {
 
 
 // export const writeOutFileV1 = (content, mode, hash) => {
-// 	sh`mkdir -p ${NUX_PATH}/out`
-// 	let path = `${NUX_PATH}/out/${hash}`
+// 	sh`mkdir -p ${JIX_PATH}/out`
+// 	let path = `${JIX_PATH}/out/${hash}`
 // 	fs.writeFileSync(path, content)
 // 	fs.chmodSync(path, mode)
 // }
@@ -103,8 +103,8 @@ export const writeOutFileV2 = (content, mode, hash) => {
 		"/bin/sh", 
 		"-c", 
 		dedent`
-			mkdir -p "$HOME/${NUX_DIR}/out"
-			path="$HOME/${NUX_DIR}/out/${hash}"
+			mkdir -p "$HOME/${JIX_DIR}/out"
+			path="$HOME/${JIX_DIR}/out/${hash}"
 			printf "%s" "$1" > "$path" &&
 			chmod ${mode} "$path"
 		`, 
@@ -131,7 +131,7 @@ export const stateDirInstallV1 = (id) => {
 	// TODO: the db-inactive backwards compatibility code can probably be deleted soon
 	id = shellEscape(id)
 	return exx("/bin/sh", "-c", dedent`
-		ND="$HOME"/${shellEscape(NUX_DIR)}
+		ND="$HOME"/${shellEscape(JIX_DIR)}
 		LINKDIR="$ND"/d
 		SD="$ND"/db/${id}
 		SD_INACTIVE="$ND"/db-inactive/${id}
@@ -157,7 +157,7 @@ export const stateDirInstallV1 = (id) => {
 export const stateDirUninstallV1 = (id) => {
 	id = shellEscape(id)
 	return exx("/bin/sh", "-c", dedent`
-		ND="$HOME"/${shellEscape(NUX_DIR)}
+		ND="$HOME"/${shellEscape(JIX_DIR)}
 		LINKDIR="$ND"/d
 
 		rm -f "$LINKDIR"/${id}

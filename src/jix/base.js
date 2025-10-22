@@ -1,14 +1,14 @@
-import * as fs from 'node:fs';
+import * as fs from 'node:fs'
 
-import { NUX_DIR, HASH_PLACEHOLDER } from './context.js';
-import { parseEffectValues, effect, target } from './effect.js';
-import { AbstractEffect } from './effectUtil.js';
+import { JIX_DIR, HASH_PLACEHOLDER } from './context.js'
+import { parseEffectValues, effect, target } from './effect.js'
+import { AbstractEffect } from './effectUtil.js'
 
-import { dedent } from './dedent.js';
-import context from './context.js';
-import { dirname, basename, shellEscape } from './util.js';
+import { dedent } from './dedent.js'
+import context from './context.js'
+import { dirname, basename, shellEscape } from './util.js'
 
-import stateDir from './stateDir.js';
+import stateDir from './stateDir.js'
 
 export const HASH = HASH_PLACEHOLDER
 
@@ -19,10 +19,10 @@ export const HASH = HASH_PLACEHOLDER
  * @returns {AbstractEffect & { name: string }}
  */
 export const importFile = (origin, mode='-w') => {
-  let content = fs.readFileSync(origin, 'utf8')
-  let e = writeFile(mode)`${content}`
-  e.name = basename(origin)
-  return e
+	let content = fs.readFileSync(origin, 'utf8')
+	let e = writeFile(mode)`${content}`
+	e.name = basename(origin)
+	return e
 }
 
 export const importScript = (origin) => {
@@ -66,10 +66,10 @@ export const alias = (mapping) => {
 */
 export const customEffect = ({install=null, uninstall=null, ...other}) => {
   let extraLines = dedent`
-    set -e  # error script if single command fails
-    set -o pipefail  # error on piped command fails
-    set -u  # error on unset variables
-  `
+		set -e  # error script if single command fails
+		set -o pipefail  # error on piped command fails
+		set -u  # error on unset variables
+	`
 
   return effect({
     install: install ? ["execShV1", `${extraLines}\n${install}`] : ["noop"],
@@ -86,13 +86,13 @@ export const customEffect = ({install=null, uninstall=null, ...other}) => {
  */
 export const buildDir = (files) => {
   const copyCommands = Object.entries(files)
-    .map(([name, sourcePath]) => {
-      const source = shellEscape(`${sourcePath}`)
-      const destination = shellEscape(`./${name}`)
-      
-      return `cp -r ${source} ${destination}`  // works for files and directories
-    })
-    .join(' && ')
+		.map(([name, sourcePath]) => {
+			const source = shellEscape(`${sourcePath}`)
+			const destination = shellEscape(`./${name}`)
+			
+			return `cp -r ${source} ${destination}`  // works for files and directories
+		})
+		.join(' && ')
 
   return build`
     mkdir "$out" && cd "$out" && ${copyCommands}
@@ -108,11 +108,11 @@ export const buildDir = (files) => {
 
 export const dir = (path, extraArgs={}) => {
   return effect({
-    install: ["execV1", "mkdir", "-p", path],
-    uninstall: ["execShV1", `rmdir -- "${path}" 2>/dev/null || true`],
-    path: path,
-    ...extraArgs,
-  })
+		install: ["execV1", "mkdir", "-p", path],
+		uninstall: ["execShV1", `rmdir -- "${path}" 2>/dev/null || true`],
+		path: path,
+		...extraArgs,
+	})
 }
 
 /**
@@ -120,16 +120,16 @@ export const dir = (path, extraArgs={}) => {
  */
 export const scriptWithTempdir = (...args) => {
   let inner = script(...args)
-  // # export NUX_TEMP="$HOME"/${NUX_DIR}/tmp_drv/${HASH}
+  // # export JIX_TEMP="$HOME"/${JIX_DIR}/tmp_drv/${HASH}
   return script`
     #!/bin/sh
-    export NUX_TEMP="$(mktemp -d)"
-    cd "$NUX_TEMP"
+    export JIX_TEMP="$(mktemp -d)"
+    cd "$JIX_TEMP"
 
     "${inner}"
     exitcode=$?
 
-    rm -rf "$NUX_TEMP"
+    rm -rf "$JIX_TEMP"
 
     exit $exitcode
   `
@@ -198,9 +198,9 @@ export const build = (templateStrings, ...values) => {
   let buildScript = dedent(templateStrings, ...values)
 
   return effect({
-    build: ["buildV6", buildScript],
-    dependencies: [],
-  })
+		build: ["buildV6", buildScript],
+		dependencies: [],
+	})
 }
 
 
@@ -238,10 +238,10 @@ let base = {
 
 
 // this is to work around a severe quickjs bug whereas different modules are created for the same file when using dynamic imports (i.e. await import(...))
-if(globalThis._nux_modules_base)
-  base = globalThis._nux_modules_base
+if(globalThis._jix_modules_base)
+	base = globalThis._jix_modules_base
 else
-  globalThis._nux_modules_base = base
+	globalThis._jix_modules_base = base
 
 
 export default base

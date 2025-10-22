@@ -1,11 +1,11 @@
 import * as fs from 'node:fs'
-import { ACTIVE_HASHES_PATH, LOCAL_STORE_PATH, EXISTING_HASHES_PATH, LOCAL_NUX_PATH, LOCAL_BIN_PATH } from '../../jix/context.js'
+import { ACTIVE_HASHES_PATH, LOCAL_STORE_PATH, EXISTING_HASHES_PATH, LOCAL_JIX_PATH, LOCAL_BIN_PATH } from '../../jix/context.js'
 import { UserError } from '../core/UserError.js'
 import set from '../core/set.js'
 
-const HOSTS_PATH = `${LOCAL_NUX_PATH}/hosts.json`
-const SHORT_PATH_DIR = `${LOCAL_NUX_PATH}/s`
-const LOCAL_OUT_PATH = `${LOCAL_NUX_PATH}/out`
+const HOSTS_PATH = `${LOCAL_JIX_PATH}/hosts.json`
+const SHORT_PATH_DIR = `${LOCAL_JIX_PATH}/s`
+const LOCAL_OUT_PATH = `${LOCAL_JIX_PATH}/out`
 
 function syncShortPaths() {
 	const existingHashes = fs.existsSync(EXISTING_HASHES_PATH)
@@ -32,12 +32,12 @@ function syncShortPaths() {
 
 export default {
 	init: () => {
-		if (!fs.existsSync(LOCAL_NUX_PATH)) fs.mkdirSync(LOCAL_NUX_PATH, { recursive: true })
+		if (!fs.existsSync(LOCAL_JIX_PATH)) fs.mkdirSync(LOCAL_JIX_PATH, { recursive: true })
 		if (!fs.existsSync(LOCAL_BIN_PATH)) fs.mkdirSync(LOCAL_BIN_PATH, { recursive: true })
 		if (!fs.existsSync(LOCAL_STORE_PATH)) fs.mkdirSync(LOCAL_STORE_PATH, { recursive: true })
 		if (!fs.existsSync(LOCAL_OUT_PATH)) fs.mkdirSync(LOCAL_OUT_PATH, { recursive: true })
 		if (!fs.existsSync(SHORT_PATH_DIR)) fs.mkdirSync(SHORT_PATH_DIR, { recursive: true })
-		if (!fs.existsSync(`${LOCAL_NUX_PATH}/logs`)) fs.mkdirSync(`${LOCAL_NUX_PATH}/logs`, { recursive: true })  // TODO: get rid of this safely
+		if (!fs.existsSync(`${LOCAL_JIX_PATH}/logs`)) fs.mkdirSync(`${LOCAL_JIX_PATH}/logs`, { recursive: true })  // TODO: get rid of this safely
 
 		syncShortPaths()
 	},

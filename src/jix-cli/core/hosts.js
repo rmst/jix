@@ -1,6 +1,6 @@
 import * as fs from "node:fs"
 import context from "../../jix/context"
-import { LOCAL_NUX_PATH } from "../../jix/context"
+import { LOCAL_JIX_PATH } from "../../jix/context"
 import { executeCmd } from "./installEffect";
 import { dedent } from "../../jix/dedent"
 import process from "node:process";
@@ -42,8 +42,8 @@ globalThis.jixHosts
  * @argument {[HostInfo]} hosts 
  */
 const writeHosts = (hosts) => {
-	if (!fs.existsSync(LOCAL_NUX_PATH))
-		throw Error(`Jix path doesn't exist: ${LOCAL_NUX_PATH}`)
+	if (!fs.existsSync(LOCAL_JIX_PATH))
+		throw Error(`Jix path doesn't exist: ${LOCAL_JIX_PATH}`)
 
   db.hosts.write(hosts)
   loadHosts()

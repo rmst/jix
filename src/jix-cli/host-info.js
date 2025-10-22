@@ -4,7 +4,7 @@ import db from './db/index.js'
 import set from './core/set.js'
 import { shortPath } from './effectUtil.js'
 import process from 'node:process'
-import { NUX_DIR } from '../jix/context.js'
+import { JIX_DIR } from '../jix/context.js'
 
 export default {
 	name: 'host-info',
@@ -52,7 +52,7 @@ export default {
 
 			console.log(`\nApplied effects: ${effectsForTarget.length}`)
 
-			const hostNuxDir = `${userInfo.home}/${NUX_DIR}/`
+			const hostNuxDir = `${userInfo.home}/${JIX_DIR}/`
 			let effectsWithValidPaths = effectsForTarget
 				.filter(effectData => effectData.path)
 				.filter(effectData => !effectData.path.startsWith(hostNuxDir))

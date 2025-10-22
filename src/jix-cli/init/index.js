@@ -3,7 +3,7 @@
 import { installJsConfig } from "./jsconfig.js"
 import process from "node:process"
 import { sh } from "../util.js"
-import { LOCAL_NUX_PATH, NUX_DIR } from "../../jix/context.js"
+import { LOCAL_JIX_PATH, JIX_DIR } from "../../jix/context.js"
 import { dedent } from "../../jix/dedent.js"
 import { writeFileSync, existsSync, readFileSync } from "node:fs"
 
@@ -63,13 +63,13 @@ function initCmd(options = {}) {
 		updated.push('jsconfig.json')
 	}
 
-	const nuxDirExisted = existsSync(`${wd}/${NUX_DIR}`)
-	sh`mkdir -p '${wd}/${NUX_DIR}/modules'`
+	const jixDirExisted = existsSync(`${wd}/${JIX_DIR}`)
+	sh`mkdir -p '${wd}/${JIX_DIR}/modules'`
 	const gitignoreContent = `modules/jix\nmodules/jix-cli\n.DS_Store\n`
-	writeFileSync(`${wd}/${NUX_DIR}/.gitignore`, gitignoreContent)
-	sh`ln -sfn '${LOCAL_NUX_PATH}/jix/modules/jix' '${wd}/${NUX_DIR}/modules/jix'`
-	sh`ln -sfn '${LOCAL_NUX_PATH}/jix/modules/jix-cli' '${wd}/${NUX_DIR}/modules/jix-cli'`
-	if (!nuxDirExisted) created.push(`${NUX_DIR}/`)
+	writeFileSync(`${wd}/${JIX_DIR}/.gitignore`, gitignoreContent)
+	sh`ln -sfn '${LOCAL_JIX_PATH}/jix/modules/jix' '${wd}/${JIX_DIR}/modules/jix'`
+	sh`ln -sfn '${LOCAL_JIX_PATH}/jix/modules/jix-cli' '${wd}/${JIX_DIR}/modules/jix-cli'`
+	if (!jixDirExisted) created.push(`${JIX_DIR}/`)
 
 	if (options.vscode) {
 		const tasksStatus = setupVSCodeTasks(wd)
@@ -91,7 +91,7 @@ export default {
 	help: dedent`
 	Initialize jix support in the current working directory.
 
-	This creates ${NUX_DIR}/modules directory, sets up editor hints, and links the jix libs locally.
+	This creates ${JIX_DIR}/modules directory, sets up editor hints, and links the jix libs locally.
 
 	Options:
 	  --vscode    Create .vscode/tasks.json with jix commands

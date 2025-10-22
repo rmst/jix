@@ -2,14 +2,14 @@
 import { sh } from '../util.js'
 import { git } from './git.js'
 import install from '../core/install.js'
-import { findNuxRoot as findJixRoot } from './util.js'
+import { findJixRoot } from './util.js'
 import { dedent } from '../../jix/dedent.js'
 
 import process from 'node:process'
 
 export default {
 	name: 'install',
-	description: 'Install/apply a jix configuration or effect.',
+	description: 'Install a jix configuration',
 	usage: 'jix install [--dry-run] <path>',
 	help: dedent`
 	Install a jix manifest located at <path>.

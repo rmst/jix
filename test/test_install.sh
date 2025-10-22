@@ -16,16 +16,16 @@ TESTDIR=$(mktemp -d)
 trap "rm -rf $TESTDIR" EXIT
 
 FAKEHOME="$TESTDIR/fake-home"
-NUXCOPY="$TESTDIR/jix"
+JIXCOPY="$TESTDIR/jix"
 mkdir -p "$FAKEHOME"
 
 printf "%b\n" "${BLUE}Test directory: $TESTDIR${NC}"
 printf "%b\n" "${BLUE}Fake HOME: $FAKEHOME${NC}"
 
-# Copy nux repo to temp directory
+# Copy jix repo to temp directory
 printf "%b\n" "${BLUE}Copying jix repository...${NC}"
-cp -r /wd/jix-pub "$NUXCOPY"
-cd "$NUXCOPY"
+cp -r /wd/jix-pub "$JIXCOPY"
+cd "$JIXCOPY"
 
 # Install jix to fake HOME
 printf "%b\n" "${BLUE}Running make install...${NC}"

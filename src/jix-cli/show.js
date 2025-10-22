@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { LOCAL_NUX_PATH, ACTIVE_HASHES_PATH, EXISTING_HASHES_PATH, NUX_DIR } from '../jix/context.js'
+import { LOCAL_JIX_PATH, ACTIVE_HASHES_PATH, EXISTING_HASHES_PATH, JIX_DIR } from '../jix/context.js'
 import { style, prettyPrintEffect } from './prettyPrint.js'
 import { dedent } from '../jix/dedent.js'
 import db from './db/index.js'
@@ -13,8 +13,8 @@ export function showEffect(effectHash) {
 	const path = effectHash.includes("/")
 		? effectHash
 		: effectHash.length < 14
-		? `${LOCAL_NUX_PATH}/s/${effectHash}`
-		: `${LOCAL_NUX_PATH}/store/${effectHash}`
+		? `${LOCAL_JIX_PATH}/s/${effectHash}`
+		: `${LOCAL_JIX_PATH}/store/${effectHash}`
 
 	console.log(`${style.title('Inspecting effect:')} ${style.path(path)}\n`)
 
@@ -55,7 +55,7 @@ export default {
 	Show metadata about an effect by hash.
 
 	Arguments:
-	  <effectId>  Hash of effect file under ~/${NUX_DIR}/store/<hash>
+	  <effectId>  Hash of effect file under ~/${JIX_DIR}/store/<hash>
 
 	Example:
 	  jix show 3f8c...

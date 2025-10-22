@@ -18,14 +18,15 @@ import db from '../db/index.js'
 
 // Add QJSXPATH entries for all parent directories of a file
 // For /my/custom/path/__<cli>__.js, adds /my/custom/path/.<cli>/modules:/my/custom/.<cli>/modules:/my/.<cli>/modules
-import { NUX_DIR } from '../../jix/context.js'
+import { JIX_DIR } from '../../jix/context.js'
+import { Host } from '../../jix/targets'
 function addQjsxPathForFile(filePath) {
 	const modulePaths = []
 	let current = filePath.substring(0, filePath.lastIndexOf('/'))
 
 	// Collect all parent directories
 	while (current && current !== '/') {
-		modulePaths.push(`${current}/${NUX_DIR}/modules`)
+		modulePaths.push(`${current}/${JIX_DIR}/modules`)
 		const lastSlash = current.lastIndexOf('/')
 		current = lastSlash > 0 ? current.substring(0, lastSlash) : ''
 	}
@@ -110,7 +111,9 @@ export default async function install({
 
 		if (!(drvs instanceof TargetedEffect)) {
 			// drvs can e.g be a list of Effects
-			drvs = jix.target(null, drvs)
+			// drvs = jix.target(null, drvs)
+      let h = Host("localhost", {users: {[process.env.USER]: {}}})
+      h.users[process.env.USER](drvs)
 		}
 		// Flatten only when we constructed drvs from a source
 		drvs = drvs.flatten()

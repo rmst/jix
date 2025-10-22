@@ -1,9 +1,9 @@
 
-import { NUX_DIR } from '../jix/context.js'
+import { JIX_DIR } from '../jix/context.js'
 
 export function shortPath(hash) {
 	const shortHash = hash.slice(0, 7)
-	return `~/${NUX_DIR}/s/${shortHash}`
+	return `~/${JIX_DIR}/s/${shortHash}`
 }
 
 /**

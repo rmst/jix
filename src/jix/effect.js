@@ -1,5 +1,5 @@
 import { HOME_PLACEHOLDER, HASH_PLACEHOLDER, MAGIC_STRING } from './context.js';
-import { NUX_DIR, LOCAL_USER } from './context.js';
+import { JIX_DIR, LOCAL_USER } from './context.js';
 import { AbstractEffect } from './effectUtil.js';
 import { dedent } from './dedent.js';
 
@@ -350,7 +350,7 @@ export class TargetedEffect extends AbstractEffect {
       .update(JSON.stringify(this.normalize()))
       .digest('hex')
 
-    let outPath = `${tgt.home}/${NUX_DIR}/out/${this.hash}`
+    let outPath = `${tgt.home}/${JIX_DIR}/out/${this.hash}`
 
     this.path = path
       ? targetizeString(tgt, path.replaceAll(HASH_PLACEHOLDER, this.hash))

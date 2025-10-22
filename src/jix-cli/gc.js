@@ -1,14 +1,14 @@
 import { dedent } from '../jix/dedent.js'
 import set from './core/set.js'
 import db from './db/index.js'
-import { NUX_DIR } from '../jix/context.js'
+import { JIX_DIR } from '../jix/context.js'
 
 export default {
 	name: 'gc',
 	description: 'Delete unreferenced build outputs and effect files.',
 	usage: 'jix gc [--dry-run]',
 	help: dedent`
-	Remove all unreferenced build outputs (~/${NUX_DIR}/out) and effect files (~/${NUX_DIR}/store) that are not referenced in active or existing hashes.
+	Remove all unreferenced build outputs (~/${JIX_DIR}/out) and effect files (~/${JIX_DIR}/store) that are not referenced in active or existing hashes.
 
 	Options:
 	  --dry-run  Show what would be deleted without actually deleting

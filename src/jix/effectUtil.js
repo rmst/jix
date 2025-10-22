@@ -27,7 +27,7 @@ export class AbstractEffect {
 
 
 // export const userHome = (host, user) => {
-//   let c = globalThis.nuxContext;
+//   let c = globalThis.jixContext;
 //   if (host === null) {
 //     if (user === null)
 //       return LOCAL_HOME;

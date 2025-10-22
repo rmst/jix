@@ -1,16 +1,16 @@
-import process from 'node:process';
+import process from 'node:process'
 
 // Project-wide constants
-export const NUX_DIR = '.jix'               // relative to the user home
+export const JIX_DIR = '.jix'               // relative to the user home
 export const MANIFEST_BASENAME = '__jix__.js'
 export const LOCAL_HOME = process.env.HOME
 export const LOCAL_USER = process.env.USER
-export const LOCAL_NUX_PATH = `${LOCAL_HOME}/${NUX_DIR}`;  // local path
-export const TMP_PATH = `${LOCAL_NUX_PATH}/tmp`;
-export const LOCAL_BIN_PATH = `${LOCAL_NUX_PATH}/bin`;
-export const LOCAL_STORE_PATH = `${LOCAL_NUX_PATH}/store`;
-export let ACTIVE_HASHES_PATH = `${LOCAL_NUX_PATH}/active.json`
-export const EXISTING_HASHES_PATH = `${LOCAL_NUX_PATH}/existing.json`;
+export const LOCAL_JIX_PATH = `${LOCAL_HOME}/${JIX_DIR}`  // local path
+export const TMP_PATH = `${LOCAL_JIX_PATH}/tmp`
+export const LOCAL_BIN_PATH = `${LOCAL_JIX_PATH}/bin`
+export const LOCAL_STORE_PATH = `${LOCAL_JIX_PATH}/store`
+export let ACTIVE_HASHES_PATH = `${LOCAL_JIX_PATH}/active.json`
+export const EXISTING_HASHES_PATH = `${LOCAL_JIX_PATH}/existing.json`
 
 export const MAGIC_STRING = "d6165af5669c8a3de2aab402ad97c778"
 export const MAGIC_STRING2 = "494ff5669c8a3de2aab402ad974fhdaf"
@@ -25,20 +25,20 @@ export const HASH_PLACEHOLDER = `_HASH_PLACEHOLDER_${MAGIC_STRING2}` // we need 
 export const HOME_PLACEHOLDER = `_HOME_PLACEHOLDER_${MAGIC_STRING2}` // TODO: ideally get rid of this; used in lots of places, search for jix.HOME
 
 
-// We do this so that IDEs can infer the properties on nuxContext better, while also being about to handle that this module code gets executed multiple times which does happens sometimes for some reason.
-let originalCtx = globalThis.nuxContext
+// We do this so that IDEs can infer the properties on jixContext better, while also being able to handle that this module code may execute multiple times.
+let originalCtx = globalThis.jixContext
 
-globalThis.nuxContext = {
+globalThis.jixContext = {
 	hosts: null,
 
 	HOME: HOME_PLACEHOLDER,
-	NUX_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR,
-	BIN_PATH: HOME_PLACEHOLDER + "/" + NUX_DIR + "/bin",
+	JIX_PATH: HOME_PLACEHOLDER + "/" + JIX_DIR,
+	BIN_PATH: HOME_PLACEHOLDER + "/" + JIX_DIR + "/bin",
 
 }
 
 if(originalCtx)
-	Object.assign(globalThis, {nuxContext: originalCtx})
+	Object.assign(globalThis, {jixContext: originalCtx})
 
 
-export default globalThis.nuxContext
+export default globalThis.jixContext

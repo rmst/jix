@@ -40,14 +40,14 @@ export function installJsConfig(projectDir) {
     const existingPaths = config.compilerOptions.paths['*'] || [];
 
     // Check if .jix/modules/* is already in the paths
-    const alreadyHasNuxPath = existingPaths.includes('.jix/modules/*')
+    const alreadyHasJixPath = existingPaths.includes('.jix/modules/*')
 
     // Ensure include array exists with the desired patterns
     const desiredInclude = ['**/*.js', './.jix/**/*.js']
     const existingInclude = config.include || []
     const hasCorrectInclude = desiredInclude.every(pattern => existingInclude.includes(pattern))
 
-    if (!alreadyHasNuxPath || needsBaseUrl || !hasCorrectInclude) {
+    if (!alreadyHasJixPath || needsBaseUrl || !hasCorrectInclude) {
       // Use a Set to add our paths and automatically handle duplicates.
       // This ensures ".jix/modules/*" is first
       const newPaths = new Set([
