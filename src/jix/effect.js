@@ -128,8 +128,12 @@ const addEffect = (e) => {
 
   @param {EffectProps | Array} obj
   @returns {TargetedEffect}
-*/
-export function effect (obj) {    
+ */
+export function effect (obj) {
+  if(typeof obj === "function") {
+    throw TypeError(`Cannot pass function as argument: ${obj}`)
+  }
+
   let props = Array.isArray(obj)
     ? { dependencies: obj }
     : obj
@@ -139,6 +143,25 @@ export function effect (obj) {
   addEffect(e)
   return e
 }
+
+
+
+// NOTE: This is invasive. We're patching toString for all functions!
+globalThis._fnPlaceholderId = 0
+
+/** @type {Map<string,Function>} */
+globalThis._fnPlaceholderMap = new Map()
+
+// @ts-ignore
+Function.prototype.toStringOriginal = Function.prototype.toString
+Function.prototype.toString = function() {
+  // TODO: we should save stack trace here, otherwise it'll be impossible to track down errors
+  let key = `_function_${globalThis._fnPlaceholderId}_${MAGIC_STRING}_`
+  globalThis._fnPlaceholderMap.set(key, this)
+  globalThis._fnPlaceholderId += 1
+  return key
+}
+// -----
 
 
 export class TargetedEffect extends AbstractEffect {
@@ -159,6 +182,7 @@ export class TargetedEffect extends AbstractEffect {
 
     const tgt = getTarget()
 
+    /** @private */
     this._stack = (new Error()).stack.split('\n').slice(2).join("\n")
 
     const dependencies = props.dependencies?.flat(Infinity) ?? []
@@ -283,7 +307,7 @@ const targetizeString = (str) => {
  */
 export const parseEffectValues = (values) => {
 
-  let dependencies = [];
+  let dependencies = []
   values = values.map((v, i) => {
     if(v === undefined)
       throw Error("received undefined value")
@@ -297,24 +321,30 @@ export const parseEffectValues = (values) => {
 
       // replace simple constants
       // TODO: this shouldn't be necessary but especially jix.HOME is used a lot
-      v = targetizeString(v);
+      v = targetizeString(v)
 
-      // search for dependencies
-      [...effectPlaceholderMap.keys()].map(k => {
-        if(v.includes(k)) {
-          let eff = effectPlaceholderMap.get(k)
-
-          // console.log(`Found drv in string ${v}`)
-          // console.log(`${k} will be replaced by ${drv.str}`)
-          
-          if (! (eff instanceof TargetedEffect)) {
-            throw Error(`Fatal: ${eff}`)
+      if(v.includes(MAGIC_STRING)) {
+        // search for dependencies, this is not the most efficient way to do this, but it's okay for now
+        ;[...effectPlaceholderMap.keys()].map(k => {
+          if(v.includes(k)) {
+            let eff = effectPlaceholderMap.get(k)
+            dependencies.push(eff)
+            v = v.replaceAll(k, eff.str)
           }
+        })
 
-          dependencies.push(eff)
-          v = v.replaceAll(k, eff.str)
-        }
-      })
+        ;[...globalThis._fnPlaceholderMap.keys()].map(k => {
+          if(v.includes(k)) {
+            let fn = globalThis._fnPlaceholderMap.get(k)
+            let eff = fn()
+            if(!(eff instanceof TargetedEffect)) {
+              throw TypeError(`Expected TargetedEffect, got: ${eff}`)
+            }
+            dependencies.push(eff)
+            v = v.replaceAll(k, eff.str)
+          }
+        })
+      }
 
       if(v.includes(MAGIC_STRING)) {
         throw Error(`Fatal error: The following value contains an unresolvable effect reference: ${v}`)
@@ -322,6 +352,15 @@ export const parseEffectValues = (values) => {
 
       return v
 
+    }
+
+    else if (typeof v === "function") {
+      const x = v()
+      if(!(x instanceof TargetedEffect)) {
+        throw TypeError(`Expected TargetedEffect, got: ${x}`)
+      }
+      dependencies.push(x)
+      return x.str
     }
 
     else if (v instanceof TargetedEffect) {

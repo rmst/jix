@@ -16,7 +16,7 @@ export const HASH = HASH_PLACEHOLDER
 /**
  * @param {string} origin 
  * @param {string} mode 
- * @returns {AbstractEffect & { name: string }}
+ * @returns {TargetedEffect & { name: string }}
  */
 export const importFile = (origin, mode='-w') => {
 	let content = fs.readFileSync(origin, 'utf8')

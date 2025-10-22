@@ -1,17 +1,18 @@
 
-
-
 let sd = () => jix.stateDir("simon.test1")
 
+
+// run these via, e.g. `jix run -f test/simple`
 export const run = {
 	default: () => `echo ${sd()}`,
+	test: () => `echo ${sd}`,  // this will work fine, too
+	test2: `echo ${sd}`,  // this will work fine, too
 }
 
+
 export default () => {
-
-
 	let d = jix.script`
-		echo 'jfjf33333f'
+		echo 'a'
 	`
 
 	// let installFail = jix.customEffect({
@@ -23,13 +24,16 @@ export default () => {
 	// })
 
 
-	let sd = jix.stateDir("simon.test1")
+	let sd = jix.stateDir("simon.test1")  // correct usage
+	// let sd = () => jix.stateDir("simon.test1")  // will work fine
+	// let sd = () => null  // will cause error
 
-	console.log(sd)
+	// console.log(`${sd}`)
 
 	return jix.alias({
 		ga123: jix.script`
-			echo '710f08jj'
+			echo ${sd}
+			echo 'b'
 			${d}
 		`	
 	})
