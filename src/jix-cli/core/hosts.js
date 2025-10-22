@@ -137,22 +137,29 @@ export const queryHostInfo = (address, user) => {
 
 
 /**
- * @param {string} address
- * @param {string} user
+ * @param {{host: HostInfo, user: string}} x
  * @returns {UserInfo} 
  */
-export const queryUserInfo = (address, user) => {
+export const queryUserInfo = ({host, user}) => {
+	let asUser = host.address === "localhost"
+		? process.env.USER
+		: user
+
 	let sh = (...args) => executeCmd({
 		cmd: "/bin/sh",
 		args: ["-c", dedent(...args)]
-	}, address, user)
+	}, host.address, asUser)
 
 	return {
 		// name: sh`whoami`,
-		uid: sh`id -u`,
-		gid: sh`id -g`,
-		home: sh`echo "$HOME"`,
-		shell: sh`echo "$SHELL"`,
+		uid: sh`id -u -- '${user}'`,
+		gid: sh`id -g -- '${user}'`,
+		home: host.os === "macos"
+			? sh`id -P "${user}" | awk -F: '{print $9}'`
+			: sh`getent passwd -- "${user}" | cut -d: -f6`,
+		shell: host.os === "macos"
+			? sh`id -P "${user}" | awk -F: '{print $10}'`
+			: sh`getent passwd --  "${user}" | cut -d: -f7`,
 	}
 
 }
@@ -275,7 +282,7 @@ export const hostInfoWithUser = (host, user, update=false) => {
 		throw TypeError(`Must be object: ${host}`)
 
 	if(!user)
-		throw new UserError(`hostInfo requires non-null user (got user: ${user})`)
+		throw new Error(`hostInfo requires non-null user (got user: ${user})`)
 
 	let hostInfo = getHostInfo(host)
 	
@@ -295,7 +302,10 @@ export const hostInfoWithUser = (host, user, update=false) => {
 
 	if(!hostInfo?.users?.[user]) {
 		console.log(`Updating user info for ${user}@${hostInfo.address}`)
-		const userInfo = queryUserInfo(hostInfo.address, user)
+		const userInfo = queryUserInfo({
+			host: hostInfo,
+			user,			
+		})
 
 		hostInfo = {
 			...hostInfo,

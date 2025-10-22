@@ -9,9 +9,9 @@ const activeContexts = new Map();
 /**
  * Creates a new Context object.
  * This object acts as a handle for providing and reading values.
- *
+ * @template T
  * @param {*} defaultValue The value to be used by useContext when no provider is found.
- * @returns {{defaultValue: *, _id: symbol, provide: (value: *, callback: () => any) => any}} A context object with a `provide` method.
+ * @returns {{defaultValue: *, _id: symbol, provide: (value: *, callback: () => T) => T}} A context object with a `provide` method.
  */
 export function createContext(defaultValue) {
   // Use a Symbol for a truly unique, internal ID for this context.

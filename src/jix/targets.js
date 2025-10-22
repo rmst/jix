@@ -1,62 +1,27 @@
-import { Effect } from './effect.js'
+import { hostInfoWithUser } from '../jix-cli/core/hosts.js'
+import { TargetedEffect, withTarget } from './effect.js'
 
-/**
- * Minimal host shape used by User handles.
- * @typedef {{
- *   address: string,
- *   os?: string,
- *   kernel_name?: string,
- *   hostname?: string,
- *   architecture?: string,
- *   os_version?: string,
- *   machineId?: string,
- *   friendlyName?: string,
- *   users: Record<string, User> & { root: User }
- * }} BaseHost
- */
 
-/**
- * @template {Record<string, any>} Users
- * @typedef {{
- *   address: string,
- *   os?: string,
- *   kernel_name?: string,
- *   hostname?: string,
- *   architecture?: string,
- *   os_version?: string,
- *   machineId?: string,
- *   friendlyName?: string,
- *   users: ({ root: User } & { [K in keyof Users]: User } & Record<string, User>)
- * }} HostWithUsers
- */
-
-/**
- * @typedef {{
- *   name: string,
- *   host: BaseHost,
- *   uid?: string,
- *   gid?: string,
- *   home?: string,
- *   shell?: string,
- * }} UserInfoShape
- */
-
-/**
- * @typedef {User} UserHandle
- */
-
-/**
- * @template {Record<string, any>} Users
- * Host object bound to an address.
- */
+/** @template {Record<string, any>} Users */
 export class Host {
 	/** @type {string} */
-	address
+	address 
 	/** @type {{ root: User } & Record<string, User>} */
-	users
+	users 
+	/** @type {string} */
+	os
+	/** @type {string} */
+	kernel_name
+	/** @type {string} */
+	architecture
+	/** @type {string} */
+	os_version
+	/** @type {string} */
+	machineId
+
+	// TODO: add missing properties
 
 	/**
-	 * @template {Record<string, any>} Users
 	 * @param {string} address
 	 * @param {Users} [users]
 	 */
@@ -65,50 +30,79 @@ export class Host {
 			throw new TypeError('Host requires a non-empty address')
 		this.address = address
 		// Build a plain users object (root + provided keys)
+
+		let hostInfo = {} /** @type {hostInfo} */
 		this.users = /** @type {any} */(Object.fromEntries(
-			['root', ...Object.keys(users)].map(u => [u, new User(this, u)])
+			[...Object.keys(users), 'root'].map(u => {
+				hostInfo = hostInfoWithUser({address}, u)
+				let userInfo = hostInfo.users[u]
+				return [u, new User(this, u, userInfo)]
+			})
 		))
+
+		delete hostInfo["users"]
+
+		Object.assign(this, {...hostInfo})
 
 	}
 
 	/**
-	 * Run an installer callback with this host
 	 * @template T
-	 * @param {(host: this) => T} cb
+	 * @param {(host: this) => T} fn
 	 * @returns {T}
 	 */
-	install(cb) {
-		if (typeof cb !== 'function')
+	install(fn) {
+		if (typeof fn !== 'function')
 			throw new TypeError('Host.install(...) expects a function argument')
-		return cb(this)
+
+		return withTarget({host: this, user: this.users.root}, () => fn(this))
 	}
 }
 
-/**
- * User on a given host
- */
+
 export class User {
 	/** @type {string} */
 	name
-	/** @type {BaseHost} */
+	/** @type {Host} */
 	host
+	/** @type {string} */
+	home
+	/** @type {string} */
+	uid
+	/** @type {string} */
+	gid
+	/** @type {string} */
+	shell
+
+	// TODO: add missing properties
 
 	/**
-	 * @param {BaseHost} host
+	 * @param {Host} host
 	 * @param {string} name
+	 * @param {import('../jix-cli/core/hosts.js').UserInfo} info
 	 */
-	constructor(host, name) {
+	constructor(host, name, info) {
 		if (!name)
 			throw new TypeError('User requires a non-empty name')
+
+		if (!(host instanceof Host))
+			throw TypeError(host)
+		
 		this.host = host
 		this.name = name
+		Object.assign(this, info)
 	}
 
 	/**
-	 * Target and install the given effect(s) for this user
-	 * @param {any} x
+	 * @template T
+	 * @param {(user: this) => T} fn
+	 * @returns {T}
 	 */
-	install(x) {
-		return new Effect(x).target({ address: this.host.address, user: this.name })
+	install(fn) {
+		if (typeof fn !== 'function')
+			throw new TypeError('Host.install(...) expects a function argument')
+		
+		return withTarget({host: this.host, user: this}, () => fn(this))
+		// return new TargetedEffect({ machineId: this.host.machineId, user: this.name}, x)
 	}
 }

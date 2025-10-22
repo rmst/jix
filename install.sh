@@ -24,8 +24,13 @@ chmod +x "${HOME}/.jix/jix/qjsx"
 rm -rf "${HOME}/.jix/jix/modules"
 mkdir -p "${HOME}/.jix/jix/modules"
 cp -R "$SCRIPT_DIR/quickjs-x/qjsx-node/node" "${HOME}/.jix/jix/modules/node"
-cp -R "$SCRIPT_DIR/src/jix" "${HOME}/.jix/jix/modules/jix"
-cp -R "$SCRIPT_DIR/src/jix-cli" "${HOME}/.jix/jix/modules/jix-cli"
+
+# TODO: use copy not symlink in prod
+# cp -R "$SCRIPT_DIR/src/jix" "${HOME}/.jix/jix/modules/jix"
+# cp -R "$SCRIPT_DIR/src/jix-cli" "${HOME}/.jix/jix/modules/jix-cli"
+ln -s "$SCRIPT_DIR/src/jix" "${HOME}/.jix/jix/modules/jix"
+ln -s "$SCRIPT_DIR/src/jix-cli" "${HOME}/.jix/jix/modules/jix-cli"
+
 
 # Create wrapper script for jix
 cat > "${HOME}/.jix/jix/jix" << 'EOF'

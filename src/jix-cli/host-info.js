@@ -1,4 +1,4 @@
-import { queryHostInfo, queryUserInfo, hostInfoWithUser } from './core/hosts.js'
+import { hostInfoWithUser } from './core/hosts.js'
 import { dedent } from '../jix/dedent.js'
 import db from './db/index.js'
 import set from './core/set.js'

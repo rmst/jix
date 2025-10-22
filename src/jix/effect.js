@@ -5,13 +5,11 @@ import { dedent } from './dedent.js';
 
 export const effectPlaceholderMap = new Map()
 
-import process from 'node:process';
 import { createHash } from 'node:crypto';
-import { hostInfoWithUser } from '../jix-cli/core/hosts.js';  // TODO: we shouldn't import cli from core; consider eventing later
 import { createContext, useContext } from './useContext.js';
+import { Host, User } from './targets.js';
 
 // import { createHash } from 'node/crypto';
-
 
 /*
 TODO: split into two types of effects:
@@ -19,15 +17,64 @@ TODO: split into two types of effects:
 - build/derivation/artifact (no side effects; all outputs in ~/.jix/out/${hash}, build function)
 */
 
-
 const TARGET_CONTEXT = createContext(null)
+
+/**
+ * @template T
+ * @param {{host: Host, user: User}} target 
+ * @param {() => T} fn 
+ * @returns {T}
+ */
 export const withTarget = (target, fn=null) => {
+  if(!(target.host.constructor.name === 'Host'))
+    throw TypeError(`${target.host}`)
+  
+  if(!(target.user.constructor.name === 'User'))
+    throw TypeError(`${target.user}`)
+
   if(fn)
-    TARGET_CONTEXT.provide(target, fn)
+    return TARGET_CONTEXT.provide(target, fn)
   else
     TARGET_CONTEXT.defaultValue = target
 }
-export const getTarget = () => useContext(TARGET_CONTEXT)
+
+/**
+ * @returns {{host: Host, user: User}}
+ */
+export const getTarget = () => {
+  let tgt = useContext(TARGET_CONTEXT)
+
+  if(tgt === null) {
+    throw Error("Missing target context. NOTE: You can't define effects at the top-level of a file!")
+  }
+
+  return tgt
+}
+
+
+const EFFECT_CONTEXT = createContext(null)
+
+/**
+ * @param {*} fn 
+ * @returns {TargetedEffect[]}
+ */
+export const collectEffects = (fn) => {
+  let allEffects = []
+  EFFECT_CONTEXT.provide(allEffects, fn)
+  return allEffects
+}
+
+/**
+ * @param {TargetedEffect} e
+ */
+const addEffect = (e) => {
+  /** @type {TargetedEffect[] | null} */
+  let allEffects = useContext(EFFECT_CONTEXT)
+  if(allEffects === null)
+    return
+  allEffects.push(e)
+}
+
 
 /**
  * @typedef {Object} EffectProps
@@ -39,8 +86,6 @@ export const getTarget = () => useContext(TARGET_CONTEXT)
  * @property {string} [hash]
  * @property {Array} [dependencies]
  */
-
-
 
 // TODO: this type is super cursed, clean it up
 
@@ -81,193 +126,18 @@ export const getTarget = () => useContext(TARGET_CONTEXT)
 
   Basic effect functions are defined under base.js and index.js
 
-  @param {EffectProps | Array | TargetFn} obj
-  @returns {AbstractEffect}
+  @param {EffectProps | Array} obj
+  @returns {TargetedEffect}
 */
 export function effect (obj) {    
-  let tgt = getTarget()
-  let e = new Effect(obj)
-  return tgt === null
-    ? e
-    : e.target(tgt)
-}
+  let props = Array.isArray(obj)
+    ? { dependencies: obj }
+    : obj
 
+  let e = new TargetedEffect(props)
 
-/**
-  @deprecated
-  @param {string | Array | {host: string, user: string} | null} tgt - e.g. `root@home`
-  @param {TargetFn | Effect | Array} obj
-  @returns {TargetedEffect}
-*/
-export function target(tgt, obj) {
-  let user, host
-  
-  if (!tgt)
-    [host, user] = [null, null]
-
-  else if (typeof tgt === "string")
-    [user, host] = tgt.split("@")
-  
-  else if (Array.isArray(tgt))
-    [host, user] = tgt
-  
-  else
-    [host, user] = [tgt.host, tgt.user]
-
-
-  let eff = (obj instanceof Effect) 
-    ? obj 
-    : new Effect(obj)
-
-  let teff = eff.target({ host, user })
-  return teff
-}
-
-
-export class TargetingError extends Error {}
-
-export class Effect extends AbstractEffect {
-  /**
-    @param {EffectProps | Array | TargetFn} obj
-  */
-  constructor (obj) {
-    super()
-    this.obj = obj
-    this._stack = (new Error()).stack.split('\n').slice(2).join("\n")
-  }
-
-  /**
-
-    NOTE: exclude this from the documenation
-
-    Returns copy with additional dependencies
-
-    This is ugly and shouldn't be used (it's only used in one place right now)
-
-    TODO: remove this function and maybe replace with a withDependencies context provider
-
-    @param {...(AbstractEffect)} others
-    @returns {Effect}
-  */
-  dependOn(...others) {
-    if(typeof this.obj === 'function')
-      throw Error("effect.dependingOn works only with simple effects like `jix.effect({ install, uninstall, dependencies })`")
-    
-    if(Array.isArray(this.obj)) {
-      return new Effect([...this.obj, ...others])
-    }
-
-    else {
-      return new Effect({
-        ...this.obj, 
-        dependencies: [ ...(this.obj.dependencies ?? []), ...others ]
-      })
-    }
-  }
-
-  /**
-  @param {
-      {address: string, user: string}
-    | {machineId: string, user: string}
-    | {host: string|null, user: string|null}
-  } x
-  @returns {TargetedEffect}
-  */
-  target(x) {
-    // TODO: decide if this function should be publically exposed at all. If so, we should have a cleaner signature.` 
-
-    try {
-      
-      let host, user
-
-      if ("address" in x) {
-        host = { address: x.address}
-        user = x.user
-      }
-      else if("machineId" in x) {
-        host = { machineId: x.machineId }
-        user = x.user
-      } 
-      else {
-        // Require user to be explicitly set for remote targets
-        if (!x.user && x.host !== null && x.host !== undefined) {
-          throw new Error("user must be specified for remote targets")
-        }
-        host = { friendlyName: x.host ?? "localhost" }
-        user = x.user ?? process.env.USER
-      }
-
-      if (!user)
-        throw new Error(`User missing in ${x}`)
-
-      let info = hostInfoWithUser(host, user)
-
-       // sanity check
-       if(!info.users)
-        throw Error(`${info}`)
-
-      if(!info.users[user])
-        throw Error(`${user} not a registered user in: ${Object.keys(info.users)}`)
-
-
-
-      // TODO: this type is super cursed
-      let r = (typeof this.obj === 'function')
-        ? this.obj({
-          ...info,
-          // host: info.friendlyName,  // TODO: we expect this in some legacy user space code, but this is wrong
-          // host: info.machineId,  // NOTE: this would currently break legacy userspace, because it is passed on to other target calls (in a few cases)
-          user,
-          users: info.users,
-          ...info.users[user],
-        })
-        : this.obj
-
-      if(r instanceof TargetedEffect)
-        return r
-
-      else if(r instanceof Effect)
-        return r.target(x)
-
-      else {
-        if (Array.isArray(r))
-          r = { dependencies: r }
-
-        return new TargetedEffect({
-          machineId: info.machineId,
-          user: user,
-          home: info.users[user].home,
-        }, r)
-      }
-
-    } catch (e) {
-      if(e instanceof TargetingError)
-        throw e
-
-      let stack = e.stack
-
-      if(stack.split("\n").length > 400) {
-        stack = stack.split("\n")
-        stack = [
-          stack[0], 
-          "    ...", 
-          ...stack.slice(-4)
-        ].join("\n")
-      }
-
-      if(stack.endsWith("\n"))
-        stack = stack.slice(0, -1)
-
-      throw new TargetingError(dedent`
-        ${e.message}
-        ${stack}
-          ----------------------------
-          with effect created
-        ${this._stack}
-      `)
-
-    }
-  }
+  addEffect(e)
+  return e
 }
 
 
@@ -279,14 +149,17 @@ export class TargetedEffect extends AbstractEffect {
   dependencies
 
   /**
-   * @param {Object} tgt - Target specification
-   * @param {string} tgt.machineId - Machine ID (required, never null)
-   * @param {string} tgt.user - User name (required, never null)
-   * @param {string} tgt.home - User home directory (required for path resolution)
    * @param {EffectProps} [props] - Effect properties
    */
-  constructor(tgt, props={}) {
+  constructor(props={}) {
     super()
+
+    if(typeof props !== "object")
+      throw TypeError(`Expected object, got: ${typeof props}`)
+
+    const tgt = getTarget()
+
+    this._stack = (new Error()).stack.split('\n').slice(2).join("\n")
 
     const dependencies = props.dependencies?.flat(Infinity) ?? []
     
@@ -311,7 +184,7 @@ export class TargetedEffect extends AbstractEffect {
       if(x.length == 1 && x[0] === undefined)
         return x
 
-      let {values, dependencies: newDeps} = parseEffectValues(tgt, x)
+      let {values, dependencies: newDeps} = parseEffectValues(x)
       dependencies.push(...newDeps)
 
       return values
@@ -323,9 +196,6 @@ export class TargetedEffect extends AbstractEffect {
       if(x instanceof TargetedEffect)
         return x
 
-      else if(x instanceof Effect)
-        return x.target(tgt)  // TODO: maybe pass tgt copy instead?
-
       else {
         let t = `${typeof x} || ${x?.constructor?.name}`
         throw Error(`Effect: ${x} of type ${t} is not a proper dependency`)
@@ -336,8 +206,8 @@ export class TargetedEffect extends AbstractEffect {
     this.install = install
     this.uninstall = uninstall
     this.build = build
-    this.host = tgt.machineId
-    this.user = tgt.user
+    this.host = tgt.host.machineId
+    this.user = tgt.user.name
 
     
     this.normalize = () => ({
@@ -354,14 +224,14 @@ export class TargetedEffect extends AbstractEffect {
       .update(JSON.stringify(this.normalize()))
       .digest('hex')
 
-    let outPath = `${tgt.home}/${JIX_DIR}/out/${this.hash}`
+    let outPath = `${tgt.user.home}/${JIX_DIR}/out/${this.hash}`
 
     this.path = path
-      ? targetizeString(tgt, path.replaceAll(HASH_PLACEHOLDER, this.hash))
+      ? targetizeString(path.replaceAll(HASH_PLACEHOLDER, this.hash))
       : (this.build ? outPath : undefined)
 
     this.str = str
-      ? targetizeString(tgt, str.replaceAll(HASH_PLACEHOLDER, this.hash))
+      ? targetizeString(str.replaceAll(HASH_PLACEHOLDER, this.hash))
       : this.path
 
     this.serialize = () => {
@@ -380,33 +250,38 @@ export class TargetedEffect extends AbstractEffect {
       return [...deps, this].flat()  // flatten the nested list
     }
 
+    this.toDebugString = () => {
+      return JSON.stringify({
+        path: this.path,
+        deps: this.dependencies.map(x => x.hash.slice(0, 5)),
+        host: tgt.host.address,
+        user: this.user,
+        str: this.str,
+        hash: this.hash.slice(0, 5),
+      })  
+    }
   }
-
-  toDebugString() {
-    return dedent`
-      path: ${this.path}
-      deps: ${this.dependencies.map(x => x.hash.slice(0, 5))}
-      host: ${this.host}
-      user: ${this.user}
-      str: ${this.str}
-      hash: ${this.hash.slice(0, 5)}
-    `
-  }
-
 }
 
-
-const targetizeString = (tgt, str) => {
-  if (!tgt.home)
+/**
+ * @param {string} str 
+ * @returns {string}
+ */
+const targetizeString = (str) => {
+  const tgt = getTarget()
+  if (!tgt.user.home)
     throw Error(`Fatal: ${tgt}`)
 
   return str
-    .replaceAll(HOME_PLACEHOLDER, tgt.home)
+    .replaceAll(HOME_PLACEHOLDER, tgt.user.home)
     // .replaceAll(USER_PLACEHOLDER, tgt.user)
 }
 
-
-export const parseEffectValues = (tgt, values) => {
+/**
+ * @param {any[]} values 
+ * @returns {{values: any[], dependencies: TargetedEffect[]}}
+ */
+export const parseEffectValues = (values) => {
 
   let dependencies = [];
   values = values.map((v, i) => {
@@ -422,7 +297,7 @@ export const parseEffectValues = (tgt, values) => {
 
       // replace simple constants
       // TODO: this shouldn't be necessary but especially jix.HOME is used a lot
-      v = targetizeString(tgt, v);
+      v = targetizeString(v);
 
       // search for dependencies
       [...effectPlaceholderMap.keys()].map(k => {
@@ -432,12 +307,8 @@ export const parseEffectValues = (tgt, values) => {
           // console.log(`Found drv in string ${v}`)
           // console.log(`${k} will be replaced by ${drv.str}`)
           
-          if (! (eff instanceof AbstractEffect)) {
-            throw Error(`Fatal: ${eff}`)
-          }
-
           if (! (eff instanceof TargetedEffect)) {
-            eff = eff.target(tgt)
+            throw Error(`Fatal: ${eff}`)
           }
 
           dependencies.push(eff)
@@ -451,11 +322,9 @@ export const parseEffectValues = (tgt, values) => {
 
       return v
 
-    } else if (v instanceof AbstractEffect) {
-      
-      if (! (v instanceof TargetedEffect))
-        v = v.target(tgt)
+    }
 
+    else if (v instanceof TargetedEffect) {
       // add it to the dependencies array
       // and replace the object with it's out path
       dependencies.push(v)
@@ -464,7 +333,7 @@ export const parseEffectValues = (tgt, values) => {
 
     else
       return v;
-  });
+  })
 
   return { values, dependencies };
 };

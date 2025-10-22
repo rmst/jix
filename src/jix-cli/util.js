@@ -67,10 +67,22 @@ function toStr(x) {
 
 
 export const monkeyPatchObjectToString = () => {
+
+	const oldLog = globalThis.console.log
+	globalThis.console.log = (...args) => {
+		return oldLog(...args.map(a => {
+			if(typeof a === "object") {
+				if(a.constructor.name === "TargetedEffect")
+					return a.toDebugString()
+			}
+			return a
+		}))
+	}
+
 	Object.prototype.toString = function() {
 		if (this === null) return '[object Null]';
 		if (typeof this !== 'object') return `[object ${typeof this}]`;
-
+		
 		const type = this.constructor && this.constructor.name ? this.constructor.name : 'Object';
 		const keyValuePairs = Object.entries(this).map(([key, value]) => {
 				let stringValue;

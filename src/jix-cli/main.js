@@ -12,7 +12,6 @@ import forceRemoveCmd from './forceRemove.js'
 import uninstallCmd from './uninstall.js'
 import hostInfoCmd from './host-info.js'
 import gcCmd from './gc.js'
-import { TargetingError } from '../jix/effect.js'
 
 
 const main = async () => {
@@ -79,7 +78,7 @@ const main = async () => {
 main().then(null, e => {
 	console.log(`Error: ${e.message}`)
 	// Only show stack trace for unexpected errors, not user validation errors
-	if (e.name !== 'UserError' && !(e instanceof TargetingError)) {
+	if (e.name !== 'UserError') {
 		console.log(e.stack)
 	}
 	process.exit(1)

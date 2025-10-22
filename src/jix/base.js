@@ -1,7 +1,7 @@
 import * as fs from 'node:fs'
 
 import { JIX_DIR, HASH_PLACEHOLDER } from './context.js'
-import { parseEffectValues, effect, target } from './effect.js'
+import { parseEffectValues, effect, getTarget, TargetedEffect } from './effect.js'
 import { AbstractEffect } from './effectUtil.js'
 
 import { dedent } from './dedent.js'
@@ -20,6 +20,7 @@ export const HASH = HASH_PLACEHOLDER
  */
 export const importFile = (origin, mode='-w') => {
 	let content = fs.readFileSync(origin, 'utf8')
+
 	let e = writeFile(mode)`${content}`
 	e.name = basename(origin)
 	return e
@@ -30,23 +31,25 @@ export const importScript = (origin) => {
   return importFile(origin, '-w+x')
 }
 
-export const link = (origin, path, symbolic=false) => effect( target => {
+export const link = (origin, path, symbolic=false) => {
+
+  const target = getTarget()
   // FIXME: we're not doing anythign to verify that path is something valid 
 
-  let { values: [origin2, path2], dependencies } = parseEffectValues(target, [origin, path])
+  let { values: [origin2, path2], dependencies } = parseEffectValues([origin, path])
 
   if (path2.startsWith('~')) {
-    path2 = path2.replace('~', target.home)  // replaces first (i.e. leading) tilde
+    path2 = path2.replace('~', target.user.home)  // replaces first (i.e. leading) tilde
   }
 
-  return {
+  return effect({
     install: [symbolic ? "symlinkV3" : "hardlinkV1", origin2, path2],
     // uninstall: ["deleteFileV1", path],
     uninstall: ["deleteFileV2", path2],  // TODO: don't remove if the file is sth else than our symlink to prevent accidental data loss, i.e. create deleteSpecificFile
     path: path2,
     dependencies,
-  }
-})
+  })
+}
 
 export const symlink = (origin, path) => link(origin, path, true)
 
@@ -81,8 +84,8 @@ export const customEffect = ({install=null, uninstall=null, ...other}) => {
 
 /**
  * creates a directory containing files
- * @param {Record<string,string|Effect>} files 
- * @returns {Effect}
+ * @param {Record<string,string|TargetedEffect>} files 
+ * @returns {TargetedEffect}
  */
 export const buildDir = (files) => {
   const copyCommands = Object.entries(files)
@@ -143,30 +146,36 @@ export const scriptWithTempdir = (...args) => {
 // };
 
 
-export const str = (templateStrings, ...rawValues) => effect( target => {
+export const str = (templateStrings, ...rawValues) => {
 
-  let { values, dependencies } = parseEffectValues(target, rawValues)
+  let { values, dependencies } = parseEffectValues(rawValues)
   let text = dedent(templateStrings, ...values)
 
-  return {
+  return effect({
     str: text,
     dependencies,
-  }
-})
+  })
+}
 
 
 export const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
-  return effect( target => {
     
-    var { values, dependencies } = parseEffectValues(target, rawValues)
-    let text = dedent(templateStrings, ...values)
+  const { values, dependencies } = parseEffectValues(rawValues)
 
-    return {
-      build: ["writeOutFileV2", text, mode],
-      dependencies,
-    }
+  // type check
+  values.map(x => {
+    if(typeof x === "function")
+      throw TypeError(`Received invalid value of type "function": ${x}`)
+  })
+
+  let text = dedent(templateStrings, ...values)
+
+  return effect({
+    build: ["writeOutFileV2", text, mode],
+    dependencies,
   })
 }
+
 
 
 export const copy = (from, to) => effect({
@@ -205,12 +214,10 @@ export const build = (templateStrings, ...values) => {
 
 
 let base = {
-  // dirname,
 
   dedent,
 
-  effect,  // TODO: maybe we should rename this to "generic effect"? creates untargeted effect
-  target,
+  effect,
   
   build,
 

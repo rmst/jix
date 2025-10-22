@@ -37,7 +37,6 @@ export default {
 		if (!fs.existsSync(LOCAL_STORE_PATH)) fs.mkdirSync(LOCAL_STORE_PATH, { recursive: true })
 		if (!fs.existsSync(LOCAL_OUT_PATH)) fs.mkdirSync(LOCAL_OUT_PATH, { recursive: true })
 		if (!fs.existsSync(SHORT_PATH_DIR)) fs.mkdirSync(SHORT_PATH_DIR, { recursive: true })
-		if (!fs.existsSync(`${LOCAL_JIX_PATH}/logs`)) fs.mkdirSync(`${LOCAL_JIX_PATH}/logs`, { recursive: true })  // TODO: get rid of this safely
 
 		syncShortPaths()
 	},

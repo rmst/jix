@@ -2,7 +2,7 @@
 import process from 'node:process'
 
 import jix from '../../jix'
-import { TargetedEffect } from '../../jix/effect.js'
+import { collectEffects, effect, TargetedEffect, withTarget } from '../../jix/effect.js'
 import { dedent } from '../../jix/dedent.js'
 
 import { tryInstallEffect, tryUninstallEffect } from './installEffect.js'
@@ -19,7 +19,7 @@ import db from '../db/index.js'
 // Add QJSXPATH entries for all parent directories of a file
 // For /my/custom/path/__<cli>__.js, adds /my/custom/path/.<cli>/modules:/my/custom/.<cli>/modules:/my/.<cli>/modules
 import { JIX_DIR } from '../../jix/context.js'
-import { Host } from '../../jix/targets'
+import { Host, User } from '../../jix/targets'
 function addQjsxPathForFile(filePath) {
 	const modulePaths = []
 	let current = filePath.substring(0, filePath.lastIndexOf('/'))
@@ -83,46 +83,57 @@ export default async function install({
 		// Determine which effects to apply based on name
 		if (name.startsWith('run.')) {
 			const runName = name.slice(4)
-				const script = (module.run || {})[runName]
-				if (!script)
-					throw new Error(`run script not found: ${runName}`)
+				const fn = (module.run || {})[runName]
+				if (!fn)
+					throw new UserError(`run script not found: ${runName}`)
 
-				if (typeof script !== 'string' && (!script || typeof script.target !== 'function'))
-					throw new Error('Run scripts must be of type string or jix.script')
+        drvs = (new Host("localhost", {[process.env.USER]: {}}))
+          .users[process.env.USER]
+          .install(() => effect(collectEffects(() => {
+          
+          let script
 
-				let effect = typeof script === 'string'
-					? jix.script(script)
-					: script
+          if(typeof fn === 'string')
+            script = fn
+          else if(typeof fn === 'function')
+            script = fn()
+          else
+            throw new UserError(`export const run = { name: value }, expects value of type function, instead got: ${typeof fn}`)
 
-				effect = effect.target({ host: null, user: null })
-				result = effect.path
-				drvs = effect
+          let effect = typeof script === 'string'
+            ? jix.script(script)
+            : script
+  
+          if(!effect.path) {
+            throw new UserError(`export const run = { name: () => value }, value to be a jix.script, instead got: ${script}`)
+          }
+          
+          result = effect.path
+
+          return effect
+        })))
+
+
 		} else {
-			let obj = module.default || []
-			if (obj === undefined)
-				throw new Error(`${sourcePath} is missing "export default ..."`)
-			else if (obj instanceof Promise)
-				drvs = await obj
-			else if (typeof obj === 'function')
-				drvs = await obj()
-			else
-				drvs = obj
-		}
 
-		if (!(drvs instanceof TargetedEffect)) {
-			// drvs can e.g be a list of Effects
-			// drvs = jix.target(null, drvs)
-      // console.log(process.env.USER)
-      // process.exit(1)
-      let h = new Host("localhost", {[process.env.USER]: {}})
-      
-      drvs = h.users[process.env.USER].install(drvs)
+			let fn = module.default || []
+			if (fn === undefined)
+				throw new Error(`${sourcePath} is missing "export default ..."`)
+
+			else if (typeof fn === 'function') {
+        drvs = (new Host("localhost", {[process.env.USER]: {}}))
+          .users[process.env.USER]
+          .install(() => effect(collectEffects(() => fn())))
+      }
+			else {
+        throw new TypeError(`Expected function not: ${fn}`)
+				// drvs = obj
+      }
 		}
+    
 		// Flatten only when we constructed drvs from a source
 		drvs = drvs.flatten()
 	}
-
-
 
   let activeHashesById = db.active.exists()
     ? db.active.read()

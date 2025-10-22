@@ -16,7 +16,7 @@ export class AbstractEffect {
     //   throw Error(`Fatal: ${super.toString()}`)
     let key = `_effect_${this.id}_${MAGIC_STRING}_`;
     effectPlaceholderMap.set(key, this);
-    return key;
+    return key
   }
 
   // convenience functions
