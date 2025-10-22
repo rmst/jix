@@ -46,7 +46,6 @@ export const getTarget = () => useContext(TARGET_CONTEXT)
 
 /**
  * @typedef {Object} TargetInfo - Detailed information about the target host and user.
- * @property {string} host - The target hostname or IP address.
  * @property {string} user - The user to connect as.
  * @property {string} home - The absolute path to the user's home directory.
  * @property {'macos' | 'nixos' | 'linux'} os - The operating system identifier.
@@ -203,15 +202,20 @@ export class Effect extends AbstractEffect {
 
       let info = hostInfoWithUser(host, user)
 
-      // sanity check
-      if(!info.friendlyName || !info.users || !info.users[user])
+       // sanity check
+       if(!info.users)
         throw Error(`${info}`)
+
+      if(!info.users[user])
+        throw Error(`${user} not a registered user in: ${Object.keys(info.users)}`)
+
+
 
       // TODO: this type is super cursed
       let r = (typeof this.obj === 'function')
         ? this.obj({
           ...info,
-          host: info.friendlyName,  // TODO: we expect this in some legacy user space code, but this is wrong
+          // host: info.friendlyName,  // TODO: we expect this in some legacy user space code, but this is wrong
           // host: info.machineId,  // NOTE: this would currently break legacy userspace, because it is passed on to other target calls (in a few cases)
           user,
           users: info.users,
@@ -242,7 +246,7 @@ export class Effect extends AbstractEffect {
 
       let stack = e.stack
 
-      if(stack.split("\n").length > 4) {
+      if(stack.split("\n").length > 400) {
         stack = stack.split("\n")
         stack = [
           stack[0], 

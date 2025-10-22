@@ -167,6 +167,8 @@ export const queryUserInfo = (address, user) => {
 	@returns {HostInfo}
 */
 const getHostInfo = (x) => {
+	if(typeof x !== "object")
+		throw TypeError(`Must be object: ${x}`)
 
 	if(!globalThis.jixHosts)
 		globalThis.jixHosts = loadHosts()
@@ -195,7 +197,8 @@ const getHostInfo = (x) => {
 		throw Error(`Argument can't be: ${x}`)
 	}
 
-	throw Error(`Host not found with property: ${x}`)
+	// throw Error(`Host not found with property: ${x}`)
+	return null
 }
 
 
@@ -206,16 +209,15 @@ const setHostInfo = (hostInfo) => {
 	if(!globalThis.jixHosts)
 		globalThis.jixHosts = loadHosts()
 	
-	if(!hostInfo.friendlyName)
-		throw Error(`"friendlyName" missing from ${hostInfo}`)
+	let idx = globalThis.jixHosts.findIndex(x => x.machineId === hostInfo.machineId)
 
-	// TODO: later we'll match via address, I think
-	let idx = globalThis.jixHosts.findIndex(x => x.friendlyName === hostInfo.friendlyName)
+	if(idx === -1) {
+		// throw Error(`${hostInfo.machineId} not in hosts.json`)
+		globalThis.jixHosts.push(hostInfo)
+	} else {
+		globalThis.jixHosts[idx] = hostInfo
+	}
 
-	if(idx === -1)
-		throw Error(`${hostInfo.friendlyName} not in hosts.json`)
-
-	globalThis.jixHosts[idx] = hostInfo
 
 	writeHosts(globalThis.jixHosts)
 }
@@ -227,7 +229,7 @@ const setHostInfo = (hostInfo) => {
  * @returns {{address: string, user: string}}
  */
 export const resolveEffectTarget = (
-	machineIdOrFriendlyName, 
+	machineIdOrFriendlyName, // TODO: rename this to machineId
 	userMayBeNull
 ) => {
 	
@@ -249,7 +251,7 @@ export const resolveEffectTarget = (
 		return { address: "localhost", user: userMayBeNull }
 	}
 
-	const hostData = getHostInfo(machineIdOrFriendlyName)
+	const hostData = getHostInfo({machineId: machineIdOrFriendlyName})
 
 	if (!hostData.address) {
 		throw new UserError(`Host ${machineIdOrFriendlyName} has no address configured`)
@@ -269,17 +271,23 @@ export const resolveEffectTarget = (
 	@returns {HostInfo}
  */
 export const hostInfoWithUser = (host, user, update=false) => {
+	if(typeof host !== "object")
+		throw TypeError(`Must be object: ${host}`)
+
 	if(!user)
 		throw new UserError(`hostInfo requires non-null user (got user: ${user})`)
 
 	let hostInfo = getHostInfo(host)
 	
-	if(update || !hostInfo.machineId) {
-		console.log(`Updating OS info for ${hostInfo.address}`)
+	if(update || !hostInfo || !hostInfo.machineId) {
+		console.log(`Updating OS info for ${host}`)
+
+		if(!("address" in host))
+			throw Error(`Needs host with address but got: ${host}`)
 
 		hostInfo = {
 			...hostInfo,
-			...queryHostInfo(hostInfo.address, user),
+			...queryHostInfo(host.address, user),
 		}
 
 		setHostInfo(hostInfo)
@@ -291,7 +299,7 @@ export const hostInfoWithUser = (host, user, update=false) => {
 
 		hostInfo = {
 			...hostInfo,
-			users: {...(hostInfo.users || {}), user: userInfo},
+			users: {...(hostInfo.users || {}), [user]: userInfo},
 		}
 
 		setHostInfo(hostInfo)

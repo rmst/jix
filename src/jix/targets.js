@@ -11,7 +11,7 @@ import { Effect } from './effect.js'
  *   os_version?: string,
  *   machineId?: string,
  *   friendlyName?: string,
- *   users: Record<string, UserHandle> & { root: UserHandle }
+ *   users: Record<string, User> & { root: User }
  * }} BaseHost
  */
 
@@ -26,14 +26,8 @@ import { Effect } from './effect.js'
  *   os_version?: string,
  *   machineId?: string,
  *   friendlyName?: string,
- *   users: ({ root: UserHandle } & { [K in keyof Users]: UserHandle } & Record<string, UserHandle>)
+ *   users: ({ root: User } & { [K in keyof Users]: User } & Record<string, User>)
  * }} HostWithUsers
- */
-
-/**
- * Callable host type that passes its full type into the callback parameter.
- * @template T
- * @typedef {((cb: (host: T) => any) => import('./effect.js').TargetedEffect) & T} HostCallable
  */
 
 /**
@@ -48,60 +42,73 @@ import { Effect } from './effect.js'
  */
 
 /**
- * @typedef {(
- *   ((fn: (u: UserInfoShape) => any) => import('./effect.js').TargetedEffect)
- * ) & (
- *   ((any) => import('./effect.js').TargetedEffect)
- * ) & UserInfoShape} UserHandle
+ * @typedef {User} UserHandle
  */
 
 /**
  * @template {Record<string, any>} Users
- * Create a Host handle bound to an address.
- *
- * Pass an object literal of usernames so keys are preserved for IntelliSense:
- *   Host('10.0.0.1', { simon: {}, alice: {} })
- *
- * @param {string} address
- * @param {Users} [users]
- * @returns {HostCallable<HostWithUsers<Users>>}
+ * Host object bound to an address.
  */
-export function Host(address, users = /** @type {Users} */({})) {
-	if (!address)
-		throw new TypeError('Host requires a non-empty address')
+export class Host {
+	/** @type {string} */
+	address
+	/** @type {{ root: User } & Record<string, User>} */
+	users
 
-	/** @type {HostCallable<HostWithUsers<Users>>} */
-	function handle(cb) {
-		if (typeof cb !== 'function')
-			throw new TypeError('Host(...) expects a function argument')
-		return cb(/** @type {any} */(handle))
+	/**
+	 * @template {Record<string, any>} Users
+	 * @param {string} address
+	 * @param {Users} [users]
+	 */
+	constructor(address, users = /** @type {any} */({})) {
+		if (!address)
+			throw new TypeError('Host requires a non-empty address')
+		this.address = address
+		// Build a plain users object (root + provided keys)
+		this.users = /** @type {any} */(Object.fromEntries(
+			['root', ...Object.keys(users)].map(u => [u, new User(this, u)])
+		))
+
 	}
 
-	handle.address = address
-
-	// Build a plain users object (root + provided keys)
-	// @ts-ignore
-	handle.users = Object.fromEntries(['root', ...Object.keys(users)].map(u => [u, User(handle, u)]))
-
-	return handle
+	/**
+	 * Run an installer callback with this host
+	 * @template T
+	 * @param {(host: this) => T} cb
+	 * @returns {T}
+	 */
+	install(cb) {
+		if (typeof cb !== 'function')
+			throw new TypeError('Host.install(...) expects a function argument')
+		return cb(this)
+	}
 }
 
 /**
- * @param {BaseHost} hostHandle
- * @param {string} name
- * @returns {UserHandle}
+ * User on a given host
  */
-export function User(hostHandle, name) {
-	if (!name)
-		throw new TypeError('User requires a non-empty name')
+export class User {
+	/** @type {string} */
+	name
+	/** @type {BaseHost} */
+	host
 
-	/** @type {UserHandle} */
-	const userHandle = (x) => {
-		return new Effect(x).target({ address: hostHandle.address, user: name })
+	/**
+	 * @param {BaseHost} host
+	 * @param {string} name
+	 */
+	constructor(host, name) {
+		if (!name)
+			throw new TypeError('User requires a non-empty name')
+		this.host = host
+		this.name = name
 	}
 
-	userHandle.name = name
-	userHandle.host = hostHandle
-
-	return userHandle
+	/**
+	 * Target and install the given effect(s) for this user
+	 * @param {any} x
+	 */
+	install(x) {
+		return new Effect(x).target({ address: this.host.address, user: this.name })
+	}
 }

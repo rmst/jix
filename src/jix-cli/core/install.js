@@ -112,8 +112,11 @@ export default async function install({
 		if (!(drvs instanceof TargetedEffect)) {
 			// drvs can e.g be a list of Effects
 			// drvs = jix.target(null, drvs)
-      let h = Host("localhost", {users: {[process.env.USER]: {}}})
-      h.users[process.env.USER](drvs)
+      // console.log(process.env.USER)
+      // process.exit(1)
+      let h = new Host("localhost", {[process.env.USER]: {}})
+      
+      drvs = h.users[process.env.USER].install(drvs)
 		}
 		// Flatten only when we constructed drvs from a source
 		drvs = drvs.flatten()
