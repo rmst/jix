@@ -1,4 +1,4 @@
-import { promptLine } from '../../src/nux-cli/readline.js'
+import { promptLine } from '../../src/jix-cli/readline.js'
 
 const main = async () => {
 	const v = await promptLine('')
@@ -6,4 +6,3 @@ const main = async () => {
 }
 
 main()
-

@@ -1,6 +1,6 @@
 # nix Namespace
 
-*Source: [src/nux/nix/index.js](../../src/nux/nix/index.js)*
+*Source: [src/jix/nix/index.js](../../src/jix/nix/index.js)*
 
 Nix package management utilities for building and accessing Nix packages.
 
@@ -19,7 +19,7 @@ Build a Nix package by name.
 - `https://github.com/NixOS/nixpkgs/archive/YOUR_COMMIT_HASH.tar.gz` (reproducible)
 - `null` - Uses current channel (not reproducible)
 
-**Source:** [src/nux/nix/index.js:18](../../src/nux/nix/index.js#L18)
+**Source:** [src/jix/nix/index.js:18](../../src/jix/nix/index.js#L18)
 
 ## Objects
 
@@ -37,7 +37,7 @@ nix.pkgs.python3.python // Returns path to python binary
 
 **Implementation:** Uses [pkg function](#pkg) internally and [str function](./Readme.md#str) for string construction
 
-**Source:** [src/nux/nix/index.js:40](../../src/nux/nix/index.js#L40)
+**Source:** [src/jix/nix/index.js:40](../../src/jix/nix/index.js#L40)
 
 ## Platform Support
 

@@ -1,4 +1,4 @@
-import { getKey } from '../../src/nux-cli/readline.js'
+import { getKey } from '../../src/jix-cli/readline.js'
 
 const main = async () => {
 	const k = await getKey()
@@ -6,4 +6,3 @@ const main = async () => {
 }
 
 main()
-

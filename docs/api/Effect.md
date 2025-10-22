@@ -1,6 +1,6 @@
 # Effect Class
 
-*Source: [src/nux/effect.js](../../src/nux/effect.js)*
+*Source: [src/jix/effect.js](../../src/jix/effect.js)*
 
 Base effect class that represents a recipe to take actions (build, install, uninstall).
 
@@ -12,7 +12,7 @@ Creates a new Effect instance.
 **Parameters:**
 - `obj` - EffectProps object, Array, or TargetFn
 
-**Source:** [src/nux/effect.js:110](../../src/nux/effect.js#L110)
+**Source:** [src/jix/effect.js:110](../../src/jix/effect.js#L110)
 
 ## Methods
 
@@ -26,7 +26,7 @@ Returns copy with additional dependencies.
 
 **Throws:** Error if called on function-based effects
 
-**Source:** [src/nux/effect.js:120](../../src/nux/effect.js#L120)
+**Source:** [src/jix/effect.js:120](../../src/jix/effect.js#L120)
 
 ### target(x)
 Target this effect to a specific host and user.
@@ -36,7 +36,7 @@ Target this effect to a specific host and user.
 
 **Returns:** [TargetedEffect](./TargetedEffect.md) instance
 
-**Source:** [src/nux/effect.js:140](../../src/nux/effect.js#L140)
+**Source:** [src/jix/effect.js:140](../../src/jix/effect.js#L140)
 
 ## Related
 

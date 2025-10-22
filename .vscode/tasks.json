@@ -2,25 +2,25 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "- nux run",
+			"label": "- jix run",
 			"type": "shell",
-			"command": "nux run -f ${file}",
+			"command": "jix run -f ${file}",
 			"group": {
 				"kind": "build"
 			}
 		},
 		{
-			"label": "nux install",
+			"label": "jix install",
 			"type": "shell",
-			"command": "nux install ${file}",
+			"command": "jix install ${file}",
 			"group": {
 				"kind": "build"
 			}
 		},
 		{
-			"label": "nux install --dry-run",
+			"label": "jix install --dry-run",
 			"type": "shell",
-			"command": "nux install --dry-run ${file}",
+			"command": "jix install --dry-run ${file}",
 			"group": {
 				"kind": "build"
 			}

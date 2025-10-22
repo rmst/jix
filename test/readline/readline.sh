@@ -3,8 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Determine build dir (always use $TMPDIR/nux-build)
-BDIR="${TMPDIR:-/tmp}/nux-build"
+# Determine build dir (always use $TMPDIR/jix-build)
+BDIR="${TMPDIR:-/tmp}/jix-build"
 
 echo "Building into: $BDIR"
 make BUILD_DIR="$BDIR" all >/dev/null

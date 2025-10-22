@@ -8,7 +8,7 @@ Use git to determine which files have changed in the target source directory sin
 
 After you're finished write the latest commit hash into `./last-updated`
 
-In `api` we want to maintain comprehensive docs for every function and property of the `nux` object as definied in `src/nux/index.js`.
+In `api` we want to maintain comprehensive docs for every function and property of the `jix` object as definied in `src/jix/index.js`.
 
 In `cli` we want to document every available subcommand and possible args.
 

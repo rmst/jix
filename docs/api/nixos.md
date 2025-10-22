@@ -1,6 +1,6 @@
 # nixos Namespace
 
-*Source: [src/nux/nixos/index.js](../../src/nux/nixos/index.js)*
+*Source: [src/jix/nixos/index.js](../../src/jix/nixos/index.js)*
 
 NixOS-specific utilities including systemd integration and module support.
 
@@ -9,14 +9,14 @@ NixOS-specific utilities including systemd integration and module support.
 ### systemd
 Systemd service management utilities.
 
-*Source: [src/nux/nixos/systemd](../../src/nux/nixos/systemd)*
+*Source: [src/jix/nixos/systemd](../../src/jix/nixos/systemd)*
 
 ## Module Functions
 
 Additional functions are available through the module system, imported from:
 - `./modules` - NixOS module utilities
 
-*Source: [src/nux/nixos/index.js:3](../../src/nux/nixos/index.js#L3)*
+*Source: [src/jix/nixos/index.js:3](../../src/jix/nixos/index.js#L3)*
 
 ## Related
 

@@ -1,6 +1,6 @@
 # AbstractEffect Class
 
-*Source: [src/nux/effectUtil.js](../../src/nux/effectUtil.js)*
+*Source: [src/jix/effectUtil.js](../../src/jix/effectUtil.js)*
 
 Base class for effects with common functionality including string conversion and convenience methods.
 
@@ -9,7 +9,7 @@ Base class for effects with common functionality including string conversion and
 ### AbstractEffect()
 Creates a new AbstractEffect instance with unique ID.
 
-**Source:** [src/nux/effectUtil.js:10](../../src/nux/effectUtil.js#L10)
+**Source:** [src/jix/effectUtil.js:10](../../src/jix/effectUtil.js#L10)
 
 ## Properties
 
@@ -25,7 +25,7 @@ Converts effect to string placeholder for use in templates.
 
 **Returns:** string - Placeholder key that gets registered in effectPlaceholderMap
 
-**Source:** [src/nux/effectUtil.js:15](../../src/nux/effectUtil.js#L15)
+**Source:** [src/jix/effectUtil.js:15](../../src/jix/effectUtil.js#L15)
 
 ### symlinkTo(path)
 Create a symbolic link to this effect at the specified path.
@@ -35,7 +35,7 @@ Create a symbolic link to this effect at the specified path.
 
 **Returns:** Effect from [symlink function](./Readme.md#symlink)
 
-**Source:** [src/nux/effectUtil.js:24](../../src/nux/effectUtil.js#L24)
+**Source:** [src/jix/effectUtil.js:24](../../src/jix/effectUtil.js#L24)
 
 ### linkTo(path, symbolic)
 Create a link (hard or symbolic) to this effect at the specified path.
@@ -46,7 +46,7 @@ Create a link (hard or symbolic) to this effect at the specified path.
 
 **Returns:** Effect from [link function](./Readme.md#link)
 
-**Source:** [src/nux/effectUtil.js:25](../../src/nux/effectUtil.js#L25)
+**Source:** [src/jix/effectUtil.js:25](../../src/jix/effectUtil.js#L25)
 
 ### copyTo(path)
 Copy this effect to the specified path.
@@ -56,7 +56,7 @@ Copy this effect to the specified path.
 
 **Returns:** Effect from [copyFile function](./Readme.md#copyfile)
 
-**Source:** [src/nux/effectUtil.js:26](../../src/nux/effectUtil.js#L26)
+**Source:** [src/jix/effectUtil.js:26](../../src/jix/effectUtil.js#L26)
 
 ## Static Properties
 

@@ -1,6 +1,6 @@
 # TargetedEffect Class
 
-*Source: [src/nux/effect.js](../../src/nux/effect.js)*
+*Source: [src/jix/effect.js](../../src/jix/effect.js)*
 
 An effect that has been targeted to a specific host and user.
 
@@ -13,7 +13,7 @@ Creates a new TargetedEffect instance.
 - `tgt` - Target object with `host` and `user` properties
 - `props` - EffectProps object (optional, defaults to {})
 
-**Source:** [src/nux/effect.js:193](../../src/nux/effect.js#L193)
+**Source:** [src/jix/effect.js:193](../../src/jix/effect.js#L193)
 
 ## Properties
 
@@ -63,28 +63,28 @@ Returns normalized representation for hashing.
 
 **Returns:** Object with install, uninstall, build, dependencies, host, user properties
 
-**Source:** [src/nux/effect.js:241](../../src/nux/effect.js#L241)
+**Source:** [src/jix/effect.js:241](../../src/jix/effect.js#L241)
 
 ### serialize()
 Returns JSON serialized representation with placeholders replaced.
 
 **Returns:** JSON string
 
-**Source:** [src/nux/effect.js:264](../../src/nux/effect.js#L264)
+**Source:** [src/jix/effect.js:264](../../src/jix/effect.js#L264)
 
 ### flatten()
 Returns flattened array of this effect and all its dependencies.
 
 **Returns:** TargetedEffect[]
 
-**Source:** [src/nux/effect.js:283](../../src/nux/effect.js#L283)
+**Source:** [src/jix/effect.js:283](../../src/jix/effect.js#L283)
 
 ### toDebugString()
 Returns human-readable debug information.
 
 **Returns:** string
 
-**Source:** [src/nux/effect.js:291](../../src/nux/effect.js#L291)
+**Source:** [src/jix/effect.js:291](../../src/jix/effect.js#L291)
 
 ## Related
 

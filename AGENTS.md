@@ -1,8 +1,8 @@
-# Nux
+# Jix
 
 ### Important: At the start of every new conversation
 - Read all of the following documents:
-	- docs/how-nux-works.md
+	- docs/how-jix-works.md
 	- docs/cli/Readme.md
 	- docs/api/Readme.md
 - Read through **all** examples in examples/
@@ -11,14 +11,14 @@
 ### Building vs. Discussing
 Only start to modify files and act if you are absolutely confident. If the user asks you to do something that is not really possible, don't try to make best-effort modifications or implement workarounds. Instead get back to the user and explain the situation to him and the possible options and then let the user decide how to proceed.
 
-### Nux CLI
-The nux CLI entry point is `src/nux-cli/main.js` and is, in addition to writing their own nux code, the main way users interact with nux.
+### Jix CLI
+The jix CLI entry point is `src/jix-cli/main.js` and is, in addition to writing their own jix code, the main way users interact with jix.
 
 ### Node API
 We're using a Quickjs-based Javascript engine with a very incomplete Node.js API shim. If you do something requiring Node API imports (e.g. `node:fs`), look at `quickjs-x/qjsx-node/node/*` first, to see what is available.
 
 ### Building
-Important: Read `Makefile`. **Always** use `$TMPDIR/nux-build` as BUILD_DIR (never use the default).
+Important: Read `Makefile`. **Always** use `$TMPDIR/jix-build` as BUILD_DIR (never use the default).
 
 ### General Instructions
 - Use tabs instead of spaces for indentation

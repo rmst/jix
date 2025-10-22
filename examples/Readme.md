@@ -1,3 +1,3 @@
-# Nux Examples
+# Jix Examples
 
-Run, e.g. hello-quickjs via `nux run hello-quickjs`
+Run, e.g. hello-quickjs via `jix run hello-quickjs`

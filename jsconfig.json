@@ -7,12 +7,12 @@
     "checkJs": true,
     "paths": {
       "*": [
-        ".nux/modules/*"
+        ".jix/modules/*"
       ]
     }
   },
   "include": [
     "**/*.js",
-    ".nux/**/*.js"
+    ".jix/**/*.js"
   ]
 }

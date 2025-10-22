@@ -1,10 +1,10 @@
 
-let repo = nux.git.checkout({
+let repo = jix.git.checkout({
 	repo: "https://github.com/bellard/quickjs", 
 	commit: "fa628f8c523ecac8ce560c081411e91fcaba2d20",  // release 2025-09-13
 })
 
-const bin = nux.build`
+const bin = jix.build`
 	cp -r "${repo}" ./repo
 	cd repo
 	make
@@ -21,6 +21,6 @@ const bin = nux.build`
 `
 
 export default {
-	qjs: nux.str`${bin}/qjs`,
-	qjsc: nux.str`${bin}/qjsc`,
+	qjs: jix.str`${bin}/qjs`,
+	qjsc: jix.str`${bin}/qjsc`,
 }

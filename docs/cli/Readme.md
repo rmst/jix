@@ -1,67 +1,67 @@
-# Nux CLI Reference
+# Jix CLI Reference
 
-*Source: [src/nux-cli/main.js](../../src/nux-cli/main.js)*
+*Source: [src/jix-cli/main.js](../../src/jix-cli/main.js)*
 
-This document contains auto-generated documentation for the nux CLI commands.
+This document contains auto-generated documentation for the jix CLI commands.
 
 ## Usage
 
 ```
-nux <command> [arguments...]
+jix <command> [arguments...]
 ```
 
 ## Commands
 
 ### install
-Install/apply a nux configuration or effect.
+Install/apply a jix configuration or effect.
 
 ```
-nux install [--dry-run] <path>
+jix install [--dry-run] <path>
 ```
 
 **Parameters:**
-- `path` - Path to a file or any path inside a git repo containing `__nux__.js`
+- `path` - Path to a file or any path inside a git repo containing `__jix__.js`
 
 **Options:**
 - `--dry-run` - Show what would be installed/uninstalled without making changes
 
 **Description:**
-Apply a nux manifest located at the specified path. The path can point to a `__nux__.js` file directly or any path inside a git repository containing one.
+Apply a jix manifest located at the specified path. The path can point to a `__jix__.js` file directly or any path inside a git repository containing one.
 
 **Examples:**
 ```
-nux install ./my-tools
-nux install ~/work/project/__nux__.js
-nux install --dry-run ./my-tools
+jix install ./my-tools
+jix install ~/work/project/__jix__.js
+jix install --dry-run ./my-tools
 ```
 
-*Source: [src/nux-cli/install/index.js](../../src/nux-cli/install/index.js)*
+*Source: [src/jix-cli/install/index.js](../../src/jix-cli/install/index.js)*
 
 ### uninstall
-Uninstall a nux manifest by its path.
+Uninstall a jix manifest by its path.
 
 ```
-nux uninstall <path>
+jix uninstall <path>
 ```
 
 **Parameters:**
-- `path` - A path inside the project containing `__nux__.js` or the path to `__nux__.js` itself
+- `path` - A path inside the project containing `__jix__.js` or the path to `__jix__.js` itself
 
 **Description:**
-Uninstall all effects currently active for a given nux manifest. The path is resolved to its canonical manifest ID internally.
+Uninstall all effects currently active for a given jix manifest. The path is resolved to its canonical manifest ID internally.
 
 **Example:**
 ```
-nux uninstall ~/work/my-tools/__nux__.js
+jix uninstall ~/work/my-tools/__jix__.js
 ```
 
-*Source: [src/nux-cli/uninstall.js](../../src/nux-cli/uninstall.js)*
+*Source: [src/jix-cli/uninstall.js](../../src/jix-cli/uninstall.js)*
 
 ### force-remove
 Forcefully remove derivations.
 
 ```
-nux force-remove <drvs>
+jix force-remove <drvs>
 ```
 
 **Parameters:**
@@ -72,16 +72,16 @@ Force-remove one or more effect hashes from the existing set without going throu
 
 **Example:**
 ```
-nux force-remove 'hash1\nhash2'
+jix force-remove 'hash1\nhash2'
 ```
 
-*Source: [src/nux-cli/forceRemove.js](../../src/nux-cli/forceRemove.js)*
+*Source: [src/jix-cli/forceRemove.js](../../src/jix-cli/forceRemove.js)*
 
 ### host-info
 Query and display host and user information.
 
 ```
-nux host-info [host] [user]
+jix host-info [host] [user]
 ```
 
 **Parameters:**
@@ -93,37 +93,37 @@ Query OS and user information for a local or remote host. Displays detailed info
 
 **Examples:**
 ```
-nux host-info
-nux host-info example.com alice
+jix host-info
+jix host-info example.com alice
 ```
 
-*Source: [src/nux-cli/host-info.js](../../src/nux-cli/host-info.js)*
+*Source: [src/jix-cli/host-info.js](../../src/jix-cli/host-info.js)*
 
 ### show
-Display information about a nux effect.
+Display information about a jix effect.
 
 ```
-nux show <effectId>
+jix show <effectId>
 ```
 
 **Parameters:**
-- `effectId` - Hash of effect file under `~/.nux/store/<hash>`
+- `effectId` - Hash of effect file under `~/.jix/store/<hash>`
 
 **Description:**
 Show metadata about an effect by hash, including its configuration and current state.
 
 **Example:**
 ```
-nux show 3f8c...
+jix show 3f8c...
 ```
 
-*Source: [src/nux-cli/show.js](../../src/nux-cli/show.js)*
+*Source: [src/jix-cli/show.js](../../src/jix-cli/show.js)*
 
 ### run
-Execute a nux script or command.
+Execute a jix script or command.
 
 ```
-nux run [options] [command-name] [args...]
+jix run [options] [command-name] [args...]
 ```
 
 **Parameters:**
@@ -131,46 +131,46 @@ nux run [options] [command-name] [args...]
 - `args` - Arguments forwarded to the invoked script
 
 **Options (before command-name):**
-- `-v, --verbose` - Show Nux install/uninstall logs for this run
+- `-v, --verbose` - Show Jix install/uninstall logs for this run
 - `-f, --file <path>` - Use a specific manifest file or directory
 
 **Description:**
-Run a command defined in the current directory's `__nux__.js` manifest. By default, the manifest is `./__nux__.js`. Use `-f/--file` to point to a different manifest file or a directory containing one. If `<command-name>` is not provided, Nux runs the `default` entry.
+Run a command defined in the current directory's `__jix__.js` manifest. By default, the manifest is `./__jix__.js`. Use `-f/--file` to point to a different manifest file or a directory containing one. If `<command-name>` is not provided, Jix runs the `default` entry.
 
-Only flags placed before `<command-name>` are consumed by Nux itself. Everything after `<command-name>` (or after a standalone `--`) is forwarded unchanged to your script.
+Only flags placed before `<command-name>` are consumed by Jix itself. Everything after `<command-name>` (or after a standalone `--`) is forwarded unchanged to your script.
 
 **Examples:**
 ```
-nux run
-nux run hello
-nux run --verbose build --release
-nux run -- hello --debug
+jix run
+jix run hello
+jix run --verbose build --release
+jix run -- hello --debug
 ```
 
-*Source: [src/nux-cli/run/index.js](../../src/nux-cli/run/index.js)*
+*Source: [src/jix-cli/run/index.js](../../src/jix-cli/run/index.js)*
 
 ### init
-Initialize a new nux environment.
+Initialize a new jix environment.
 
 ```
-nux init
+jix init
 ```
 
 **Description:**
-Initialize nux support in the current working directory. This creates `.nux/modules` directory, sets up editor hints, and links the nux libs locally.
+Initialize jix support in the current working directory. This creates `.jix/modules` directory, sets up editor hints, and links the jix libs locally.
 
 **Example:**
 ```
-nux init
+jix init
 ```
 
-*Source: [src/nux-cli/init/index.js](../../src/nux-cli/init/index.js)*
+*Source: [src/jix-cli/init/index.js](../../src/jix-cli/init/index.js)*
 
 ### help
 Show help for a command.
 
 ```
-nux help [command]
+jix help [command]
 ```
 
 **Parameters:**
@@ -181,11 +181,11 @@ Show help for a specific command, or show an overview of all available commands 
 
 **Examples:**
 ```
-nux help
-nux help install
+jix help
+jix help install
 ```
 
-*Source: [src/nux-cli/main.js](../../src/nux-cli/main.js)*
+*Source: [src/jix-cli/main.js](../../src/jix-cli/main.js)*
 
 ## Exit Codes
 

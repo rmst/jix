@@ -1,6 +1,6 @@
 # git Namespace
 
-*Source: [src/nux/git/index.js](../../src/nux/git/index.js)*
+*Source: [src/jix/git/index.js](../../src/jix/git/index.js)*
 
 Git-related helpers.
 
@@ -13,4 +13,4 @@ Create a working tree at a specific commit.
   - `commit` — Commit hash
 - **Returns:** [Effect](./Effect.md) whose `path` points to the checked out tree
 
-*Source: [src/nux/git/index.js](../../src/nux/git/index.js)
+*Source: [src/jix/git/index.js](../../src/jix/git/index.js)
