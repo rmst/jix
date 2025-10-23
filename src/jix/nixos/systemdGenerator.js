@@ -1,17 +1,17 @@
 
 import jix from "../base"
-import { AbstractEffect } from "../effectUtil"
+import { TargetedEffect } from "../effect"
 import stateDir from "../stateDir"
 import systemdBase from "./systemdBase"
 
-const unitDir = stateDir("jix.systemd")
+const unitDir = () => stateDir("jix.systemd")
 
 /**
 	This generates/copies systemd unit files at system startup and enables them
 
 	WARNING: Generated services aren't automatically enabled, and can't be enabled using systemctl enable. This seems to be a well-known problem, see https://github.com/systemd/systemd/issues/28006. Instead, we have to simulate systemctl enable ourselves
 */
-const bootstrapGeneratorScript = jix.script`
+const bootstrapGeneratorScript = () => jix.script`
 	#!/bin/sh
 	export PATH="/run/current-system/sw/bin:$PATH"
 
@@ -51,15 +51,14 @@ const bootstrapGeneratorScript = jix.script`
 
 `
 
-let bootstrapGenerator = systemdBase.generator({
+let bootstrapGenerator = () => systemdBase.generator({
 	name: "bootstrap",
 	file: bootstrapGeneratorScript,
 })
 
 /**
- *
- * @param {{name: string, file: AbstractEffect, runOnInstall: boolean, noUninstall: boolean, dependencies: Array<AbstractEffect>}} param0
- * @returns {AbstractEffect}
+ * @param {{name: string, file: TargetedEffect, runOnInstall?: boolean, noUninstall?: boolean, dependencies?: Array<TargetedEffect>}} param0
+ * @returns {TargetedEffect}
  */
 export const enableUnit = ({
 	name,
@@ -72,26 +71,19 @@ export const enableUnit = ({
 		throw Error(`name can't be be empty`)
 
 	if(!file?.symlinkTo)
-		throw Error(`file has to be of type AbstractEffect`)
+		throw TypeError(`File has to be of type TargetedEffect, got ${file}`)
 
 	file = file.symlinkTo(`${unitDir}/${name}`)
 
-	return jix.effect(target => {
-
-		let install = jix.customEffect({
-			install: jix.dedent`
-				${bootstrapGeneratorScript} /run/systemd/generator
-				systemctl daemon-reload
-				${runOnInstall ? `systemctl restart ${name}` : ""}
-			`,
-			uninstall: noUninstall ? null : `systemctl stop ${name} || true`,
-			dependencies: [ ...dependencies, file, bootstrapGenerator ]
-		})
-
-		return jix.effect({
-			dependencies: [ 
-				install,
-			]
-		})
+	let install = jix.customEffect({
+		install: jix.dedent`
+			${bootstrapGeneratorScript} /run/systemd/generator
+			systemctl daemon-reload
+			${runOnInstall ? `systemctl restart ${name}` : ""}
+		`,
+		uninstall: noUninstall ? null : `systemctl stop ${name} || true`,
+		dependencies: [ ...dependencies, file, bootstrapGenerator ]
 	})
+
+	return install
 }

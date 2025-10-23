@@ -8,7 +8,9 @@ export default ({
 	system = false,
 	runOnInstall = true,
 	noUninstall = false,
-}) => jix.effect(target => {
+}) => {
+
+	const target = jix.target()
 
 	label ?? (()=>{throw Error("label is required")})()
 	runscript ?? (()=>{throw Error("runscript is required")})()
@@ -27,7 +29,7 @@ export default ({
 		WantedBy=${system ? 'multi-user.target' : 'default.target'}
 	`
 
-	if(system && target.os === "nixos") {
+	if(system && target.host.os === "nixos") {
 		// return nixos.systemdUnit({
 		// 	name: serviceName,
 		// 	file: serviceFile,
@@ -44,7 +46,7 @@ export default ({
 
 	const servicePath = system
 	? `/etc/systemd/system/${serviceName}`
-	: `${jix.dir(`${target.home}/.config/systemd/user`)}/${serviceName}`;
+	: `${jix.dir(`${target.user.home}/.config/systemd/user`)}/${serviceName}`;
 
 	const systemctlFlags = system ? "" : "--user";
 
@@ -77,4 +79,4 @@ export default ({
 		`],
 		dependencies: [ serviceFile ]
 	})
-})
+}

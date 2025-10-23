@@ -2,7 +2,6 @@ import * as fs from 'node:fs'
 
 import { JIX_DIR, HASH_PLACEHOLDER } from './context.js'
 import { parseEffectValues, effect, getTarget, TargetedEffect } from './effect.js'
-import { AbstractEffect } from './effectUtil.js'
 
 import { dedent } from './dedent.js'
 import context from './context.js'
@@ -138,13 +137,6 @@ export const scriptWithTempdir = (...args) => {
   `
 }
 
-// export const globalConfigFile = (path, content, original, reloadScript = null) => {
-//   return {
-//     install: ["writeConfSudoV1", path, content, reloadScript],
-//     uninstall: ["writeConfSudoV1", path, original, reloadScript],
-//   };
-// };
-
 
 export const str = (templateStrings, ...rawValues) => {
 
@@ -214,6 +206,8 @@ export const build = (templateStrings, ...values) => {
 
 
 let base = {
+
+  target: () => getTarget(),
 
   dedent,
 

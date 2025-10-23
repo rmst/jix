@@ -2,15 +2,13 @@ import modules from "./modules"
 import jix from "../base"
 
 
-
 export const generator = ({
 	name, 
 	file, 
-})=> jix.effect(target => {
+})=> jix.target().host.install(host => {
 
-	if(target.os !== "nixos")
-		throw Error(`target.os should be "nixos" but we have: ${target.os}`)
-
+	if(host.os !== "nixos")
+		throw Error(`target os should be "nixos" but we have: ${host.os}`)
 
 	let module = modules.importModules({ [`${name}-systemd-generator.nix`]:
 		jix.textfile`
@@ -22,13 +20,12 @@ export const generator = ({
 	}, { core: true, keep: true })
 	
 	// NOTE: nixos seems to start these on install by default
-return jix.customEffect({
+	return jix.customEffect({
 		// install: `systemctl daemon-reload`,
 		dependencies: [ module ]
-	}).target({host: target.host, user: "root"})
+	})
 
 })
-
 
 
 /**
@@ -46,13 +43,18 @@ export const unit = ({
 	file, 
 	// runOnInstall=false,
 	wantedBy=["multi-user.target"],
-})=> jix.effect(target => {
+})=> {
+
+	let target = jix.target()
+
+	if(target.user.name !== "root")
+		throw Error(`Needs "root", got ${target.user.name}`)
 
 	if(!name.endsWith(".service"))
 		throw Error(`Unit name should end in .service but we have: ${name}`)
 
-	if(target.os !== "nixos")
-		throw Error(`target.os should be "nixos" but we have: ${target.os}`)
+	if(target.host.os !== "nixos")
+		throw Error(`target.os should be "nixos" but we have: ${target.host.os}`)
 
 
 	let module = modules.importModules({ [`${name}.nix`]:
@@ -71,13 +73,12 @@ export const unit = ({
 	})
 	
 	// NOTE: nixos seems to start these on install by default
-return jix.customEffect({
+	return jix.customEffect({
 		// install: runOnInstall ? `systemctl start ${name}` : null,
 		dependencies: [ module ]
-	}).target({host: target.host, user: "root"})
+	})
 
-})
-
+}
 
 
 export default {

@@ -7,14 +7,16 @@ export default ({
 	system = false, 
 	runOnInstall = true,
 	noUninstall = false,
-}) => jix.effect(target => {
+}) => {
+
+	const target = jix.target()
 
 	label ?? (()=>{throw Error("label is required")})()
 	runscript ?? (()=>{throw Error("runscript is required")})()
 
 	const plistPath = system
 		? `/Library/LaunchDaemons/${label}.plist`
-		: `${target.home}/Library/LaunchAgents/${label}.plist`;
+		: `${target.user.home}/Library/LaunchAgents/${label}.plist`;
 
 	const launchdTarget = system ? "system" : `gui/$(id -u)`;
 
@@ -57,5 +59,5 @@ export default ({
 	})
 	
 	
-})
+}
 

@@ -3,8 +3,8 @@ import stateDir from "../stateDir.js"
 import launchdService from './launchd.js'
 import systemdService from './systemd.js'
 
-export const userServicesDir = stateDir("jix.services")
-export const systemServicesDir = stateDir("jix.system-services")
+export const userServicesDir = () => stateDir("jix.user-services")
+export const systemServicesDir = () => stateDir("jix.services")
 
 const serviceImplementations = {
 	macos: launchdService,
@@ -18,100 +18,100 @@ export default ({
 	system = false, 
 	runOnInstall = true,
 	noUninstall = false,
-}) => jix.effect(target => {
+}) => {
 
-	if(typeof label !== "string" || !label)
-		throw Error(`Invalid arg "label": ${label}`)
+	const target = jix.target()
+	const targetUser = target.host.users[system ? "root" : target.user.name]
 
-	if(runscript === null || runscript === undefined)
-		throw Error(`Invalid arg "runscript": null/undefined`)
-	
-  const servicesDir = system ? systemServicesDir : userServicesDir
-  
-  const PATH = target.os === "nixos"
-		? "PATH=" + [
-			"/bin", 
-			"/usr/bin", 
-			"/run/current-system/sw/bin", 
-			"/nix/var/nix/profiles/default/bin",
-		].join(":")  // these are necessary to get a POSIX shell on NixOS
-		: ""
+	return targetUser.install(() => {
+			
+		if(typeof label !== "string" || !label)
+			throw Error(`Invalid arg "label": ${label}`)
 
-  let wrapperScript = jix.script`
-		#!/bin/sh
-
-    ${PATH}
-
-    # ensure log dirs exist
-		mkdir -p "${servicesDir}/${label}"
-
-		add_timestamp() {
-			while IFS= read -r line; do
-				printf "%s\t%s\n" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$line"
-			done
-		}
-
-		DPATH="${servicesDir}/${label}/details"
+		if(runscript === null || runscript === undefined)
+			throw Error(`Invalid arg "runscript": null/undefined`)
 		
-    set -o pipefail  # important
+		const servicesDir = system ? systemServicesDir : userServicesDir
+		
+		const PATH = target.host.os === "nixos"
+			? "PATH=" + [
+				"/bin", 
+				"/usr/bin", 
+				"/run/current-system/sw/bin", 
+				"/nix/var/nix/profiles/default/bin",
+			].join(":")  // these are necessary to get a POSIX shell on NixOS
+			: ""
 
-		while true; do
+		let wrapperScript = jix.script`
+			#!/bin/sh
+
+			${PATH}
+
+			# ensure log dirs exist
+			mkdir -p "${servicesDir}/${label}"
+
+			add_timestamp() {
+				while IFS= read -r line; do
+					printf "%s\t%s\n" "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$line"
+				done
+			}
+
+			DPATH="${servicesDir}/${label}/details"
 			
-			START_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-			
-			echo "$START_TIME,started,$$" >> "${servicesDir}/${label}/status"
+			set -o pipefail  # important
 
-			echo "exec=${runscript}" > "$DPATH"
-			echo "state=started" >> "$DPATH"
-			echo "start_time=$START_TIME" >> "$DPATH"
-			echo "pid=$$" >> "$DPATH"
+			while true; do
+				
+				START_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+				
+				echo "$START_TIME,started,$$" >> "${servicesDir}/${label}/status"
 
-			# Execute the actual runscript, redirecting its output to the log file
-			( ${runscript} ) 2>&1 | add_timestamp >> "${servicesDir}/${label}/log"
-			
-			EXIT_CODE=$?
-			
-			EXIT_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+				echo "exec=${runscript}" > "$DPATH"
+				echo "state=started" >> "$DPATH"
+				echo "start_time=$START_TIME" >> "$DPATH"
+				echo "pid=$$" >> "$DPATH"
 
-      echo "$EXIT_TIME,exited,$EXIT_CODE" >> "${servicesDir}/${label}/status"
+				# Execute the actual runscript, redirecting its output to the log file
+				( ${runscript} ) 2>&1 | add_timestamp >> "${servicesDir}/${label}/log"
+				
+				EXIT_CODE=$?
+				
+				EXIT_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-			echo "exec=${runscript}" > "$DPATH"
-			echo "state=exited" >> "$DPATH"
-			echo "start_time=$START_TIME" >> "$DPATH"
-			# echo "" >> "$DPATH"
-			echo "exit_time=$START_TIME" >> "$DPATH"
-			echo "exit_code=$EXIT_CODE" >> "$DPATH"
+				echo "$EXIT_TIME,exited,$EXIT_CODE" >> "${servicesDir}/${label}/status"
 
-			if [ $EXIT_CODE -eq 0 ]; then
-				break  # Exit the loop on success
-			else
-				sleep 5
-			fi
-		done
-	`;
+				echo "exec=${runscript}" > "$DPATH"
+				echo "state=exited" >> "$DPATH"
+				echo "start_time=$START_TIME" >> "$DPATH"
+				# echo "" >> "$DPATH"
+				echo "exit_time=$START_TIME" >> "$DPATH"
+				echo "exit_code=$EXIT_CODE" >> "$DPATH"
 
-	// this is just so MacOS shows a nice name in various UIs and not a hash
-  wrapperScript = `${jix.buildDir({[label]: wrapperScript })}/${label}`
+				if [ $EXIT_CODE -eq 0 ]; then
+					break  # Exit the loop on success
+				else
+					sleep 5
+				fi
+			done
+		`;
 
-	const serviceImplementation = serviceImplementations[target.os];
+		// this is just so MacOS shows a nice name in various UIs and not a hash
+		wrapperScript = jix.str`${jix.buildDir({[label]: wrapperScript })}/${label}`
 
-	if (serviceImplementation) {
+		const serviceImplementation = serviceImplementations[target.host.os]
 
-		let service = serviceImplementation({
-			label,
-			runscript: wrapperScript,
-			system,
-			runOnInstall,
-			noUninstall,
-		})
+		if (serviceImplementation) {
 
-    return jix.target({
-			host: target.host,
-			user: system ? "root" : target.user,
-		}, service)
+			return serviceImplementation({
+				label,
+				runscript: wrapperScript,
+				system,
+				runOnInstall,
+				noUninstall,
+			})
 
-	} else {
-		throw new Error(`Unsupported platform: ${target.os}`);
-	}
-
-})
+		} else {
+			throw new Error(`Unsupported platform: ${target.host.os}`);
+		}
+	})
+}

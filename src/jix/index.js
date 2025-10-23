@@ -5,7 +5,7 @@ import { AbstractEffect } from "./effectUtil.js"
 
 import { HOME_PLACEHOLDER, JIX_DIR } from './context.js'
 import base, { HASH, scriptWithTempdir, writeFile } from './base.js'
-// import service from './service/index.js'
+import service from './service/index.js'
 
 // import nixos from './nixos'
 // import nix from './nix'
@@ -18,7 +18,7 @@ let jix = {
 
   ...base,
 
-  // service,
+  service,
 
   // nix,
 

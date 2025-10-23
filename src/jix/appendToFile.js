@@ -1,4 +1,5 @@
 import { script, customEffect } from './base';
+import { dedent } from './dedent';
 import { shellEscape } from './util';
 
 /**
@@ -25,7 +26,7 @@ export const appendToFile = (path, line) => {
   `;
 
   return customEffect({
-    install: jix.dedent`
+    install: dedent`
       # add missing newline if necessary
       [ -s '${path}' ] && [ -n "$(tail -c 1 '${path}')" ] && echo >> '${path}'
       
