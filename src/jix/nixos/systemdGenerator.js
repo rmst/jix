@@ -4,7 +4,11 @@ import { TargetedEffect } from "../effect"
 import stateDir from "../stateDir"
 import systemdBase from "./systemdBase"
 
+// this and only this is the interface between the generator and the user specified services which the generator launches
 const unitDir = () => stateDir("jix.systemd")
+const generatorScript = () => `${unitDir()}/generator.sh`
+// -----
+
 
 /**
 	This generates/copies systemd unit files at system startup and enables them
@@ -56,7 +60,21 @@ let bootstrapGenerator = () => systemdBase.generator({
 	file: bootstrapGeneratorScript,
 })
 
+
+// must be installed by host
+export const enableSystemUnits = () => {
+	return jix.effect([
+		bootstrapGenerator(),
+		bootstrapGeneratorScript().symlinkTo(generatorScript()),
+	])
+}
+
+
+
+
+
 /**
+ * NOTE: this requires systemdGenerator to be installed by the host
  * @param {{name: string, file: TargetedEffect, runOnInstall?: boolean, noUninstall?: boolean, dependencies?: Array<TargetedEffect>}} param0
  * @returns {TargetedEffect}
  */
@@ -77,12 +95,14 @@ export const enableUnit = ({
 
 	let install = jix.customEffect({
 		install: jix.dedent`
-			${bootstrapGeneratorScript} /run/systemd/generator
+			[ ! -e ${generatorScript()} ] && { echo "Error: systemd generator has not yet been installed on this host" >&2; exit 1; }
+			 
+			${generatorScript()} /run/systemd/generator
 			systemctl daemon-reload
 			${runOnInstall ? `systemctl restart ${name}` : ""}
 		`,
 		uninstall: noUninstall ? null : `systemctl stop ${name} || true`,
-		dependencies: [ ...dependencies, file, bootstrapGenerator ]
+		dependencies: [ ...dependencies, file ]
 	})
 
 	return install

@@ -1,11 +1,11 @@
 
 
-import module from "./modules"
+import modules from "./modules"
 import systemd from "./systemd"
 
 
 
 export default {
-	...module,
+	...modules,
 	systemd,
 }

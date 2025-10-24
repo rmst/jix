@@ -1,8 +1,9 @@
 import systemdBase from "./systemdBase";
-import { enableUnit } from "./systemdGenerator";
+import { enableSystemUnits, enableUnit } from "./systemdGenerator";
 
 
 export default {
 	...systemdBase,
+	enableSystemUnits,
 	enableUnit,
 }

@@ -9,7 +9,6 @@ export default ({
 	runOnInstall = true,
 	noUninstall = false,
 }) => {
-
 	const target = jix.target()
 
 	label ?? (()=>{throw Error("label is required")})()
