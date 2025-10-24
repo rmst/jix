@@ -2,11 +2,11 @@ import { hostInfoWithUser } from '../jix-cli/core/hosts.js'
 import { TargetedEffect, withTarget } from './effect.js'
 
 
-/** @template {Record<string, any>} Users */
+/** @template {Record<string, unknown>} Users */
 export class Host {
 	/** @type {string} */
 	address 
-	/** @type {{ root: User } & Record<string, User>} */
+	/** @type {{ [K in keyof Users | 'root']: User }} */
 	users 
 	/** @type {string} */
 	os
@@ -23,17 +23,22 @@ export class Host {
 
 	/**
 	 * @param {string} address
-	 * @param {Users} [users]
+	 * @param {Users} [users={}]
 	 */
-	constructor(address, users = /** @type {any} */({})) {
+	constructor(address, users = /** @type {Users} */({})) {
 		if (!address)
 			throw new TypeError('Host requires a non-empty address')
 		this.address = address
 		// Build a plain users object (root + provided keys)
 
 		let hostInfo = {} /** @type {hostInfo} */
-		this.users = /** @type {any} */(Object.fromEntries(
-			[...Object.keys(users), 'root'].map(u => {
+		const keys = /** @type {Array<(keyof Users & string) | 'root'>} */([
+			.../** @type {Array<keyof Users & string>} */(Object.keys(users)),
+			'root'
+		])
+
+		this.users = /** @type {{ [K in keyof Users | 'root']: User }} */(Object.fromEntries(
+			keys.map(u => {
 				hostInfo = hostInfoWithUser({address}, u)
 				let userInfo = hostInfo.users[u]
 				return [u, new User(this, u, userInfo)]
