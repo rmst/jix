@@ -126,7 +126,7 @@ export default async function install({
           .install(() => effect(collectEffects(() => fn())))
       }
 			else {
-        throw new TypeError(`Expected function not: ${fn}`)
+        throw new TypeError(`Expected function, instead got: ${fn}`)
 				// drvs = obj
       }
 		}

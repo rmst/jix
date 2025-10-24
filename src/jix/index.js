@@ -7,7 +7,7 @@ import { HOME_PLACEHOLDER, JIX_DIR } from './context.js'
 import base, { HASH, scriptWithTempdir, writeFile } from './base.js'
 import service from './service/index.js'
 
-// import nixos from './nixos'
+import nixos from './nixos'
 // import nix from './nix'
 // import git from './git'
 import { appendToFile } from './appendToFile.js'
@@ -28,7 +28,7 @@ let jix = {
 
   // NOTE: do not list experimental in the documentation
   experimental: {
-    // nixos,
+    nixos,
     shelltools,
 
     appendToFile,

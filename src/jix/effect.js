@@ -336,7 +336,7 @@ export const parseEffectValues = (values) => {
     else if (typeof v === "function") {
       const x = v()
       if(!(x instanceof TargetedEffect)) {
-        throw TypeError(`Expected TargetedEffect, got: ${x}`)
+        throw TypeError(`Expected TargetedEffect, got: ${x} of type ${typeof x === "object" ? x.constructor.name : typeof x}`)
       }
       dependencies.push(x)
       return x.str

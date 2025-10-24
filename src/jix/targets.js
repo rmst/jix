@@ -40,6 +40,7 @@ export class Host {
 			})
 		))
 
+		hostInfo = {...hostInfo}
 		delete hostInfo["users"]
 
 		Object.assign(this, {...hostInfo})

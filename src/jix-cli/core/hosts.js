@@ -7,7 +7,6 @@ import process from "node:process";
 import { UserError } from "./UserError.js"
 import db from "../db/index.js"
 
-
 /**
  * Describes the properties of a single system user.
  * @typedef {object} UserInfo
@@ -44,6 +43,7 @@ globalThis.jixHosts
 const writeHosts = (hosts) => {
 	if (!fs.existsSync(LOCAL_JIX_PATH))
 		throw Error(`Jix path doesn't exist: ${LOCAL_JIX_PATH}`)
+
 
   db.hosts.write(hosts)
   loadHosts()
@@ -215,7 +215,7 @@ const getHostInfo = (x) => {
 const setHostInfo = (hostInfo) => {
 	if(!globalThis.jixHosts)
 		globalThis.jixHosts = loadHosts()
-	
+
 	let idx = globalThis.jixHosts.findIndex(x => x.machineId === hostInfo.machineId)
 
 	if(idx === -1) {
@@ -224,7 +224,6 @@ const setHostInfo = (hostInfo) => {
 	} else {
 		globalThis.jixHosts[idx] = hostInfo
 	}
-
 
 	writeHosts(globalThis.jixHosts)
 }
@@ -287,7 +286,7 @@ export const hostInfoWithUser = (host, user, update=false) => {
 	let hostInfo = getHostInfo(host)
 	
 	if(update || !hostInfo || !hostInfo.machineId) {
-		console.log(`Updating OS info for ${host}`)
+		console.log(`Updating OS info for ${host} via user ${user}`)
 
 		if(!("address" in host))
 			throw Error(`Needs host with address but got: ${host}`)
@@ -300,8 +299,10 @@ export const hostInfoWithUser = (host, user, update=false) => {
 		setHostInfo(hostInfo)
 	}
 
+	
 	if(!hostInfo?.users?.[user]) {
 		console.log(`Updating user info for ${user}@${hostInfo.address}`)
+
 		const userInfo = queryUserInfo({
 			host: hostInfo,
 			user,			
