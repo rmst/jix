@@ -145,9 +145,23 @@ export default async function install({
     ? set(db.existing.read()).list()
     : []
 
-  if(!uninstall) {
-    checkOrphanedEffects()
-  }
+	if(!uninstall) {
+		checkOrphanedEffects()
+
+		if (!dryRun) {
+			const storedStacks = db.stackTrace.read()
+
+			storedStacks[jixId] = Object.fromEntries(
+				drvs.map(d => {
+					if (!(d instanceof TargetedEffect) || typeof d.hash !== 'string' || typeof d._stack !== 'string')
+						throw new Error(`Unexpected install result: ${d}`)
+					return [d.hash, d._stack]
+				})
+			)
+
+			db.stackTrace.write(storedStacks)
+		}
+	}
 
 
   // write derivations to disk
@@ -196,14 +210,14 @@ export default async function install({
     `)
   }
 
-  let installedHashes = [...(function*(){
-    for (const hash of hashesToInstall) {
-      let e = tryInstallEffect(hash)
-      if(e)
-        return  // return early on error
-      yield hash
-    }
-  })()]
+	let installedHashes = [...(function*(){
+		for (const hash of hashesToInstall) {
+			let e = tryInstallEffect(hash, jixId)
+			if(e)
+				return  // return early on error
+			yield hash
+		}
+	})()]
 
   if (installedHashes.length != hashesToInstall.length) {
     console.log(dedent`
@@ -229,12 +243,12 @@ export default async function install({
 
     console.log(`Trying to restore old install...\n`)
 
-    let reinstalledHashes = [...(function*(){
-      for (const hash of hashesToUninstall) {
-        let e = tryInstallEffect(hash)   // continue despite errors this time
-        yield hash
-      }
-    })()]
+		let reinstalledHashes = [...(function*(){
+			for (const hash of hashesToUninstall) {
+				let e = tryInstallEffect(hash, jixId)   // continue despite errors this time
+				yield hash
+			}
+		})()]
 
     if (reinstalledHashes.length != hashesToUninstall.length) {
 

@@ -6,6 +6,7 @@ import set from '../core/set.js'
 const HOSTS_PATH = `${LOCAL_JIX_PATH}/hosts.json`
 const SHORT_PATH_DIR = `${LOCAL_JIX_PATH}/s`
 const LOCAL_OUT_PATH = `${LOCAL_JIX_PATH}/out`
+const STACK_TRACE_PATH = `${LOCAL_JIX_PATH}/stackTrace.json`
 
 function syncShortPaths() {
 	const existingHashes = fs.existsSync(EXISTING_HASHES_PATH)
@@ -114,5 +115,18 @@ export default {
 			}
 		},
 		write: (obj) => fs.writeFileSync(HOSTS_PATH, JSON.stringify(obj, null, 2), 'utf8')
+	},
+
+	stackTrace: {
+		exists: () => fs.existsSync(STACK_TRACE_PATH),
+		read: () => {
+			if (!fs.existsSync(STACK_TRACE_PATH)) return {}
+			try {
+				return JSON.parse(fs.readFileSync(STACK_TRACE_PATH, 'utf8'))
+			} catch (e) {
+				throw new UserError(`Failed to read stackTrace.json: ${e.message}`)
+			}
+		},
+		write: (obj) => fs.writeFileSync(STACK_TRACE_PATH, JSON.stringify(obj, null, 2), 'utf8')
 	}
 }

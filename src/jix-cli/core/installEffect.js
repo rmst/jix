@@ -63,7 +63,7 @@ export const executeCmd = (command, address, user) => {
 
 
 
-export const tryInstallEffect = (hash) => {
+export const tryInstallEffect = (hash, manifestId) => {
   let effectData = db.store.read(hash)
 
   var { install = null, build = null, host, user, debug = {} } = effectData
@@ -83,17 +83,19 @@ export const tryInstallEffect = (hash) => {
       var [f, ...args] = build;
       let cmd = actions[f](...args, hash);
 
-      try {
-        executeCmd(cmd, host, user)
+			try {
+				executeCmd(cmd, host, user)
 
-      } catch (e) {
-        console.log(`Error with ${hash}:`)
-        prettyPrintEffect(effectData)
-        console.log(`\n${e.message}`)
+			} catch (e) {
+				console.log(`Error with ${hash}:`)
+				prettyPrintEffect(effectData)
+				console.log(`\n${e.message}`)
 
-        console.log("\n...uninstall continuing...\n")
-        return e
-      }
+				const trace = db.stackTrace.read()[manifestId][hash]
+        console.log(`\nStack trace:\n${trace}\n`)
+   
+				return e
+			}
     }
   }
 
@@ -107,7 +109,9 @@ export const tryInstallEffect = (hash) => {
       prettyPrintEffect(effectData)
       console.log(`\n${e.message}`)
 
-      console.log("\n...uninstall continuing...\n")
+      const trace = db.stackTrace.read()[manifestId][hash]
+      console.log(`\nStack trace:\n${trace}\n`)
+
       return e
     }
   }
