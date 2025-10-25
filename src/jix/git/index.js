@@ -1,8 +1,6 @@
 import jix from "../base"
 
-/**
-	@returns {Effect} with path pointing to the working tree for repo at commit
- */
+
 let checkout = ({repo, commit}) => jix.build`
 	repo_url="${repo}"
 	commit_hash="${commit}"

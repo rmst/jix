@@ -8,8 +8,8 @@ import base, { HASH, scriptWithTempdir, writeFile } from './base.js'
 import service from './service/index.js'
 
 import nixos from './nixos'
-// import nix from './nix'
-// import git from './git'
+import nix from './nix'
+import git from './git'
 import { appendToFile } from './appendToFile.js'
 import shelltools from './shelltools'
 import { Host, User } from './targets.js'
@@ -20,9 +20,9 @@ let jix = {
 
   service,
 
-  // nix,
+  nix,
 
-  // git,
+  git,
 
   HOME: HOME_PLACEHOLDER,
 

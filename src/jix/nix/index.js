@@ -1,4 +1,9 @@
-import jix from "../base";
+import jix from "../base"
+import { TargetedEffect } from "../effect"
+
+/**
+ * @typedef {Record<string, Record<string, TargetedEffect>>} NixPkgs
+ */
 
 /*
 https://nixos.org/guides/nix-pills/11-garbage-collector.html
@@ -15,27 +20,27 @@ https://nixos.org/guides/nix-pills/11-garbage-collector.html
  */
 export const pkg = (name, nixpkgsPath=null) => {
 
-	return jix.effect(target => {
+	let target = jix.target()
 
-		let nixbuildPath = target.os == "nixos"
-			? "/run/current-system/sw/bin/nix-build"
-			: "/nix/var/nix/profiles/default/bin/nix-build"
+	let nixbuildPath = target.host.os == "nixos"
+		? "/run/current-system/sw/bin/nix-build"
+		: "/nix/var/nix/profiles/default/bin/nix-build"
 
-		
-		let nixbuildArgs = nixpkgsPath
-			? `-I nixpkgs='${nixpkgsPath}'`
-			: `'<nixpkgs>'`  // uses whatever is the current channel (TODO: this isn't reproducible and won't even trigger a re-evaluation if nixpkgs is updated)
-		
+	
+	let nixbuildArgs = nixpkgsPath
+		? `-I nixpkgs='${nixpkgsPath}'`
+		: `'<nixpkgs>'`  // uses whatever is the current channel (TODO: this isn't reproducible and won't even trigger a re-evaluation if nixpkgs is updated)
+	
 
-		let derivation = jix.build`
-			"${nixbuildPath}" ${nixbuildArgs} -A "${name}" --out-link $out
-		`
+	let derivation = jix.build`
+		"${nixbuildPath}" ${nixbuildArgs} -A "${name}" --out-link $out
+	`
 
-		return derivation
-	})
+	return derivation
 }
 
 
+/** @type {NixPkgs} */
 export const pkgs = new Proxy({}, {
 	get: (_, name) => {
 		return new Proxy({}, {

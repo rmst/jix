@@ -95,7 +95,7 @@ export const enableUnit = ({
 
 	let install = jix.customEffect({
 		install: jix.dedent`
-			[ ! -e ${generatorScript()} ] && { echo "Error: systemd generator has not yet been installed on this host" >&2; exit 1; }
+			[ ! -e ${generatorScript()} ] && { echo "Error: systemd generator has not yet been installed on this host. Add 'jix.experimental.nixos.systemd.enableSystemUnits()' to your host configuration." >&2; exit 1; }
 			 
 			${generatorScript()} /run/systemd/generator
 			systemctl daemon-reload
