@@ -23,9 +23,9 @@ let jix = {
 
   git,
 
+  /** @deprecated */
   HOME: HOME_PLACEHOLDER,
 
-  // NOTE: do not list experimental in the documentation
   experimental: {
     nixos,
     shelltools,
@@ -39,13 +39,13 @@ let jix = {
 
   // NOTE: do not list _internal in the documentation
   _internal: {
-    Effect,
     JIX_PATH: HOME_PLACEHOLDER + "/" + JIX_DIR,  // TODO: this should be independent of the user home
     HASH,
 
     writeFile,
   },
 
+  Effect,
   Host,
   User,
 }
