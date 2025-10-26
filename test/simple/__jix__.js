@@ -15,9 +15,9 @@ export default () => {
 		echo 'a'
 	`
 
-	// let installFail = jix.customEffect({
-	// 	install: "exit 1"
-	// })
+	jix.customEffect({
+		install: `echo "Error: test error" >&2;  exit 1`
+	})
 
 	// let uninstallFail = jix.customEffect({
 	// 	uninstall: "exit 1"
