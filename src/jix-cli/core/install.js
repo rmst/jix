@@ -115,19 +115,28 @@ export default async function install({
 
 		} else {
 
-			let fn = module.install || []
-			if (fn === undefined)
+			let exported = module.install
+			if (exported === undefined)
 				throw new Error(`${sourcePath} is missing "export const install = ..."`)
 
-			else if (typeof fn === 'function') {
-        drvs = (new Host("localhost", {[process.env.USER]: {}}))
-          .users[process.env.USER]
-          .install(() => effect(collectEffects(() => fn())))
-      }
-			else {
-        throw new TypeError(`Expected function, instead got: ${fn}`)
-				// drvs = obj
-      }
+			// Handle object export with named entries (similar to run)
+			let fn
+			if (typeof exported === 'object' && exported !== null && !Array.isArray(exported)) {
+				fn = exported[name]
+				if (!fn)
+					throw new UserError(`install script not found: ${name}`)
+			} else if (typeof exported === 'function') {
+				// Direct function export (only works for "default")
+				if (name !== 'default')
+					throw new UserError(`install script not found: ${name} (only function export available)`)
+				fn = exported
+			} else {
+				throw new TypeError(`Expected function or object, instead got: ${typeof exported}`)
+			}
+
+			drvs = (new Host("localhost", {[process.env.USER]: {}}))
+				.users[process.env.USER]
+				.install(() => effect(collectEffects(() => fn())))
 		}
     
 		// Flatten only when we constructed drvs from a source

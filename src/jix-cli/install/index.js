@@ -17,7 +17,7 @@ export default {
 	Install a jix manifest from the current directory's ${MANIFEST_BASENAME}.
 
 	Arguments:
-	  [name]  Name of the install (only "default" is currently supported, this is the default)
+	  [name]  Name of the install (defaults to "default")
 
 	Options:
 	  --dry-run         Show what would be installed/uninstalled without making changes
@@ -26,6 +26,7 @@ export default {
 	Examples:
 	  jix install
 	  jix install default
+	  jix install foo
 	  jix install -f ./my-tools
 	  jix install --dry-run
 	`,
@@ -38,11 +39,6 @@ export default {
 		}
 
 		const name = positionals[0] || 'default'
-
-		if (name !== 'default') {
-			console.log(`Error: Only "default" is currently supported as install name`)
-			process.exit(1)
-		}
 
 		const path = sh`realpath '${findJixRoot(flags.f || flags.file || '.')}'`.trim()
 
