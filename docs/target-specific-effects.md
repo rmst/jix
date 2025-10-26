@@ -1,6 +1,7 @@
 ---
 title: Target-Specific Effects
-nav_order: 2
+parent: Advanced
+nav_order: 1
 ---
 
 # Target-Specific Effects

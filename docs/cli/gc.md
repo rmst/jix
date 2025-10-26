@@ -1,6 +1,11 @@
+---
+parent: CLI Reference
+title: jix gc
+---
+
 # jix gc
 
-Source: [`src/jix-cli/gc.js`](../../src/jix-cli/gc.js)
+Source: [`src/jix-cli/gc.js`](https://github.com/rmst/jix/blob/main/src/jix-cli/gc.js)
 
 Delete unreferenced build outputs and effect files.
 

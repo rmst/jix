@@ -1,6 +1,11 @@
+---
+parent: CLI Reference
+title: jix uninstall
+---
+
 # jix uninstall
 
-Source: [`src/jix-cli/uninstall.js`](../../src/jix-cli/uninstall.js)
+Source: [`src/jix-cli/uninstall.js`](https://github.com/rmst/jix/blob/main/src/jix-cli/uninstall.js)
 
 Uninstall a jix manifest.
 

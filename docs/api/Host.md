@@ -1,6 +1,11 @@
+---
+parent: API Reference
+title: Host
+---
+
 # Host
 
-Source: [`src/jix/targets.js#L6-66`](../../src/jix/targets.js#L6-66)
+Source: [`src/jix/targets.js#L6-66`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L6-66)
 
 Class representing a target host machine.
 
@@ -29,7 +34,7 @@ Host information is automatically queried from the target machine.
 ## Methods
 
 ### install
-Source: [`src/jix/targets.js#L60-65`](../../src/jix/targets.js#L60-65)
+Source: [`src/jix/targets.js#L60-65`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L60-65)
 
 ```javascript
 install(fn)

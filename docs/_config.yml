@@ -1,5 +1,11 @@
 remote_theme: just-the-docs/just-the-docs
 
+# Exclude files from processing
+exclude:
+  - AGENTS.md
+  - CLAUDE.md
+  - last-updated
+
 # Site settings
 title: Jix Documentation
 description: Configuration management tool combining declarative config with imperative control
@@ -14,4 +20,4 @@ nav_sort: case_insensitive
 # Back to GitHub link
 aux_links:
   "View on GitHub":
-    - "//github.com/jix-rs/jix"
+    - "https://github.com/rmst/jix"

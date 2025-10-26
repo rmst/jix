@@ -1,6 +1,11 @@
+---
+parent: CLI Reference
+title: jix host info
+---
+
 # jix host-info
 
-Source: [`src/jix-cli/host-info.js`](../../src/jix-cli/host-info.js)
+Source: [`src/jix-cli/host-info.js`](https://github.com/rmst/jix/blob/main/src/jix-cli/host-info.js)
 
 Query and display host and user information.
 

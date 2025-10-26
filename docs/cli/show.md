@@ -1,6 +1,11 @@
+---
+parent: CLI Reference
+title: jix show
+---
+
 # jix show
 
-Source: [`src/jix-cli/show.js`](../../src/jix-cli/show.js)
+Source: [`src/jix-cli/show.js`](https://github.com/rmst/jix/blob/main/src/jix-cli/show.js)
 
 Display information about a jix effect.
 

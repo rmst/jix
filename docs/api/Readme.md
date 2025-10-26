@@ -1,33 +1,33 @@
 ---
 title: API Reference
-nav_order: 4
+nav_order: 5
 has_children: true
 ---
 
 # Jix API Reference
 
-Source: [`src/jix/index.js`](../../src/jix/index.js)
+Source: [`src/jix/index.js`](https://github.com/rmst/jix/blob/main/src/jix/index.js)
 
 ## Properties
 
 ### HOME
 Type: `string`
 
-Source: [`src/jix/context.js#L5`](../../src/jix/context.js#L5)
+Source: [`src/jix/context.js#L5`](https://github.com/rmst/jix/blob/main/src/jix/context.js#L5)
 
 Placeholder for the user's home directory.
 
 ### HASH
 Type: `string`
 
-Source: [`src/jix/base.js#L12`](../../src/jix/base.js#L12)
+Source: [`src/jix/base.js#L12`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L12)
 
 Placeholder constant that gets replaced with the effect's hash.
 
 ## Functions
 
 ### effect
-Source: [`src/jix/effect.js#L111`](../../src/jix/effect.js#L111)
+Source: [`src/jix/effect.js#L111`](https://github.com/rmst/jix/blob/main/src/jix/effect.js#L111)
 
 ```javascript
 effect(obj)
@@ -47,7 +47,7 @@ Create an effect from properties or dependencies.
 **Returns:** Effect
 
 ### build
-Source: [`src/jix/base.js#L189`](../../src/jix/base.js#L189)
+Source: [`src/jix/base.js#L189`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L189)
 
 Template tag function for building artifacts from shell scripts.
 
@@ -57,7 +57,7 @@ Template tag function for building artifacts from shell scripts.
 **Returns:** Effect with build output path in `$out`
 
 ### dedent
-Source: [`src/jix/dedent.js`](../../src/jix/dedent.js)
+Source: [`src/jix/dedent.js`](https://github.com/rmst/jix/blob/main/src/jix/dedent.js)
 
 Remove common leading whitespace from template strings.
 
@@ -68,7 +68,7 @@ Remove common leading whitespace from template strings.
 **Returns:** string
 
 ### importFile
-Source: [`src/jix/base.js#L19`](../../src/jix/base.js#L19)
+Source: [`src/jix/base.js#L19`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L19)
 
 ```javascript
 importFile(origin, mode='-w')
@@ -83,7 +83,7 @@ Read a file from the filesystem and create an effect containing its contents.
 **Returns:** Effect with additional `name` property set to file basename
 
 ### importScript
-Source: [`src/jix/base.js#L27`](../../src/jix/base.js#L27)
+Source: [`src/jix/base.js#L27`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L27)
 
 ```javascript
 importScript(origin)
@@ -97,7 +97,7 @@ Import an executable script file. Equivalent to `importFile(origin, '-w+x')`.
 **Returns:** Effect
 
 ### copy
-Source: [`src/jix/base.js#L167`](../../src/jix/base.js#L167)
+Source: [`src/jix/base.js#L167`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L167)
 
 ```javascript
 copy(from, to)
@@ -112,7 +112,7 @@ Copy a file to a destination path.
 **Returns:** Effect
 
 ### link
-Source: [`src/jix/base.js#L32`](../../src/jix/base.js#L32)
+Source: [`src/jix/base.js#L32`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L32)
 
 ```javascript
 link(origin, path, symbolic=false)
@@ -128,7 +128,7 @@ Create a hard or symbolic link.
 **Returns:** Effect
 
 ### symlink
-Source: [`src/jix/base.js#L53`](../../src/jix/base.js#L53)
+Source: [`src/jix/base.js#L53`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L53)
 
 ```javascript
 symlink(origin, path)
@@ -143,7 +143,7 @@ Create a symbolic link. Equivalent to `link(origin, path, true)`.
 **Returns:** Effect
 
 ### alias
-Source: [`src/jix/base.js#L56`](../../src/jix/base.js#L56)
+Source: [`src/jix/base.js#L56`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L56)
 
 ```javascript
 alias(mapping)
@@ -157,7 +157,7 @@ Create command aliases in the jix bin directory.
 **Returns:** Array of Effect (symlinks)
 
 ### customEffect
-Source: [`src/jix/base.js#L69`](../../src/jix/base.js#L69)
+Source: [`src/jix/base.js#L69`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L69)
 
 ```javascript
 customEffect({install, uninstall, ...other})
@@ -173,7 +173,7 @@ Create an effect with custom shell commands for install/uninstall.
 **Returns:** Effect
 
 ### buildDir
-Source: [`src/jix/base.js#L83`](../../src/jix/base.js#L83)
+Source: [`src/jix/base.js#L83`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L83)
 
 ```javascript
 buildDir(files)
@@ -187,7 +187,7 @@ Build a directory containing specified files.
 **Returns:** Effect representing the built directory
 
 ### dir
-Source: [`src/jix/base.js#L105`](../../src/jix/base.js#L105)
+Source: [`src/jix/base.js#L105`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L105)
 
 ```javascript
 dir(path, extraArgs={})
@@ -202,7 +202,7 @@ Create a directory at the specified path using `mkdir -p`.
 **Returns:** Effect
 
 ### str
-Source: [`src/jix/base.js#L135`](../../src/jix/base.js#L135)
+Source: [`src/jix/base.js#L135`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L135)
 
 Template tag function for creating string effects with dependency tracking.
 
@@ -212,7 +212,7 @@ Template tag function for creating string effects with dependency tracking.
 **Returns:** Effect with `str` property containing the resulting string
 
 ### textfile
-Source: [`src/jix/base.js#L174`](../../src/jix/base.js#L174)
+Source: [`src/jix/base.js#L174`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L174)
 
 Template tag function for creating text files. Equivalent to `writeFile()`.
 
@@ -222,7 +222,7 @@ Template tag function for creating text files. Equivalent to `writeFile()`.
 **Returns:** Effect
 
 ### script
-Source: [`src/jix/base.js#L183`](../../src/jix/base.js#L183)
+Source: [`src/jix/base.js#L183`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L183)
 
 Template tag function for creating executable script files. Equivalent to `writeFile('-w+x')`.
 
@@ -232,7 +232,7 @@ Template tag function for creating executable script files. Equivalent to `write
 **Returns:** Effect
 
 ### writeFile
-Source: [`src/jix/base.js#L147`](../../src/jix/base.js#L147)
+Source: [`src/jix/base.js#L147`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L147)
 
 ```javascript
 writeFile(mode='-w')
@@ -246,7 +246,7 @@ Create a template tag function for writing files with specified permissions.
 **Returns:** Function that takes a template string and returns an Effect
 
 ### stateDir
-Source: [`src/jix/stateDir.js#L8`](../../src/jix/stateDir.js#L8)
+Source: [`src/jix/stateDir.js#L8`](https://github.com/rmst/jix/blob/main/src/jix/stateDir.js#L8)
 
 ```javascript
 stateDir(id)
@@ -260,7 +260,7 @@ Create a state directory in `~/.jix/db/<id>` that persists across installs/unins
 **Returns:** Effect
 
 ### target
-Source: [`src/jix/base.js#L204`](../../src/jix/base.js#L204)
+Source: [`src/jix/base.js#L204`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L204)
 
 Get the current target context (host and user).
 
@@ -269,38 +269,38 @@ Get the current target context (host and user).
 ## Classes
 
 ### [Host](./Host.md)
-Source: [`src/jix/targets.js#L6`](../../src/jix/targets.js#L6)
+Source: [`src/jix/targets.js#L6`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L6)
 
 Represents a target host machine.
 
 ### [User](./User.md)
-Source: [`src/jix/targets.js#L69`](../../src/jix/targets.js#L69)
+Source: [`src/jix/targets.js#L69`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L69)
 
 Represents a user on a host.
 
 ## Namespaces
 
 ### [service](./service.md)
-Source: [`src/jix/service/index.js`](../../src/jix/service/index.js)
+Source: [`src/jix/service/index.js`](https://github.com/rmst/jix/blob/main/src/jix/service/index.js)
 
 Service management functions.
 
 ### [nix](./nix.md)
-Source: [`src/jix/nix/index.js`](../../src/jix/nix/index.js)
+Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js)
 
 Nix package management integration.
 
 ### [git](./git.md)
-Source: [`src/jix/git/index.js`](../../src/jix/git/index.js)
+Source: [`src/jix/git/index.js`](https://github.com/rmst/jix/blob/main/src/jix/git/index.js)
 
 Git repository operations.
 
 ### experimental
-Source: [`src/jix/index.js#L29-38`](../../src/jix/index.js#L29-38)
+Source: [`src/jix/index.js#L29-38`](https://github.com/rmst/jix/blob/main/src/jix/index.js#L29-38)
 
 Contains experimental features: `nixos`, `shelltools`, `appendToFile`, `scriptWithTempdir`, `withTarget`, `getTarget`.
 
 ### _internal
-Source: [`src/jix/index.js#L41-47`](../../src/jix/index.js#L41-47)
+Source: [`src/jix/index.js#L41-47`](https://github.com/rmst/jix/blob/main/src/jix/index.js#L41-47)
 
 Contains internal APIs: `Effect`, `JIX_PATH`, `HASH`, `writeFile`.

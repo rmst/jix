@@ -1,13 +1,18 @@
+---
+parent: API Reference
+title: git
+---
+
 # git
 
-Source: [`src/jix/git/index.js`](../../src/jix/git/index.js)
+Source: [`src/jix/git/index.js`](https://github.com/rmst/jix/blob/main/src/jix/git/index.js)
 
 Git repository operations namespace.
 
 ## Functions
 
 ### checkout
-Source: [`src/jix/git/index.js#L4-23`](../../src/jix/git/index.js#L4-23)
+Source: [`src/jix/git/index.js#L4-23`](https://github.com/rmst/jix/blob/main/src/jix/git/index.js#L4-23)
 
 ```javascript
 checkout({repo, commit})

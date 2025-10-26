@@ -1,6 +1,11 @@
+---
+parent: CLI Reference
+title: jix force remove
+---
+
 # jix force-remove
 
-Source: [`src/jix-cli/forceRemove.js`](../../src/jix-cli/forceRemove.js)
+Source: [`src/jix-cli/forceRemove.js`](https://github.com/rmst/jix/blob/main/src/jix-cli/forceRemove.js)
 
 Forcefully remove derivations.
 

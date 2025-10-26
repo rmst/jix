@@ -1,13 +1,18 @@
+---
+parent: API Reference
+title: nix
+---
+
 # nix
 
-Source: [`src/jix/nix/index.js`](../../src/jix/nix/index.js)
+Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js)
 
 Nix package management namespace.
 
 ## Functions
 
 ### pkg
-Source: [`src/jix/nix/index.js#L21-40`](../../src/jix/nix/index.js#L21-40)
+Source: [`src/jix/nix/index.js#L21-40`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js#L21-40)
 
 ```javascript
 pkg(name, nixpkgsPath=null)
@@ -26,7 +31,7 @@ Uses `/run/current-system/sw/bin/nix-build` on NixOS, `/nix/var/nix/profiles/def
 ## Properties
 
 ### pkgs
-Source: [`src/jix/nix/index.js#L44-53`](../../src/jix/nix/index.js#L44-53)
+Source: [`src/jix/nix/index.js#L44-53`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js#L44-53)
 
 Proxy object for accessing package binaries.
 

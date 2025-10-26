@@ -1,6 +1,11 @@
+---
+parent: CLI Reference
+title: jix help
+---
+
 # jix help
 
-Source: [`src/jix-cli/main.js`](../../src/jix-cli/main.js)
+Source: [`src/jix-cli/main.js`](https://github.com/rmst/jix/blob/main/src/jix-cli/main.js)
 
 Show help for a command.
 

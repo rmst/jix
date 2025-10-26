@@ -1,6 +1,11 @@
+---
+parent: API Reference
+title: User
+---
+
 # User
 
-Source: [`src/jix/targets.js#L69-114`](../../src/jix/targets.js#L69-114)
+Source: [`src/jix/targets.js#L69-114`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L69-114)
 
 Class representing a user on a host.
 
@@ -29,7 +34,7 @@ User instances are typically created automatically by Host constructor.
 ## Methods
 
 ### install
-Source: [`src/jix/targets.js#L107-112`](../../src/jix/targets.js#L107-112)
+Source: [`src/jix/targets.js#L107-112`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L107-112)
 
 ```javascript
 install(fn)
