@@ -1,0 +1,17 @@
+remote_theme: just-the-docs/just-the-docs
+
+# Site settings
+title: Jix Documentation
+description: Configuration management tool combining declarative config with imperative control
+
+# Enable/disable features
+search_enabled: true
+heading_anchors: true
+
+# Navigation
+nav_sort: case_insensitive
+
+# Back to GitHub link
+aux_links:
+  "View on GitHub":
+    - "//github.com/jix-rs/jix"

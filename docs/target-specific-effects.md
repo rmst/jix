@@ -1,3 +1,8 @@
+---
+title: Target-Specific Effects
+nav_order: 2
+---
+
 # Target-Specific Effects
 
 Effects in Jix are always created within a target context that specifies the host and user they apply to. This enables creating platform-specific effects and managing installations across different machines. The target context is automatically set when using `Host.install()` or `User.install()` methods, and effects created within these contexts can access information about the target host and user.

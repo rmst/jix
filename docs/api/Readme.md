@@ -1,3 +1,9 @@
+---
+title: API Reference
+nav_order: 4
+has_children: true
+---
+
 # Jix API Reference
 
 Source: [`src/jix/index.js`](../../src/jix/index.js)

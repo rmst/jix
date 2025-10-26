@@ -1,3 +1,8 @@
+---
+title: How Jix Works
+nav_order: 2
+---
+
 # How Jix Works
 
 Jix is centered around manifest files (named `__jix__.js`). A jix manifest is a JavaScript file that declaratively defines a desired state to be installed via `jix install` or scripts to be run via `jix run`.

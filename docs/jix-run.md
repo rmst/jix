@@ -1,3 +1,8 @@
+---
+title: Jix Run
+nav_order: 2
+---
+
 # jix run
 
 The `jix run` command provides a powerful way to execute ad-hoc scripts and commands within the context of a Jix manifest. It is conceptually similar to `npm run`, but with the added benefit of Jix's automatic dependency management.

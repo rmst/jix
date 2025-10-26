@@ -1,3 +1,9 @@
+---
+title: CLI Reference
+nav_order: 3
+has_children: true
+---
+
 # Jix CLI Reference
 
 Source: [`src/jix-cli/main.js`](../../src/jix-cli/main.js)
