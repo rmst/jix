@@ -116,9 +116,9 @@ export default async function install({
 
 		} else {
 
-			let fn = module.default || []
+			let fn = module.install || []
 			if (fn === undefined)
-				throw new Error(`${sourcePath} is missing "export default ..."`)
+				throw new Error(`${sourcePath} is missing "export const install = ..."`)
 
 			else if (typeof fn === 'function') {
         drvs = (new Host("localhost", {[process.env.USER]: {}}))
