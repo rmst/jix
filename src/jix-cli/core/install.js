@@ -51,9 +51,8 @@ export default async function install({
   // loadHosts()
 
   // Derive ID from absolute manifest path and scoped name
-  // When uninstall=true, sourcePath can be a manifest ID directly
-  const manifestPath = uninstall ? sourcePath : sh`realpath '${sourcePath}'`.trim()
-  const jixId = name === 'default' ? manifestPath : `${manifestPath}#${name}`
+	const manifestPath = sh`realpath '${sourcePath}'`.trim()
+	const jixId = `${manifestPath}#${name}`
 
   // Prepare results and drvs
   let drvs = []

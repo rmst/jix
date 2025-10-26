@@ -1,44 +1,39 @@
 import install from './core/install.js'
 import { dedent } from '../jix/dedent.js'
-import { MANIFEST_NAME } from './install/util.js'
+import { MANIFEST_BASENAME } from '../jix/context.js'
+import { parseArgs } from './parseArgs.js'
+import { findJixRoot } from './install/util.js'
 import { sh } from './util.js'
-import db from './db/index.js'
 
 export default {
 	name: 'uninstall',
-	description: 'Uninstall a jix manifest by its path.',
-	usage: 'jix uninstall <path>',
+	description: 'Uninstall a jix manifest.',
+	usage: 'jix uninstall [name]',
 	help: dedent`
 	Uninstall all effects currently active for a given jix manifest.
 
 	Arguments:
-	  <path>  A path inside the project containing ${MANIFEST_NAME} or the path to ${MANIFEST_NAME} itself
+	  [name]  Name of the install (default: 'default')
 
-	Example:
-	  jix uninstall ~/work/my-tools/${MANIFEST_NAME}
+	Options:
+	  -f, --file <path> Use a specific manifest file or directory
+
+	Examples:
+	  jix uninstall
+	  jix uninstall default
+	  jix uninstall -f ~/work/my-tools
 	`,
 	async run(args) {
-		const arg = args[0]
-		if (!arg || args.includes('--help') || args.includes('-h')) {
+		const { flags, positionals } = parseArgs(args, { f: 'value', file: 'value' })
+
+		if (flags.help || flags.h) {
 			console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
 			return
 		}
 
-		const active = db.active.exists()
-			? db.active.read()
-			: {}
+		const name = positionals[0] || 'default'
+		const path = sh`realpath '${findJixRoot(flags.f || flags.file || '.')}'`.trim()
 
-		let id = arg
-
-		if(!active[id])
-			id = sh`realpath '${arg}' || true`.trim()
-			
-		if(!active[id])
-			id = `${id}/${MANIFEST_NAME}`
-
-		if(!active[id])
-			throw new Error(`'${arg}' isn't a valid, active manifest path or id`)  // TODO: instead of throw we should print to stderr and process.exit(1), note: console.error is missing in Quickjs
-
-		await install({ sourcePath: id, uninstall: true })
+		await install({ sourcePath: path, name, uninstall: true })
 	}
 }

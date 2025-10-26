@@ -27,8 +27,8 @@ export function warnAboutStaleManifestIds() {
   if (!db.active.exists()) return
   const active = db.active.read()
   const stale = Object.keys(active).filter(id => {
-    if (id.includes('#')) return false
-    const p = id.startsWith('~/') ? (process.env.HOME || LOCAL_HOME) + id.slice(1) : id
+    const [path] = id.split('#')
+    const p = path.startsWith('~/') ? (process.env.HOME || LOCAL_HOME) + path.slice(1) : path
     return !fs.existsSync(p)
   })
   if (stale.length) {
@@ -37,7 +37,10 @@ export function warnAboutStaleManifestIds() {
 			  ${stale.join('\n  ')}
 
 			Consider cleaning up with:
-			  ${stale.map(id => `jix uninstall ${id}`).join('\n  ')}
+			  ${stale.map(id => {
+				const [path, name] = id.split('#')
+				return `jix uninstall ${name} -f ${path}`
+			}).join('\n  ')}
     ` + "\n")
   }
 }

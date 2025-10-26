@@ -43,7 +43,7 @@ async function run(cmd, args, { verbose = false, file } = {}) {
 	// If there is leftover state for this run id, try a full uninstall first
 	if (db.active.read()[jixId]) {
 		try {
-			await withLogger({ verbose }, async () => await install({ sourcePath: jixId, uninstall: true }))
+			await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, name, uninstall: true }))
 		} catch (e) {
 			console.log(`${style.red('Error:')} Detected leftover effects from a previous 'jix run'. Tried to auto-clean them but failed. Specifically:\n`)
 			console.log(e.message)

@@ -4,37 +4,47 @@ import { git } from './git.js'
 import install from '../core/install.js'
 import { findJixRoot } from './util.js'
 import { dedent } from '../../jix/dedent.js'
-
+import { MANIFEST_BASENAME } from '../../jix/context.js'
+import { parseArgs } from '../parseArgs.js'
+import * as fs from 'node:fs'
 import process from 'node:process'
 
 export default {
 	name: 'install',
 	description: 'Install a jix configuration',
-	usage: 'jix install [--dry-run] <path>',
+	usage: 'jix install [name]',
 	help: dedent`
-	Install a jix manifest located at <path>.
+	Install a jix manifest from the current directory's ${MANIFEST_BASENAME}.
 
 	Arguments:
-	  <path>  Path to a file or any path inside a git repo containing __jix__.js
+	  [name]  Name of the install (only "default" is currently supported, this is the default)
 
 	Options:
-	  --dry-run  Show what would be installed/uninstalled without making changes
+	  --dry-run         Show what would be installed/uninstalled without making changes
+	  -f, --file <path> Use a specific manifest file or directory
 
 	Examples:
-	  jix install ./my-tools
-	  jix install ~/work/project/__jix__.js
-	  jix install --dry-run ./my-tools
+	  jix install
+	  jix install default
+	  jix install -f ./my-tools
+	  jix install --dry-run
 	`,
 	async run(args) {
-		const dryRun = args.includes('--dry-run')
-		const p = args.find(arg => !arg.startsWith('--'))
-		if (!p || args.includes('--help') || args.includes('-h')) {
+		const { flags, positionals } = parseArgs(args, { f: 'value', file: 'value' })
+
+		if (flags.help || flags.h) {
 			console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
 			return
 		}
 
-		// NOTE: path can be any path inside of a git repo and doesn't necessarily have to point to a __jix__.js file
-		let path = sh`realpath '${findJixRoot(p)}'`.trim() // TODO: obvious get rid of this
+		const name = positionals[0] || 'default'
+
+		if (name !== 'default') {
+			console.log(`Error: Only "default" is currently supported as install name`)
+			process.exit(1)
+		}
+
+		const path = sh`realpath '${findJixRoot(flags.f || flags.file || '.')}'`.trim()
 
 		if (process.env.JIX_GITCOMMIT) {
 			let gitRoot = git.root(path)
@@ -48,6 +58,6 @@ export default {
 			}
 		}
 
-		await install({ sourcePath: path, dryRun })
+		await install({ sourcePath: path, name, dryRun: flags['dry-run'] })
 	}
 }
