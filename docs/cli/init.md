@@ -1,6 +1,7 @@
 ---
 parent: CLI Reference
 title: jix init
+nav_order: 1
 ---
 
 # jix init

@@ -1,6 +1,7 @@
 ---
 parent: API Reference
 title: Host
+nav_order: 21
 ---
 
 # Host
@@ -16,6 +17,7 @@ new Host(address, users = {})
 ```
 
 **Parameters:**
+
 - `address` (string, required) - Host address or hostname
 - `users` (Object, optional) - User definitions (default: `{}`)
 
@@ -43,6 +45,7 @@ install(fn)
 Execute a function with this host and root user as the target context.
 
 **Parameters:**
+
 - `fn` (Function) - Function that receives the host as argument
 
 **Returns:** The return value of `fn`

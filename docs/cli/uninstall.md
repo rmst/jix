@@ -1,6 +1,7 @@
 ---
 parent: CLI Reference
 title: jix uninstall
+nav_order: 4
 ---
 
 # jix uninstall

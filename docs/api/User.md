@@ -1,6 +1,7 @@
 ---
 parent: API Reference
 title: User
+nav_order: 22
 ---
 
 # User
@@ -18,6 +19,7 @@ new User(host, name, info)
 User instances are typically created automatically by Host constructor.
 
 **Parameters:**
+
 - `host` (Host, required) - The host this user belongs to
 - `name` (string, required) - Username
 - `info` (Object, required) - User information object
@@ -43,6 +45,7 @@ install(fn)
 Execute a function with this user as the target context.
 
 **Parameters:**
+
 - `fn` (Function) - Function that receives the user as argument
 
 **Returns:** The return value of `fn`

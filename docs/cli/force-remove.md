@@ -1,6 +1,7 @@
 ---
 parent: CLI Reference
-title: jix force remove
+title: jix force-remove
+nav_order: 7
 ---
 
 # jix force-remove

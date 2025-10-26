@@ -1,6 +1,7 @@
 ---
 parent: CLI Reference
 title: jix gc
+nav_order: 6
 ---
 
 # jix gc

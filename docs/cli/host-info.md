@@ -1,6 +1,7 @@
 ---
 parent: CLI Reference
-title: jix host info
+title: jix host-info
+nav_order: 8
 ---
 
 # jix host-info

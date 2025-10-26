@@ -1,6 +1,7 @@
 ---
 parent: CLI Reference
 title: jix show
+nav_order: 5
 ---
 
 # jix show

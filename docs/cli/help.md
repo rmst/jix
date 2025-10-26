@@ -1,6 +1,7 @@
 ---
 parent: CLI Reference
 title: jix help
+nav_order: 9
 ---
 
 # jix help

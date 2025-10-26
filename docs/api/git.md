@@ -1,6 +1,7 @@
 ---
 parent: API Reference
 title: git
+nav_order: 10
 ---
 
 # git
@@ -21,6 +22,7 @@ checkout({repo, commit})
 Clone a git repository and checkout a specific commit, including submodules.
 
 **Parameters:**
+
 - `repo` (string, required) - Git repository URL
 - `commit` (string, required) - Commit hash to checkout
 

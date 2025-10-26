@@ -7,8 +7,8 @@ exclude:
   - last-updated
 
 # Site settings
-title: Jix Documentation
-description: Configuration management tool combining declarative config with imperative control
+title: Jix Documentaion
+description: Declarative development and deployment
 
 # Enable/disable features
 search_enabled: true

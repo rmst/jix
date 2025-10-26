@@ -1,6 +1,7 @@
 ---
 parent: API Reference
 title: nix
+nav_order: 11
 ---
 
 # nix
@@ -21,8 +22,9 @@ pkg(name, nixpkgsPath=null)
 Build a Nix package using nix-build.
 
 **Parameters:**
+
 - `name` (string, required) - Package attribute name (e.g., "git")
-- `nixpkgsPath` (string | null, optional) - URL to nixpkgs archive for pinning (default: uses current channel)
+- `nixpkgsPath` (string \| null, optional) - URL to nixpkgs archive for pinning (default: uses current channel)
 
 **Returns:** Effect representing the nix package derivation output path
 

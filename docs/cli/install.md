@@ -1,6 +1,7 @@
 ---
 parent: CLI Reference
 title: jix install
+nav_order: 2
 ---
 
 # jix install

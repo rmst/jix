@@ -1,6 +1,7 @@
 ---
 parent: CLI Reference
 title: jix run
+nav_order: 3
 ---
 
 # jix run
