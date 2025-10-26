@@ -1,7 +1,7 @@
 import * as fs from 'node:fs'
 
 import { JIX_DIR, HASH_PLACEHOLDER } from './context.js'
-import { parseEffectValues, effect, getTarget, TargetedEffect } from './effect.js'
+import { parseEffectValues, effect, getTarget, Effect } from './effect.js'
 
 import { dedent } from './dedent.js'
 import context from './context.js'
@@ -15,7 +15,7 @@ export const HASH = HASH_PLACEHOLDER
 /**
  * @param {string} origin 
  * @param {string} mode 
- * @returns {TargetedEffect & { name: string }}
+ * @returns {Effect & { name: string }}
  */
 export const importFile = (origin, mode='-w') => {
 	let content = fs.readFileSync(origin, 'utf8')
@@ -77,8 +77,8 @@ export const customEffect = ({install=null, uninstall=null, ...other}) => {
 
 /**
  * creates a directory containing files
- * @param {Record<string,string|TargetedEffect>} files 
- * @returns {TargetedEffect}
+ * @param {Record<string,string|Effect>} files 
+ * @returns {Effect}
  */
 export const buildDir = (files) => {
   const copyCommands = Object.entries(files)

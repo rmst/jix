@@ -72,7 +72,7 @@ export const monkeyPatchObjectToString = () => {
 	globalThis.console.log = (...args) => {
 		return oldLog(...args.map(a => {
 			if(typeof a === "object") {
-				if(a.constructor.name === "TargetedEffect")
+				if(a.constructor.name === "Effect")
 					return a.toDebugString()
 			}
 			return a

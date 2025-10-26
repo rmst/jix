@@ -2,7 +2,7 @@
 import process from 'node:process'
 
 import jix from '../../jix'
-import { collectEffects, effect, TargetedEffect, withTarget } from '../../jix/effect.js'
+import { collectEffects, effect, Effect, withTarget } from '../../jix/effect.js'
 import { dedent } from '../../jix/dedent.js'
 
 import { tryInstallEffect, tryUninstallEffect } from './installEffect.js'
@@ -153,7 +153,7 @@ export default async function install({
 
 			storedStacks[jixId] = Object.fromEntries(
 				drvs.map(d => {
-					if (!(d instanceof TargetedEffect) || typeof d.hash !== 'string' || typeof d._stack !== 'string')
+					if (!(d instanceof Effect) || typeof d.hash !== 'string' || typeof d._stack !== 'string')
 						throw new Error(`Unexpected install result: ${d}`)
 					return [d.hash, d._stack]
 				})

@@ -1,6 +1,6 @@
 
 import jix from "../base"
-import { TargetedEffect } from "../effect"
+import { Effect } from "../effect"
 import stateDir from "../stateDir"
 import systemdBase from "./systemdBase"
 
@@ -75,8 +75,8 @@ export const enableSystemUnits = () => {
 
 /**
  * NOTE: this requires systemdGenerator to be installed by the host
- * @param {{name: string, file: TargetedEffect, runOnInstall?: boolean, noUninstall?: boolean, dependencies?: Array<TargetedEffect>}} param0
- * @returns {TargetedEffect}
+ * @param {{name: string, file: Effect, runOnInstall?: boolean, noUninstall?: boolean, dependencies?: Array<Effect>}} param0
+ * @returns {Effect}
  */
 export const enableUnit = ({
 	name,
@@ -89,7 +89,7 @@ export const enableUnit = ({
 		throw Error(`name can't be be empty`)
 
 	if(!file?.symlinkTo)
-		throw TypeError(`File has to be of type TargetedEffect, got ${file}`)
+		throw TypeError(`File has to be of type Effect, got ${file}`)
 
 	file = file.symlinkTo(`${unitDir}/${name}`)
 

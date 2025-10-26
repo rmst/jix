@@ -1,5 +1,5 @@
 import { hostInfoWithUser } from '../jix-cli/core/hosts.js'
-import { TargetedEffect, withTarget } from './effect.js'
+import { Effect, withTarget } from './effect.js'
 
 
 /** @template {Record<string, unknown>} Users */
@@ -109,6 +109,5 @@ export class User {
 			throw new TypeError('Host.install(...) expects a function argument')
 		
 		return withTarget({host: this.host, user: this}, () => fn(this))
-		// return new TargetedEffect({ machineId: this.host.machineId, user: this.name}, x)
 	}
 }

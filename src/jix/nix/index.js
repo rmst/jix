@@ -1,8 +1,8 @@
 import jix from "../base"
-import { TargetedEffect } from "../effect"
+import { Effect } from "../effect"
 
 /**
- * @typedef {Record<string, Record<string, TargetedEffect>>} NixPkgs
+ * @typedef {Record<string, Record<string, Effect>>} NixPkgs
  */
 
 /*

@@ -1,6 +1,6 @@
 
 import jix from "../base"
-import { TargetedEffect } from "../effect"
+import { Effect } from "../effect"
 import { shellEscape } from "../util"
 
 
@@ -12,7 +12,7 @@ import { shellEscape } from "../util"
 	
 
 /**
- * @param {TargetedEffect[] | Record<string,TargetedEffect>} files 
+ * @param {Effect[] | Record<string,Effect>} files 
  * @param {*} options 
  * @returns 
  */
@@ -24,7 +24,7 @@ export const importModules = (files, { core=false, keep=false }={}) => {
 		throw Error(`${target.host.os} !== "nixos" || ${target.user.name} !== "root"`)
 	
 
-	/** @type {[string, TargetedEffect][]} */
+	/** @type {[string, Effect][]} */
 	const filesEntries = !Array.isArray(files)
 		? Object.entries(files)
 		: files.map(f => typeof f === "string"

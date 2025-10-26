@@ -56,7 +56,7 @@ const EFFECT_CONTEXT = createContext(null)
 
 /**
  * @param {*} fn 
- * @returns {TargetedEffect[]}
+ * @returns {Effect[]}
  */
 export const collectEffects = (fn) => {
   let allEffects = []
@@ -65,10 +65,10 @@ export const collectEffects = (fn) => {
 }
 
 /**
- * @param {TargetedEffect} e
+ * @param {Effect} e
  */
 const addEffect = (e) => {
-  /** @type {TargetedEffect[] | null} */
+  /** @type {Effect[] | null} */
   let allEffects = useContext(EFFECT_CONTEXT)
   if(allEffects === null)
     return
@@ -106,7 +106,7 @@ const addEffect = (e) => {
   Basic effect functions are defined under base.js and index.js
 
   @param {EffectProps | Array} obj
-  @returns {TargetedEffect}
+  @returns {Effect}
  */
 export function effect (obj) {
   if(typeof obj === "function") {
@@ -117,7 +117,7 @@ export function effect (obj) {
     ? { dependencies: obj }
     : obj
 
-  let e = new TargetedEffect(props)
+  let e = new Effect(props)
 
   addEffect(e)
   return e
@@ -143,10 +143,10 @@ Function.prototype.toString = function() {
 // -----
 
 
-export class TargetedEffect {
+export class Effect {
 
   /** 
-   * @type {TargetedEffect[]} 
+   * @type {Effect[]} 
    */
   dependencies
 
@@ -157,8 +157,8 @@ export class TargetedEffect {
    * @param {EffectProps} [props] - Effect properties
    */
   constructor(props={}) {
-    this.id = TargetedEffect.nextId;
-    TargetedEffect.nextId += 1;
+    this.id = Effect.nextId;
+    Effect.nextId += 1;
 
     if(typeof props !== "object")
       throw TypeError(`Expected object, got: ${typeof props}`)
@@ -195,7 +195,7 @@ export class TargetedEffect {
 
     // process dependencies  
     this.dependencies = dependencies.map(x => {
-      if(x instanceof TargetedEffect)
+      if(x instanceof Effect)
         return x
 
       else {
@@ -266,8 +266,6 @@ export class TargetedEffect {
 
 
   toString() {
-    // if(!this instanceof TargetedEffect && !this.target)
-    //   throw Error(`Fatal: ${super.toString()}`)
     let key = `_effect_${this.id}_${MAGIC_STRING}_`;
     effectPlaceholderMap.set(key, this);
     return key
@@ -297,7 +295,7 @@ const targetizeString = (str) => {
 
 /**
  * @param {any[]} values 
- * @returns {{values: any[], dependencies: TargetedEffect[]}}
+ * @returns {{values: any[], dependencies: Effect[]}}
  */
 export const parseEffectValues = (values) => {
 
@@ -331,8 +329,8 @@ export const parseEffectValues = (values) => {
           if(v.includes(k)) {
             let fn = globalThis._fnPlaceholderMap.get(k)
             let eff = fn()
-            if(!(eff instanceof TargetedEffect)) {
-              throw TypeError(`Expected TargetedEffect, got: ${eff}`)
+            if(!(eff instanceof Effect)) {
+              throw TypeError(`Expected Effect, got: ${eff}`)
             }
             dependencies.push(eff)
             v = v.replaceAll(k, eff.str)
@@ -350,14 +348,14 @@ export const parseEffectValues = (values) => {
 
     else if (typeof v === "function") {
       const x = v()
-      if(!(x instanceof TargetedEffect)) {
-        throw TypeError(`Expected TargetedEffect, got: ${x} of type ${typeof x === "object" ? x.constructor.name : typeof x}`)
+      if(!(x instanceof Effect)) {
+        throw TypeError(`Expected Effect, got: ${x} of type ${typeof x === "object" ? x.constructor.name : typeof x}`)
       }
       dependencies.push(x)
       return x.str
     }
 
-    else if (v instanceof TargetedEffect) {
+    else if (v instanceof Effect) {
       // add it to the dependencies array
       // and replace the object with it's out path
       dependencies.push(v)
