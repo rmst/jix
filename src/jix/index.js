@@ -1,7 +1,6 @@
 // This is the root of the jix API
 
 import { TargetedEffect, withTarget, getTarget } from './effect.js'
-import { AbstractEffect } from "./effectUtil.js"
 
 import { HOME_PLACEHOLDER, JIX_DIR } from './context.js'
 import base, { HASH, scriptWithTempdir, writeFile } from './base.js'
@@ -41,7 +40,6 @@ let jix = {
   // NOTE: do not list _internal in the documentation
   _internal: {
     TargetedEffect,
-    AbstractEffect,
     JIX_PATH: HOME_PLACEHOLDER + "/" + JIX_DIR,  // TODO: this should be independent of the user home
     HASH,
 

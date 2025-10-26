@@ -1,13 +1,13 @@
-import { HOME_PLACEHOLDER, HASH_PLACEHOLDER, MAGIC_STRING } from './context.js';
-import { JIX_DIR, LOCAL_USER } from './context.js';
-import { AbstractEffect } from './effectUtil.js';
-import { dedent } from './dedent.js';
+import { HOME_PLACEHOLDER, HASH_PLACEHOLDER, MAGIC_STRING } from './context.js'
+import { symlink, link, copy } from './base.js'
+import { JIX_DIR, LOCAL_USER } from './context.js'
+import { dedent } from './dedent.js'
 
 export const effectPlaceholderMap = new Map()
 
-import { createHash } from 'node:crypto';
-import { createContext, useContext } from './useContext.js';
-import { Host, User } from './targets.js';
+import { createHash } from 'node:crypto'
+import { createContext, useContext } from './useContext.js'
+import { Host, User } from './targets.js'
 
 // import { createHash } from 'node/crypto';
 
@@ -143,18 +143,22 @@ Function.prototype.toString = function() {
 // -----
 
 
-export class TargetedEffect extends AbstractEffect {
+export class TargetedEffect {
 
   /** 
    * @type {TargetedEffect[]} 
    */
   dependencies
 
+  /** @private */
+  static nextId = 0
+
   /**
    * @param {EffectProps} [props] - Effect properties
    */
   constructor(props={}) {
-    super()
+    this.id = TargetedEffect.nextId;
+    TargetedEffect.nextId += 1;
 
     if(typeof props !== "object")
       throw TypeError(`Expected object, got: ${typeof props}`)
@@ -165,11 +169,6 @@ export class TargetedEffect extends AbstractEffect {
     this._stack = (new Error()).stack.split('\n').slice(2).join("\n")
 
     const dependencies = props.dependencies?.flat(Infinity) ?? []
-    
-    // TODO: delete this, instead we're doing assert x instanceof AbstractEffect 
-    // this.dependencies =  this.dependencies.map(x => {
-    //   return x instanceof AbstractEffect ? x : Effect(x)
-    // })
 
     // process values in the arguments to install, uninstall, etc
     var { install, uninstall, build, str, path } = props
@@ -264,7 +263,23 @@ export class TargetedEffect extends AbstractEffect {
       })  
     }
   }
+
+
+  toString() {
+    // if(!this instanceof TargetedEffect && !this.target)
+    //   throw Error(`Fatal: ${super.toString()}`)
+    let key = `_effect_${this.id}_${MAGIC_STRING}_`;
+    effectPlaceholderMap.set(key, this);
+    return key
+  }
+
+
+  // convenience functions
+  symlinkTo(path) { return symlink(this, path) }
+  linkTo(path, symbolic = false) { return link(this, path, symbolic) }
+  copyTo(path) { return copy(this, path) }
 }
+
 
 /**
  * @param {string} str 
