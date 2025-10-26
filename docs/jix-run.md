@@ -16,13 +16,13 @@ A command's definition can be one of two types:
 
 ### Example Manifest
 
-Here is an example of a `__jix__.js` manifest that defines several runnable commands and demonstrates dependency inference. A `default` export is not needed when you only intend to use `jix run`.
+Here is an example of a `__jix__.js` manifest that defines several runnable commands and demonstrates dependency inference.
 
 ```javascript
 // my-app/__jix__.js
 
 // Define a helper script that will be a dependency for another command.
-const helper = jix.script`
+const helper = () => jix.script`
 	#!/bin/sh
 	echo "I am a helper script!"
 `
@@ -34,7 +34,7 @@ export const run = {
 
 	// A command that depends on the 'helper' script.
 	// By interpolating ${helper}, we tell Jix that this script depends on it.
-	'with-helper': jix.script`
+	'with-helper': () => jix.script`
 		#!/bin/sh
 		echo "Running a command with a helper..."
 		${helper}
@@ -48,10 +48,10 @@ export const run = {
 When you execute `jix run <command-name>`, Jix performs the following steps:
 
 1.  Finds Manifest: Locates the `__jix__.js` file in the current directory (or a path provided via `-f/--file`).
-2.  Resolves Script + Deps: Looks up the selected entry under `export const run`, validates it is a string or `jix.script`, and infers only that script’s dependencies (e.g. interpolated helpers).
-3.  Installs Scoped Effects: Installs just the effects needed for this run script (scoped install), failing fast if stale state for the same run id is still active.
-4.  Executes Command: Runs the generated script via `/bin/sh`, forwarding any additional arguments.
-5.  Cleans Up: Uninstalls effects installed for this run, preserving and returning the script’s exit code.
+2.  Resolves Script + Deps: Looks up the selected entry under `export const run`, validates it is a string or `jix.script`, and infers that script’s dependencies (e.g. interpolated helpers).
+3.  Installs Effects: Installs the effects needed for this run script.
+4.  Executes Command: Runs the generated script, forwarding any additional arguments.
+5.  Cleans Up: Uninstalls effects installed for this run.
 
 
 ## Usage
@@ -71,18 +71,3 @@ $ jix run with-helper
 Running a command with a helper...
 I am a helper script!
 ```
-
-### Selecting a manifest with -f/--file
-
-You can point `jix run` at a specific manifest file or directory using `-f, --file`.
-
-```bash
-# Use a manifest located in a different directory
-$ jix run -f ./my-app hello
-
-# Or pass the file explicitly
-$ jix run --file ./my-app/__jix__.js with-helper
-```
-
-When a directory is provided, Jix looks for `<dir>/__jix__.js`. If the resolved file does not exist, the command prints an error and exits.
-
