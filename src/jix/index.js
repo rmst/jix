@@ -3,7 +3,7 @@
 import { Effect, withTarget, getTarget } from './effect.js'
 
 import { HOME_PLACEHOLDER, JIX_DIR } from './context.js'
-import base, { HASH, scriptWithTempdir, writeFile } from './base.js'
+import base, { HASH, scriptWithTempdir, buildDir } from './base.js'
 import service from './service/index.js'
 
 import nixos from './nixos'
@@ -23,31 +23,32 @@ let jix = {
 
   git,
 
+  Effect,
+  Host,
+  User,
+
   /** @deprecated */
   HOME: HOME_PLACEHOLDER,
 
+  // NOTE: do not list this in docs
   experimental: {
     nixos,
     shelltools,
 
     appendToFile,
     scriptWithTempdir,
+    buildDir,
 
     withTarget,
     getTarget,
   },
 
-  // NOTE: do not list _internal in the documentation
+  // NOTE: do not list this in docs
   _internal: {
     JIX_PATH: HOME_PLACEHOLDER + "/" + JIX_DIR,  // TODO: this should be independent of the user home
     HASH,
-
-    writeFile,
   },
 
-  Effect,
-  Host,
-  User,
 }
 
 

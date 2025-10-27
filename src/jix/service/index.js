@@ -96,7 +96,7 @@ export default ({
 		`;
 
 		// this is just so MacOS shows a nice name in various UIs and not a hash
-		wrapperScript = jix.str`${jix.buildDir({[label]: wrapperScript })}/${label}`
+		wrapperScript = jix.str`${jix.experimental.buildDir({[label]: wrapperScript })}/${label}`
 
 		const serviceImplementation = serviceImplementations[target.host.os]
 

@@ -273,8 +273,21 @@ export class Effect {
 
 
   // convenience functions
+  /**
+   * @param {string} path
+   * @returns {Effect}
+   */
   symlinkTo(path) { return symlink(this, path) }
+  /**
+   * @param {string} path
+   * @param {boolean} symbolic - @private For internal use only
+   * @returns {Effect}
+   */
   linkTo(path, symbolic = false) { return link(this, path, symbolic) }
+  /**
+   * @param {string} path
+   * @returns {Effect}
+   */
   copyTo(path) { return copy(this, path) }
 }
 

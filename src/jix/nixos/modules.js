@@ -28,7 +28,7 @@ export const importModules = (files, { core=false, keep=false }={}) => {
 	const filesEntries = !Array.isArray(files)
 		? Object.entries(files)
 		: files.map(f => typeof f === "string"
-				? [null, jix.importFile(f)]
+				? [null, jix.importTextfile(f)]
 				: [null, f]
 			)
 
