@@ -9,19 +9,21 @@ import { dirname, basename, shellEscape } from './util.js'
 
 import stateDir from './stateDir.js'
 
+/**
+  @typedef {import('./effect.js').EffectOrFn} EffectOrFn
+ */
+
 export const HASH = HASH_PLACEHOLDER
 
 
 /**
-	@param {string|Effect} origin
+	@param {string|EffectOrFn} origin
 	@param {string} path
-	@param {boolean} symbolic - @private For internal use only
 	@returns {Effect}
 */
 export const link = (origin, path, symbolic=false) => {
 
   const target = getTarget()
-  // FIXME: we're not doing anythign to verify that path is something valid
 
   let { values: [origin2, path2], dependencies } = parseEffectValues([origin, path])
 
@@ -39,7 +41,7 @@ export const link = (origin, path, symbolic=false) => {
 }
 
 /**
-	@param {string|Effect} origin
+	@param {string|EffectOrFn} origin
 	@param {string} path
 	@returns {Effect}
 */
@@ -47,7 +49,7 @@ export const symlink = (origin, path) => link(origin, path, true)
 
 
 /**
-	@param {string|Effect} from
+	@param {string|EffectOrFn} from
 	@param {string} to
 	@returns {Effect}
 */
@@ -58,17 +60,35 @@ export const copy = (from, to) => effect({
 })
 
 
+/**
+  @param {Record<string, EffectOrFn>} mapping 
+  @returns {Effect}
+ */
 export const alias = (mapping) => {
-  // TODO: add PATH check (to see if the login shell has .jix/bin in its path and warn if not)
+  
+  let target = jix.target()
+
   let binDir = dir(context.BIN_PATH)
+
+  let checkPath = jix.script`
+    #!${target.user.shell} -l
+    if ! echo ":$PATH:" | grep -q ":${binDir}:"; then
+      echo "Error: ${binDir} not in PATH: $PATH" >&2
+      exit 1
+    fi
+  `
+  customEffect({
+    install: `${checkPath}`
+  })
+
   let links = Object.entries(mapping).map(([k, v]) => symlink(v, `${binDir}/${k}`))
 
-  return links
+  return effect(links)
 }
 
 
 /**
-  @param {{install?: string, uninstall?: string, dependencies?: Array, path?: string, str?: string}} obj
+  @param {{install?: string, uninstall?: string, dependencies?: Array<EffectOrFn>, path?: string, str?: string}} obj
 */
 export const customEffect = ({install=null, uninstall=null, ...other}) => {
   return effect({
@@ -82,7 +102,6 @@ export const customEffect = ({install=null, uninstall=null, ...other}) => {
 /**
   Creates a directory. Install via `mkdir -p`. Uninstall will only remove the dir if it is empty.
   @param {string} path 
-  @param {object} extraArgs - @private
   @returns {Effect}
  */
 export const dir = (path, extraArgs={}) => {
@@ -98,7 +117,7 @@ export const dir = (path, extraArgs={}) => {
 /**
 	Creates an Effect with string property and dependencies according to the interpolated values
 	@param {TemplateStringsArray} templateStrings
-	@param  {...(string|number|Effect)} values
+	@param  {...(string|number|EffectOrFn)} values
 	@returns {Effect}
 */
 export const str = (templateStrings, ...values) => {
@@ -136,7 +155,7 @@ const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
 /**
 	Creates a text file
 	@param {TemplateStringsArray} templateStrings
-	@param  {...(string|number|Effect)} values
+	@param  {...(string|number|EffectOrFn)} values
 	@returns {Effect}
 */
 export const textfile = writeFile()
@@ -145,7 +164,7 @@ export const textfile = writeFile()
 /**
 	Creates a runnable script
 	@param {TemplateStringsArray} templateStrings
-	@param  {...(string|number|Effect)} values
+	@param  {...(string|number|EffectOrFn)} values
 	@returns {Effect}
 */
 export const script = (templateStrings, ...values) => writeFile('-w+x')(templateStrings, ...values)
@@ -154,7 +173,7 @@ export const script = (templateStrings, ...values) => writeFile('-w+x')(template
 /**
 	Creates a runnable script that is executed from within a temporary directory
 	@param {TemplateStringsArray} templateStrings
-	@param  {...(string|number|Effect)} values
+	@param  {...(string|number|EffectOrFn)} values
 	@returns {Effect}
 */
 export const scriptWithTempdir = (templateStrings, ...values) => {
@@ -177,7 +196,6 @@ export const scriptWithTempdir = (templateStrings, ...values) => {
 
 /**
 	@param {string} origin
-	@param {string} mode - @private For internal use only
 	@returns {Effect & { name: string }}
 */
 export const importTextfile = (origin, mode='-w') => {
@@ -204,7 +222,7 @@ export const importScript = (origin) => {
 	Creates a build shell script which will be executed in a temporary directory. The build result should be written to the path given by the $out environment variable.
 
 	@param {TemplateStringsArray} templateStrings
-	@param  {...(string|number|Effect)} values
+	@param  {...(string|number|EffectOrFn)} values
 	@returns {Effect}
 */
 export const build = (templateStrings, ...values) => {
@@ -222,7 +240,7 @@ export const build = (templateStrings, ...values) => {
 
 /**
 	creates a directory containing files
-	@param {Record<string,string|Effect>} files
+	@param {Record<string,string|EffectOrFn>} files
 	@returns {Effect}
 */
 export const buildDir = (files) => {

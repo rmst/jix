@@ -87,6 +87,14 @@ const addEffect = (e) => {
  * @property {Array} [dependencies]
  */
 
+/**
+ * @typedef {() => Effect} EffectFn
+ */
+
+/**
+ * @typedef {Effect | EffectFn} EffectOrFn
+ */
+
 
 
 /**
@@ -280,10 +288,9 @@ export class Effect {
   symlinkTo(path) { return symlink(this, path) }
   /**
    * @param {string} path
-   * @param {boolean} symbolic - @private For internal use only
    * @returns {Effect}
    */
-  linkTo(path, symbolic = false) { return link(this, path, symbolic) }
+  linkTo(path) { return link(this, path) }
   /**
    * @param {string} path
    * @returns {Effect}
