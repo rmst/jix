@@ -15,7 +15,7 @@ Template tag function for creating executable script files.
 
 - Template string containing script content
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
@@ -28,7 +28,7 @@ Template tag function for creating text files.
 
 - Template string containing file content
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
@@ -41,7 +41,7 @@ Import an executable script file.
 
 - `origin` (string) - Path to script file
 
-**Returns:** Effect with additional `name` property set to file basename
+**Returns:** [Effect](./Effect.md) with additional `name` property set to file basename
 
 ---
 
@@ -54,7 +54,7 @@ Read a text file from the filesystem and create an effect containing its content
 
 - `origin` (string) - Path to file to import
 
-**Returns:** Effect with additional `name` property set to file basename
+**Returns:** [Effect](./Effect.md) with additional `name` property set to file basename
 
 ---
 
@@ -65,25 +65,24 @@ Copy a file to a destination path.
 
 **Parameters:**
 
-- `from` (string \| Effect) - Source path
+- `from` (string \| [Effect](./Effect.md)) - Source path
 - `to` (string) - Destination path
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
-## `link(origin, path, symbolic=false)`
+## `link(origin, path)`
 Source: [`src/jix/base.js#L24`](https://github.com/rmst/jix/blob/main/src/jix/base.js#L24)
 
-Create a hard or symbolic link.
+Create a hard link.
 
 **Parameters:**
 
-- `origin` (string \| Effect) - Source path
+- `origin` (string \| [Effect](./Effect.md)) - Source path
 - `path` (string) - Link destination path (tilde expanded)
-- `symbolic` (boolean, optional) - Create symbolic link if true (default: false)
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
@@ -94,10 +93,10 @@ Create a symbolic link. Equivalent to `link(origin, path, true)`.
 
 **Parameters:**
 
-- `origin` (string \| Effect) - Source path
+- `origin` (string \| [Effect](./Effect.md)) - Source path
 - `path` (string) - Link destination path
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
@@ -110,7 +109,7 @@ Create command aliases in the jix bin directory.
 
 - `mapping` (Object) - Maps alias names to target paths/effects
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
@@ -124,7 +123,7 @@ Create a directory at the specified path using `mkdir -p`. Uninstall will only r
 - `path` (string) - Directory path to create
 - `extraArgs` (Object, optional) - Additional effect properties
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
@@ -137,10 +136,10 @@ Create an effect with custom shell commands for install/uninstall.
 
 - `install` (string, optional) - Shell command to run on install
 - `uninstall` (string, optional) - Shell command to run on uninstall
-- `dependencies` (Array, optional) - Array of effect dependencies
+- `dependencies` (Array, optional) - Array of [EffectOrFn](./Effect.md#effectorfn) dependencies
 - Additional properties passed to effect
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
@@ -153,7 +152,7 @@ Create a state directory in `~/.jix/db/<id>` that persists across installs/unins
 
 - `id` (string) - Non-empty identifier for the state directory
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
@@ -166,7 +165,7 @@ Template tag function for creating string effects with dependency tracking.
 
 - Template string with possible effect interpolations
 
-**Returns:** Effect with `str` property containing the resulting string
+**Returns:** [Effect](./Effect.md) with `str` property containing the resulting string
 
 ---
 
@@ -179,7 +178,7 @@ Template tag function for building artifacts from shell scripts. The build scrip
 
 - Template string containing shell script
 
-**Returns:** Effect with build output path in `$out`
+**Returns:** [Effect](./Effect.md) with build output path in `$out`
 
 ---
 
@@ -213,15 +212,15 @@ Create an effect from properties or dependencies.
 
 **Parameters:**
 
-- `obj` (Object \| Array) - Effect properties or array of dependencies
+- `obj` (Object \| Array) - [Effect](./Effect.md) properties or array of dependencies
   - `install` (Array, optional) - Install action specification
   - `uninstall` (Array, optional) - Uninstall action specification
   - `build` (Array, optional) - Build action specification
-  - `dependencies` (Array, optional) - Effect dependencies
+  - `dependencies` (Array, optional) - [EffectOrFn](./Effect.md#effectorfn) dependencies
   - `path` (string, optional) - File system path
   - `str` (string, optional) - String representation
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 ---
 
@@ -233,12 +232,12 @@ Create a persistent background service.
 **Parameters:**
 
 - `label` (string, required) - Service identifier
-- `runscript` (string \| Effect, required) - Path to executable or script effect
+- `runscript` (string \| [Effect](./Effect.md), required) - Path to executable or script effect
 - `system` (boolean, optional) - Install as system service if true (default: false)
 - `runOnInstall` (boolean, optional) - Start service on install (default: true)
 - `noUninstall` (boolean, optional) - Skip uninstallation (default: false)
 
-**Returns:** Effect
+**Returns:** [Effect](./Effect.md)
 
 
 ---

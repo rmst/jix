@@ -10,6 +10,26 @@ Source: [`src/jix/effect.js#L154-299`](https://github.com/rmst/jix/blob/main/src
 
 Core class representing a jix effect. Effects are the fundamental building blocks in Jix that describe actions to build, install, and uninstall configurations.
 
+## Type Definitions
+
+## `EffectFn`
+Source: [`src/jix/effect.js#L91`](https://github.com/rmst/jix/blob/main/src/jix/effect.js#L91)
+
+A function that returns an [Effect](#effect).
+
+**Type:** `() => Effect`
+
+---
+
+## `EffectOrFn`
+Source: [`src/jix/effect.js#L95`](https://github.com/rmst/jix/blob/main/src/jix/effect.js#L95)
+
+An [Effect](#effect) or a function that returns an Effect.
+
+**Type:** `Effect | EffectFn`
+
+---
+
 ## `new Effect(props)`
 
 **Parameters:**
@@ -18,7 +38,7 @@ Core class representing a jix effect. Effects are the fundamental building block
   - `install` (Array, optional) - Install action specification
   - `uninstall` (Array, optional) - Uninstall action specification
   - `build` (Array, optional) - Build action specification
-  - `dependencies` (Array, optional) - Array of Effect dependencies
+  - `dependencies` (Array, optional) - Array of [Effect](#effect) dependencies
   - `path` (string, optional) - File system path for the effect
   - `str` (string, optional) - String representation
   - `hash` (string, optional) - Pre-computed hash (usually auto-generated)
@@ -26,7 +46,7 @@ Core class representing a jix effect. Effects are the fundamental building block
 ## Properties
 
 - `id` (number) - Unique effect identifier
-- `dependencies` (Effect[]) - Array of dependent effects
+- `dependencies` ([Effect](#effect)[]) - Array of dependent effects
 - `install` (Array) - Install action specification
 - `uninstall` (Array) - Uninstall action specification
 - `build` (Array) - Build action specification
@@ -47,7 +67,7 @@ Create a symbolic link to this effect at the specified path.
 
 - `path` (string) - Destination path for the symbolic link
 
-**Returns:** Effect
+**Returns:** [Effect](#effect)
 
 ---
 
@@ -60,7 +80,7 @@ Create a hard link to this effect at the specified path.
 
 - `path` (string) - Destination path for the link
 
-**Returns:** Effect
+**Returns:** [Effect](#effect)
 
 ---
 
@@ -73,7 +93,7 @@ Copy this effect to the specified path.
 
 - `path` (string) - Destination path for the copy
 
-**Returns:** Effect
+**Returns:** [Effect](#effect)
 
 ---
 

@@ -16,14 +16,14 @@ User instances are typically created automatically by Host constructor.
 
 **Parameters:**
 
-- `host` (Host, required) - The host this user belongs to
+- `host` ([Host](./Host.md), required) - The host this user belongs to
 - `name` (string, required) - Username
 - `info` (Object, required) - User information object
 
 ## Properties
 
 - `name` (string) - Username
-- `host` (Host) - The associated host
+- `host` ([Host](./Host.md)) - The associated host
 - `home` (string) - Home directory path
 - `uid` (string) - User ID
 - `gid` (string) - Group ID
@@ -38,6 +38,6 @@ Execute a function with this user as the target context.
 
 **Parameters:**
 
-- `fn` (Function) - Function that receives the user as argument
+- `fn` ([EffectFn](./Effect.md#effectfn)) - Function that receives the user as argument
 
 **Returns:** The return value of `fn`

@@ -22,9 +22,9 @@ export const HASH = HASH_PLACEHOLDER
 	@returns {Effect}
 */
 export const link = (origin, path, symbolic=false) => {
+  // NOTE: symbolic is an internal parameter, do not list it in the docs
 
   const target = getTarget()
-
   let { values: [origin2, path2], dependencies } = parseEffectValues([origin, path])
 
   if (path2.startsWith('~')) {

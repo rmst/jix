@@ -20,7 +20,7 @@ Build a Nix package using nix-build.
 - `name` (string, required) - Package attribute name (e.g., "git")
 - `nixpkgsPath` (string \| null, optional) - URL to nixpkgs archive for pinning (default: uses current channel)
 
-**Returns:** Effect representing the nix package derivation output path
+**Returns:** [Effect](./Effect.md) representing the nix package derivation output path
 
 Uses `/run/current-system/sw/bin/nix-build` on NixOS, `/nix/var/nix/profiles/default/bin/nix-build` elsewhere.
 

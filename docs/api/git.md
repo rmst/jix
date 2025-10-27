@@ -20,6 +20,6 @@ Clone a git repository and checkout a specific commit, including submodules.
 - `repo` (string, required) - Git repository URL
 - `commit` (string, required) - Commit hash to checkout
 
-**Returns:** Effect representing the repository directory (without `.git` directory)
+**Returns:** [Effect](./Effect.md) representing the repository directory (without `.git` directory)
 
 The checkout is shallow (depth 1) and submodules are initialized. The `.git` directory is removed from the output.

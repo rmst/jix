@@ -38,6 +38,6 @@ Execute a function with this host and root user as the target context.
 
 **Parameters:**
 
-- `fn` (Function) - Function that receives the host as argument
+- `fn` ([EffectFn](./Effect.md#effectfn)) - Function that receives the host as argument
 
 **Returns:** The return value of `fn`
