@@ -6,7 +6,7 @@ nav_order: 20
 
 # Effect
 
-Source: [`src/jix/effect.js#L146-252`](https://github.com/rmst/jix/blob/main/src/jix/effect.js#L146-252)
+Source: [`src/jix/effect.js#L154-299`](https://github.com/rmst/jix/blob/main/src/jix/effect.js#L154-299)
 
 Core class representing a jix effect. Effects are the fundamental building blocks in Jix that describe actions to build, install, and uninstall configurations.
 
@@ -41,6 +41,42 @@ new Effect(props)
 - `str` (string) - String representation (defaults to `path`)
 
 ## Methods
+
+### symlinkTo(path)
+
+Source: [`src/jix/effect.js#L288`](https://github.com/rmst/jix/blob/main/src/jix/effect.js#L288)
+
+Create a symbolic link to this effect at the specified path.
+
+**Parameters:**
+
+- `path` (string) - Destination path for the symbolic link
+
+**Returns:** Effect
+
+### linkTo(path)
+
+Source: [`src/jix/effect.js#L293`](https://github.com/rmst/jix/blob/main/src/jix/effect.js#L293)
+
+Create a hard link to this effect at the specified path.
+
+**Parameters:**
+
+- `path` (string) - Destination path for the link
+
+**Returns:** Effect
+
+### copyTo(path)
+
+Source: [`src/jix/effect.js#L298`](https://github.com/rmst/jix/blob/main/src/jix/effect.js#L298)
+
+Copy this effect to the specified path.
+
+**Parameters:**
+
+- `path` (string) - Destination path for the copy
+
+**Returns:** Effect
 
 ### normalize()
 

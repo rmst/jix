@@ -21,3 +21,5 @@ Only for classes/namespaces/objects maintain a separate file where their functio
 Always use of Markdown links to link to the file/section whenever you reference something.
 
 Provide links to the source files (including line numbers, e.g. `./my/file.js#L53`) as well.
+
+When including line numbers always make sure you always look at the relevant files including the line number (e.g. using `cat -n`)

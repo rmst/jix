@@ -132,8 +132,8 @@ export const str = (templateStrings, ...values) => {
 }
 
 
-/** @private */
-const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
+
+export const writeFile = (mode='-w') => (templateStrings, ...rawValues) => {
     
   const { values, dependencies } = parseEffectValues(rawValues)
 
@@ -199,8 +199,8 @@ export const scriptWithTempdir = (templateStrings, ...values) => {
 	@returns {Effect & { name: string }}
 */
 export const importTextfile = (origin, mode='-w') => {
+  // NOTE: mode is a private param, do not mention in docs
 	let content = fs.readFileSync(origin, 'utf8')
-
 	let e = writeFile(mode)`${content}`
 	e.name = basename(origin)
 	return e

@@ -3,7 +3,7 @@
 import { Effect, withTarget, getTarget } from './effect.js'
 
 import { HOME_PLACEHOLDER, JIX_DIR } from './context.js'
-import base, { HASH, scriptWithTempdir, buildDir } from './base.js'
+import base, { HASH, scriptWithTempdir, buildDir, writeFile } from './base.js'
 import service from './service/index.js'
 
 import nixos from './nixos'
@@ -47,6 +47,7 @@ let jix = {
   _internal: {
     JIX_PATH: HOME_PLACEHOLDER + "/" + JIX_DIR,  // TODO: this should be independent of the user home
     HASH,
+    writeFile,
   },
 
 }
