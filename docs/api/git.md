@@ -10,14 +10,8 @@ Source: [`src/jix/git/index.js`](https://github.com/rmst/jix/blob/main/src/jix/g
 
 Git repository operations namespace.
 
-## Functions
-
-### checkout
+## `checkout({repo, commit})`
 Source: [`src/jix/git/index.js#L4-23`](https://github.com/rmst/jix/blob/main/src/jix/git/index.js#L4-23)
-
-```javascript
-checkout({repo, commit})
-```
 
 Clone a git repository and checkout a specific commit, including submodules.
 

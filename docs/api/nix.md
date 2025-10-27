@@ -10,14 +10,8 @@ Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/main/src/jix/n
 
 Nix package management namespace.
 
-## Functions
-
-### pkg
+## `pkg(name, nixpkgsPath=null)`
 Source: [`src/jix/nix/index.js#L21-40`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js#L21-40)
-
-```javascript
-pkg(name, nixpkgsPath=null)
-```
 
 Build a Nix package using nix-build.
 
@@ -30,9 +24,9 @@ Build a Nix package using nix-build.
 
 Uses `/run/current-system/sw/bin/nix-build` on NixOS, `/nix/var/nix/profiles/default/bin/nix-build` elsewhere.
 
-## Properties
+---
 
-### pkgs
+## `pkgs`
 Source: [`src/jix/nix/index.js#L44-53`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js#L44-53)
 
 Proxy object for accessing package binaries.

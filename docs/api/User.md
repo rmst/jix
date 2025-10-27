@@ -10,11 +10,7 @@ Source: [`src/jix/targets.js#L69-114`](https://github.com/rmst/jix/blob/main/src
 
 Class representing a user on a host.
 
-## Constructor
-
-```javascript
-new User(host, name, info)
-```
+## `new User(host, name, info)`
 
 User instances are typically created automatically by Host constructor.
 
@@ -33,14 +29,10 @@ User instances are typically created automatically by Host constructor.
 - `gid` (string) - Group ID
 - `shell` (string) - Default shell path
 
-## Methods
+---
 
-### install
+## `install(fn)`
 Source: [`src/jix/targets.js#L107-112`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L107-112)
-
-```javascript
-install(fn)
-```
 
 Execute a function with this user as the target context.
 

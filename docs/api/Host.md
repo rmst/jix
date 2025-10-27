@@ -10,11 +10,7 @@ Source: [`src/jix/targets.js#L6-66`](https://github.com/rmst/jix/blob/main/src/j
 
 Class representing a target host machine.
 
-## Constructor
-
-```javascript
-new Host(address, users = {})
-```
+## `new Host(address, users = {})`
 
 **Parameters:**
 
@@ -33,14 +29,10 @@ Host information is automatically queried from the target machine.
 - `os_version` (string) - OS version string
 - `machineId` (string) - Unique machine identifier
 
-## Methods
+---
 
-### install
+## `install(fn)`
 Source: [`src/jix/targets.js#L60-65`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L60-65)
-
-```javascript
-install(fn)
-```
 
 Execute a function with this host and root user as the target context.
 
