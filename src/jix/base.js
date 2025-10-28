@@ -1,4 +1,5 @@
 import * as fs from 'node:fs'
+import { createHash } from 'node:crypto'
 
 import { JIX_DIR, HASH_PLACEHOLDER } from './context.js'
 import { parseEffectValues, effect, getTarget, Effect } from './effect.js'
@@ -100,6 +101,25 @@ export const customEffect = ({install=null, uninstall=null, ...other}) => {
 
 
 /**
+  @param {string} command
+  @param {{errorMessage?: string}} options
+  @returns {Effect}
+*/
+export const existingCommand = (command, {errorMessage = null} = {}) => {
+  errorMessage = errorMessage ?? `Error: command '${command}' not found`
+  return customEffect({
+    install: `
+      if ! command -v "${command}" >/dev/null 2>&1; then
+        echo "${errorMessage}" >&2
+        exit 1
+      fi
+    `,
+    str: command,
+  })
+}
+
+
+/**
   Creates a directory. Install via `mkdir -p`. Uninstall will only remove the dir if it is empty.
   @param {string} path 
   @returns {Effect}
@@ -187,7 +207,13 @@ export const scriptWithTempdir = (templateStrings, ...values) => {
     "${inner}"
     exitcode=$?
 
-    rm -rf "$JIX_TEMP"
+    # Retry cleanup with delays if it fails
+    rm -rf "$JIX_TEMP" || \
+    sleep 0.1 && rm -rf "$JIX_TEMP" || \
+    sleep 1 && rm -rf "$JIX_TEMP" || {
+      echo "Error: Failed to clean up temporary directory $JIX_TEMP after multiple attempts" >&2
+      exit 1
+    }
 
     exit $exitcode
   `
@@ -266,7 +292,7 @@ let base = {
 
   script,
   textfile,
-  
+
   importScript,
   importTextfile,
 
@@ -279,6 +305,8 @@ let base = {
   dir,
 
   customEffect,
+
+  existingCommand,
 
   stateDir,
 

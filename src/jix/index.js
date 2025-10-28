@@ -12,6 +12,7 @@ import git from './git'
 import { appendToFile } from './appendToFile.js'
 import shelltools from './shelltools'
 import { Host, User } from './targets.js'
+import container from './container'
 
 let jix = {
 
@@ -34,6 +35,7 @@ let jix = {
   experimental: {
     nixos,
     shelltools,
+    container,
 
     appendToFile,
     scriptWithTempdir,
