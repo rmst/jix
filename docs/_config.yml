@@ -5,6 +5,10 @@ exclude:
   - AGENTS.md
   - CLAUDE.md
   - last-updated
+  - vendor
+  - .gitignore
+  - Gemfile
+  - Gemfile.lock
 
 # Site settings
 title: Jix Documentaion

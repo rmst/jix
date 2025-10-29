@@ -1,7 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (7.2.2.2)
+    activesupport (7.2.3)
       base64
       benchmark (>= 0.3)
       bigdecimal
@@ -45,7 +45,7 @@ GEM
       logger
     faraday-net_http (3.4.1)
       net-http (>= 0.5.0)
-    ffi (1.17.2-x86_64-linux-musl)
+    ffi (1.17.2)
     forwardable-extended (2.6.0)
     gemoji (4.1.0)
     github-pages (232)
@@ -227,6 +227,7 @@ GEM
       rb-inotify (~> 0.9, >= 0.9.10)
     logger (1.7.0)
     mercenary (0.3.6)
+    mini_portile2 (2.8.9)
     minima (2.5.1)
       jekyll (>= 3.5, < 5.0)
       jekyll-feed (~> 0.9)
@@ -234,7 +235,8 @@ GEM
     minitest (5.26.0)
     net-http (0.6.0)
       uri
-    nokogiri (1.18.10-x86_64-linux-musl)
+    nokogiri (1.18.10)
+      mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
     octokit (4.25.1)
       faraday (>= 1, < 3)
@@ -271,6 +273,7 @@ GEM
     webrick (1.9.1)
 
 PLATFORMS
+  aarch64-linux
   x86_64-linux-musl
 
 DEPENDENCIES

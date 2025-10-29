@@ -13,7 +13,7 @@ import nix from '../nix/index.js';
   TODO: should be configurable via context manager, e.g. jix.experimental.container.withContainer({ dockerCli: customPathOfEffect })
   @returns {Effect}
  */
-export const dockerCli = () => {
+export const docker = () => {
   let target = jix.target()
 
   if(false) {
@@ -36,8 +36,8 @@ export const dockerCli = () => {
  */
 export const tag = (mapping) => {
   let ops = Object.entries(mapping).map(([k, v]) => jix.customEffect({
-    install: `${dockerCli} tag "${v}" ${k}`,
-    uninstall: `${dockerCli} rmi "${k} || true"`
+    install: `${docker} tag "${v}" ${k}`,
+    uninstall: `${docker} rmi "${k} || true"`
   }))
 
   return jix.effect(ops)
@@ -45,8 +45,15 @@ export const tag = (mapping) => {
 
 
 export const network = (name) => jix.customEffect({
-  install: `${dockerCli} network create --internal ${name}`,
-  uninstall: `${dockerCli} network rm ${name}`,
+  install: `${docker} network create --internal ${name}`,
+  uninstall: `${docker} network rm ${name}`,
+  str: name,
+})
+
+
+export const volume = (name) => jix.customEffect({
+  install: `${docker} volume create ${name}`,
+  uninstall: `${docker} volume rm ${name}`,
   str: name,
 })
 
@@ -65,18 +72,18 @@ export const imageFromDockerfile = (templateStrings, ...values) => {
   let transformedValues = values.map(x => {
     if(typeof x === "function") {
       x = x()
-      if(! (x instanceof jix.Effect))
+      if(! (x instanceof Effect))
         throw TypeError(`Interpolated functions must return Effect, instead got: ${x}`)
     }
-
-    if(! (x instanceof jix.Effect))
-      return x
 
     if(typeof x !== "object")
       return x
 
-    if(! x.hash)
+    if(! (x instanceof Effect))
       return x
+
+    if(! x.path)
+      return x  // is effect but doesn't have a path (e.g. another image)
 
     drvsToCopy.push(x)
     return x.hash  // the new path
@@ -99,7 +106,7 @@ export const imageFromDockerfile = (templateStrings, ...values) => {
     ${copyCommands}
 
     cp "${dockerfile}" ./Dockerfile
-    "${dockerCli}" build -t jix:$JIX_HASH .
+    "${docker}" build -t jix:$JIX_HASH .
   
   `
 
@@ -109,7 +116,7 @@ export const imageFromDockerfile = (templateStrings, ...values) => {
       export JIX_HASH=${HASH}
       "${script}"
     `],
-    uninstall: ["execShV1", `"${dockerCli}" rmi jix:${HASH} || true`],
+    uninstall: ["execShV1", `"${docker}" rmi jix:${HASH} || true`],
     str: `jix:${HASH}`,
   })
 }
@@ -123,11 +130,11 @@ export const run = ({exe, name=null, args=[]}) => {
   // TODO: always killing an existing container, doesn't seem to be generally desirable
 
   let killExisting = name 
-    ? `${dockerCli} kill ${name} > /dev/null 2>&1 || true`  // in case it was orphaned
+    ? `${docker} kill ${name} > /dev/null 2>&1 || true`  // in case it was orphaned
     : ''
 
   let deleteExisting = name 
-    ? `${dockerCli} rm -f ${name} > /dev/null 2>&1 || true`  // in case it was orphaned
+    ? `${docker} rm -f ${name} > /dev/null 2>&1 || true`  // in case it was orphaned
     : ''
 
   args = [
@@ -151,7 +158,7 @@ export const run = ({exe, name=null, args=[]}) => {
     
     test -t 1 && USE_TTY="-it" || USE_TTY=""  # run interactively if we're in an interactive shell
 
-    exec "${dockerCli}" run \
+    exec "${docker}" run \
     $USE_TTY \
     ${args.join(" \\\n")} \
     /.jix-user-exe "$@"
@@ -161,13 +168,14 @@ export const run = ({exe, name=null, args=[]}) => {
 
 
 export default {
-  dockerCli,
+  docker,
   run,
 
   aptInstall,
   tag,
   imageFromDockerfile,
   network,
+  volume,
 
 }
 

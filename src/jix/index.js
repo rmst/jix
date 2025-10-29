@@ -24,6 +24,8 @@ let jix = {
 
   git,
 
+  container,
+
   Effect,
   Host,
   User,
@@ -32,10 +34,10 @@ let jix = {
   HOME: HOME_PLACEHOLDER,
 
   // NOTE: do not list this in docs
+
   experimental: {
     nixos,
     shelltools,
-    container,
 
     appendToFile,
     scriptWithTempdir,
