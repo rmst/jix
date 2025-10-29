@@ -46,4 +46,3 @@ hash2'
 
 - Without `--abandon`: Attempts to properly uninstall each effect and reports success/failure
 - With `--abandon`: Directly removes hashes from the existing list without attempting uninstallation
-- Shows counts before and after the operation

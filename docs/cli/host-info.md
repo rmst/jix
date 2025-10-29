@@ -38,4 +38,5 @@ The command displays:
 - Host information (OS, architecture, machine ID, etc.)
 - User information (home directory, UID, GID, shell, etc.)
 - List of applied effects for the target host/user combination
-- Paths of effects that are not in the `~/.jix/` directory
+- Paths of installed effects
+

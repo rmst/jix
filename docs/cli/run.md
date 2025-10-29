@@ -30,12 +30,6 @@ Run a command defined in the current directory's `__jix__.js` manifest under `ex
 - `-v, --verbose` - Show jix install/uninstall logs for this run
 - `-f, --file <path>` - Use a specific manifest file or directory
 
-## Notes
-
-- Only flags placed before `<command-name>` are consumed by jix itself. Everything after `<command-name>` (or after a standalone `--`) is forwarded unchanged to your script.
-- If leftover effects from a previous run are detected, they will be automatically cleaned up before running the command.
-- Effects are automatically uninstalled after the command completes or is interrupted (via SIGINT/SIGTERM).
-
 ## Examples
 
 ```bash

@@ -38,9 +38,3 @@ jix install foo
 jix install -f ./my-tools
 jix install --dry-run
 ```
-
-## Behavior
-
-- If the `JIX_GITCOMMIT` environment variable is set and the repository is dirty, the command will automatically commit changes before installing
-- The manifest file path is resolved to an absolute path
-- The install process applies effects defined in the manifest
