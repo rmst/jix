@@ -1,10 +1,10 @@
 
-let repo = jix.git.checkout({
+let repo = () => jix.git.checkout({
 	repo: "https://github.com/bellard/quickjs", 
 	commit: "fa628f8c523ecac8ce560c081411e91fcaba2d20",  // release 2025-09-13
 })
 
-const bin = jix.build`
+const quickjs = () => jix.build`
 	cp -r "${repo}" ./repo
 	cd repo
 	make
@@ -20,7 +20,13 @@ const bin = jix.build`
 	ls -la $out
 `
 
-export default {
-	qjs: jix.str`${bin}/qjs`,
-	qjsc: jix.str`${bin}/qjsc`,
+
+/**
+	Run via: jix run -f examples/build.__jix__.js
+*/
+export const run = {
+	default: () => `
+		${quickjs}/qjs --eval 'console.log("Hello from Quickjs!")'
+	`
 }
+
