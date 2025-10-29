@@ -1,6 +1,6 @@
 
 import { sh } from '../util.js'
-import { git } from './git.js'
+import git from './git.js'
 import install from '../core/install.js'
 import { findJixRoot } from './util.js'
 import { dedent } from '../../jix/dedent.js'

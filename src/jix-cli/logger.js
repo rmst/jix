@@ -17,3 +17,5 @@ export const log = (...args) => {
 export const error = (...args) => {
 	console.log(...args)
 }
+
+export const isVerbose = () => state.verbose

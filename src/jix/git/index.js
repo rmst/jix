@@ -11,7 +11,7 @@ let checkout = ({repo, commit}) => jix.build`
 	# Step 2: Checkout the specified commit hash
 	cd ./repo
 	git fetch --depth 1 origin "$commit_hash"
-	git checkout "$commit_hash"
+	git -c advice.detachedHead=false checkout "$commit_hash"
 	
 	# Step 3: Initialize and update submodules shallowly
 	git submodule update --init --depth 1

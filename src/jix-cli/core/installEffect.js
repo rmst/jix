@@ -11,6 +11,7 @@ import { UserError } from './UserError.js'
 import db from '../db/index.js'
 import { resolveEffectTarget } from './hosts.js'
 import { shellEscape } from '../../jix/util.js'
+import * as logger from '../logger.js'
 
 
 /**
@@ -24,7 +25,7 @@ export const executeCmd = (command, address, user) => {
   if(command === null)  // noop
     return
 
-  let options = command.verbose ? { stdout: 'inherit', stderr: 'inherit' } : {}
+  let options = (command.verbose && logger.isVerbose()) ? { stdout: 'inherit', stderr: 'inherit' } : {}
   let { cmd, args } = command
 
   if(address !== "localhost") {
