@@ -31,7 +31,7 @@ export const docker = () => {
 
 
 /**
-  @param {Record<string, Effect>} mapping 
+  @param {Record<string, EffectOrFn>} mapping 
   @returns {Effect}
  */
 export const tag = (mapping) => {

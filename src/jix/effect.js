@@ -45,7 +45,9 @@ export const getTarget = () => {
   let tgt = useContext(TARGET_CONTEXT)
 
   if(tgt === null) {
-    throw Error("Missing target context. NOTE: You can't define effects at the top-level of a file!")
+    throw Error(dedent`
+      Missing target context. Do not define effects at the top-level of a file. E.g. replace  myEffect(...)  with  () => myEffect(...)  .
+    `)
   }
 
   return tgt
