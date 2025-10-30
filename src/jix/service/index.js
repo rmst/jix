@@ -1,4 +1,4 @@
-import jix, { buildDir } from "../base.js"
+import jix, { dirWith } from "../base.js"
 import stateDir from "../stateDir.js"
 import launchdService from './launchd.js'
 import systemdService from './systemd.js'
@@ -96,7 +96,7 @@ export default ({
 		`;
 
 		// this is just so MacOS shows a nice name in various UIs and not a hash
-		wrapperScript = jix.str`${buildDir({[label]: wrapperScript })}/${label}`
+		wrapperScript = jix.str`${dirWith({[label]: wrapperScript })}/${label}`
 
 		const serviceImplementation = serviceImplementations[target.host.os]
 

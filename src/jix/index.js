@@ -3,7 +3,7 @@
 import { Effect, withTarget, getTarget } from './effect.js'
 
 import { HOME_PLACEHOLDER, JIX_DIR } from './context.js'
-import base, { HASH, scriptWithTempdir, buildDir, writeFile } from './base.js'
+import base, { HASH, scriptWithTempdir, dirWith, writeFile } from './base.js'
 import service from './service/index.js'
 
 import nixos from './nixos'
@@ -41,7 +41,6 @@ let jix = {
 
     appendToFile,
     scriptWithTempdir,
-    buildDir,
 
     withTarget,
     getTarget,

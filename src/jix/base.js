@@ -269,7 +269,7 @@ export const build = (templateStrings, ...values) => {
 	@param {Record<string,string|EffectOrFn>} files
 	@returns {Effect}
 */
-export const buildDir = (files) => {
+export const dirWith = (files) => {
   const copyCommands = Object.entries(files)
 		.map(([name, sourcePath]) => {
 			const source = shellEscape(`${sourcePath}`)
@@ -313,6 +313,7 @@ let base = {
   str,
 
   build,
+  dirWith,
 
   target: () => getTarget(),
 
