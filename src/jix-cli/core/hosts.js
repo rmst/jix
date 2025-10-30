@@ -157,11 +157,11 @@ export const queryUserInfo = ({host, user}) => {
 		uid: sh`id -u -- '${user}'`,
 		gid: sh`id -g -- '${user}'`,
 		home: host.os === "macos"
-			? sh`id -P "${user}" | awk -F: '{print $9}'`
-			: sh`getent passwd -- "${user}" | cut -d: -f6`,
+			? sh`id -P "${user}"`.split(':')[8]
+			: sh`grep "^${user}:" /etc/passwd`.split(':')[5],
 		shell: host.os === "macos"
-			? sh`id -P "${user}" | awk -F: '{print $10}'`
-			: sh`getent passwd --  "${user}" | cut -d: -f7`,
+			? sh`id -P "${user}"`.split(':')[9]
+			: sh`grep "^${user}:" /etc/passwd`.split(':')[6],
 	}
 
 }
