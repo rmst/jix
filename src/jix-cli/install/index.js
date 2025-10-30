@@ -1,8 +1,7 @@
 
-import { sh } from '../util.js'
+import { sh, resolveManifestPath } from '../util.js'
 import git from './git.js'
 import install from '../core/install.js'
-import { findJixRoot } from './util.js'
 import { dedent } from '../../jix/dedent.js'
 import { MANIFEST_BASENAME } from '../../jix/context.js'
 import { parseArgs } from '../parseArgs.js'
@@ -20,8 +19,9 @@ export default {
 	  [name]  Name of the install (defaults to "default")
 
 	Options:
-	  --dry-run         Show what would be installed/uninstalled without making changes
-	  -f, --file <path> Use a specific manifest file or directory
+	  --dry-run             Show what would be installed/uninstalled without making changes
+	  -f, --file <path>     Use a specific manifest file or directory
+	  --find-manifest       Search parent directories for manifest
 
 	Examples:
 	  jix install
@@ -29,6 +29,7 @@ export default {
 	  jix install foo
 	  jix install -f ./my-tools
 	  jix install --dry-run
+	  jix install --find-manifest
 	`,
 	async run(args) {
 		const { flags, positionals } = parseArgs(args, { f: 'value', file: 'value' })
@@ -39,8 +40,19 @@ export default {
 		}
 
 		const name = positionals[0] || 'default'
+		const inputPath = flags.f || flags.file || '.'
+		const findManifest = flags['find-manifest'] || false
 
-		const path = sh`realpath '${findJixRoot(flags.f || flags.file || '.')}'`.trim()
+		const path = resolveManifestPath(inputPath, findManifest)
+
+		if (!path) {
+			if (findManifest) {
+				console.log(`No ${MANIFEST_BASENAME} found in ${inputPath} or any parent directories`)
+			} else {
+				console.log(`Manifest not found: ${inputPath}`)
+			}
+			return
+		}
 
 		if (process.env.JIX_GITCOMMIT) {
 			let gitRoot = git.root(path)

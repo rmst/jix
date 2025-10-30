@@ -1,5 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { dedent } from '../jix/dedent';
+import * as fs from 'node:fs';
+import { MANIFEST_BASENAME } from '../jix/context.js';
 
 
 export function relpath(from, to) {
@@ -163,4 +165,46 @@ export function uuidV4() {
 	}
 
 	return uuidString;
+}
+
+
+/**
+ * Resolve manifest path from a given path or directory
+ * @param {string} path - Path to file or directory (defaults to current directory)
+ * @param {boolean} findManifest - If true, search parent directories for manifest
+ * @returns {string|null} - Absolute path to manifest, or null if not found
+ */
+export function resolveManifestPath(path = '.', findManifest = false) {
+	const join = (a, b) => (a.endsWith('/') || a.endsWith('\\')) ? a + b : a + '/' + b
+
+	if (findManifest) {
+		// For findManifest mode, start from the directory (not the file)
+		let searchPath = path
+		if (fs.existsSync(searchPath) && !fs.statSync(searchPath).isDirectory()) {
+			// If it's a file, start from its parent directory
+			searchPath = searchPath.substring(0, searchPath.lastIndexOf('/')) || '.'
+		}
+
+		// Search upward through parent directories
+		while (true) {
+			const candidate = join(searchPath, MANIFEST_BASENAME)
+			if (fs.existsSync(candidate)) {
+				return sh`realpath ${candidate}`.trim()
+			}
+			const parentDir = searchPath.substring(0, searchPath.lastIndexOf('/')) || '.'
+			if (parentDir === searchPath) {
+				return null
+			}
+			searchPath = parentDir
+		}
+	} else {
+		// Exact path mode: if directory, look inside; if file, use it
+		if (fs.existsSync(path) && fs.statSync(path).isDirectory()) {
+			path = join(path, MANIFEST_BASENAME)
+		}
+		if (fs.existsSync(path)) {
+			return sh`realpath ${path}`.trim()
+		}
+		return null
+	}
 }

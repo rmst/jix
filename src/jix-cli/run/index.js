@@ -1,5 +1,5 @@
 import install from '../core/install.js'
-import { sh } from '../util.js'
+import { sh, resolveManifestPath } from '../util.js'
 import * as fs from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import process from 'node:process'
@@ -8,30 +8,23 @@ import { withLogger } from '../logger.js'
 import db from '../db/index.js'
 import { style } from '../prettyPrint.js'
 import { MANIFEST_BASENAME } from '../../jix/context.js'
+import { parseArgs } from '../parseArgs.js'
 
 
-async function run(cmd, args, { verbose = false, file } = {}) {
-	let manifestPath = `./${MANIFEST_BASENAME}`
-	const join = (a, b) => (a.endsWith('/') || a.endsWith('\\')) ? a + b : a + '/' + b
-	if (file) {
-		let candidate = file
-		if (!fs.existsSync(candidate)) {
-			console.log(`Specified path does not exist: ${candidate}`)
-			return
+async function run(cmd, args, { verbose = false, file, findManifest = false } = {}) {
+	const inputPath = file || '.'
+	const manifestPath = resolveManifestPath(inputPath, findManifest)
+
+	if (!manifestPath) {
+		if (findManifest) {
+			console.log(`No ${MANIFEST_BASENAME} found in ${inputPath} or any parent directories`)
+		} else {
+			console.log(`Manifest not found: ${inputPath}`)
 		}
-		const stat = fs.statSync(candidate)
-		if (stat.isDirectory())
-			candidate = join(candidate, MANIFEST_BASENAME)
-		manifestPath = candidate
-	}
-
-	if (!fs.existsSync(manifestPath)) {
-		console.log(`Manifest not found: ${manifestPath}`)
 		return
 	}
 
-  // The dynamic import in 'apply' needs an absolute path.
-  const absoluteManifestPath = sh`realpath ${manifestPath}`.trim() // TODO: obvious get rid of this
+  const absoluteManifestPath = manifestPath
 
   // Default to the "default" entry if no name is provided
   if (!cmd)
@@ -116,6 +109,7 @@ export default {
 		Options before <command-name>:
 		  -v, --verbose        Show jix install/uninstall logs for this run
 		  -f, --file <path>    Use a specific manifest file or directory
+		  --find-manifest      Search parent directories for manifest
 
 	Notes:
 	  - Only flags placed before <command-name> are consumed by jix itself.
@@ -129,40 +123,25 @@ export default {
 	  jix run -- hello --debug
 	`,
 	async run(args) {
-		// Parse flags before the script name; support "--" sentinel
-		let verbose = false
-		let file
-		let i = 0
-		while (i < args.length) {
-			const tok = args[i]
-			if (tok === '--') { i++; break }
-			if (tok === '--help' || tok === '-h') {
-				console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
-				return
-			}
-			if (tok === '--verbose' || tok === '-v') { verbose = true; i++; continue }
-			if (tok === '-f') {
-				file = args[i + 1]
-				i += 2
-				continue
-			}
-			if (tok.startsWith('--file=')) {
-				file = tok.slice('--file='.length)
-				i++
-				continue
-			}
-			if (tok === '--file') {
-				file = args[i + 1]
-				i += 2
-				continue
-			}
-			if (tok.startsWith('-')) { i++; continue }
-			break
+		const { flags, positionals, sawDoubleDash } = parseArgs(
+			args,
+			{ v: true, verbose: true, f: 'value', file: 'value' },
+			{ stopAtPositional: true }
+		)
+
+		if (flags.help || flags.h) {
+			console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
+			return
 		}
 
-		const sub = args[i]
-		const rest = args.slice(i + 1)
+		const verbose = flags.verbose || flags.v || false
+		const file = flags.file || flags.f
+		const findManifest = flags['find-manifest'] || false
 
-		await run(sub, rest, { verbose, file })
+		// If -- was used, treat all positionals as args to the default command
+		const cmd = sawDoubleDash ? undefined : positionals[0]
+		const rest = sawDoubleDash ? positionals : positionals.slice(1)
+
+		await run(cmd, rest, { verbose, file, findManifest })
 	}
 }

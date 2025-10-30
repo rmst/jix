@@ -7,21 +7,6 @@ import db from '../db/index.js'
 
 export const MANIFEST_NAME = MANIFEST_BASENAME
 
-export function findJixRoot(path) {
-
-  if (fs.existsSync(`${path}/${MANIFEST_NAME}`)) {
-    return `${path}/${MANIFEST_NAME}`
-  }
-
-  const parentDir = path.substring(0, path.lastIndexOf('/'))
-  if (parentDir === '' || parentDir === path) {
-    throw new Error(`No ${MANIFEST_NAME} file found in any parent directories`)
-  }
-
-  return findJixRoot(parentDir)
-}
-
-
 // Print a warning about manifest IDs in active.json whose files no longer exist
 export function warnAboutStaleManifestIds() {
   if (!db.active.exists()) return

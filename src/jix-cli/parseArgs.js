@@ -1,16 +1,19 @@
 // Simple argument parser for CLI commands
-// Returns { flags: {}, positionals: [] }
-export function parseArgs(args, schema = {}) {
+// Returns { flags: {}, positionals: [], sawDoubleDash: boolean }
+export function parseArgs(args, schema = {}, options = {}) {
 	const flags = {}
 	const positionals = []
+	let sawDoubleDash = false
 	let i = 0
 
 	while (i < args.length) {
 		const arg = args[i]
 
-		// Stop parsing flags after --
+		// Stop parsing flags after -- (don't include -- itself in positionals)
 		if (arg === '--') {
-			positionals.push(...args.slice(i + 1))
+			sawDoubleDash = true
+			i++
+			positionals.push(...args.slice(i))
 			break
 		}
 
@@ -42,7 +45,14 @@ export function parseArgs(args, schema = {}) {
 		// Positional argument
 		positionals.push(arg)
 		i++
+
+		// If stopAtPositional is set, treat everything after the first positional as positionals
+		// (but only if we actually found a real positional, not via the -- path above)
+		if (options.stopAtPositional) {
+			positionals.push(...args.slice(i))
+			break
+		}
 	}
 
-	return { flags, positionals }
+	return { flags, positionals, sawDoubleDash }
 }
