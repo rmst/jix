@@ -19,7 +19,7 @@ export const run = {
 			-e BUNDLE_PATH=/srv/jekyll/vendor/bundle \
 			-p 4000:4000 \
 			${jekyll} \
-			bash -c "bundle install && bundle exec jekyll serve --host 0.0.0.0"
+			/bin/sh -c "bundle install && bundle exec jekyll serve --host 0.0.0.0"
 	`,
 }
 
