@@ -51,7 +51,8 @@ export default async function install({
   // loadHosts()
 
   // Derive ID from absolute manifest path and scoped name
-	const manifestPath = sh`realpath '${sourcePath}'`.trim()
+	// const manifestPath = sh`realpath '${sourcePath}'`.trim()
+  const manifestPath = sourcePath
 	const jixId = `${manifestPath}#${name}`
 
   // Prepare results and drvs
