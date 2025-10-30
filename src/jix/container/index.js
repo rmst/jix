@@ -37,7 +37,7 @@ export const docker = () => {
 export const tag = (mapping) => {
   let ops = Object.entries(mapping).map(([k, v]) => jix.customEffect({
     install: `${docker} tag "${v}" ${k}`,
-    uninstall: `${docker} rmi "${k} || true"`
+    uninstall: `${docker} rmi "${k}" || true`
   }))
 
   return jix.effect(ops)
