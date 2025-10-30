@@ -24,12 +24,18 @@ export function createContext(defaultValue) {
 
     /**
      * Provides a value for this context for the duration of the callback's execution.
+     * If no callback is provided, sets the defaultValue instead.
      *
      * @param {*} value The value to provide to consumers within the callback.
-     * @param {() => any} callback The function to execute within this context's scope.
-     * @returns The return value of the callback function.
+     * @param {() => any} [callback] The function to execute within this context's scope.
+     * @returns The return value of the callback function, or undefined if no callback.
      */
     provide(value, callback) {
+      if(!callback) {
+        context.defaultValue = value
+        return
+      }
+
       // Get or create the value stack for this specific context
       if (!activeContexts.has(contextId)) {
         activeContexts.set(contextId, []);

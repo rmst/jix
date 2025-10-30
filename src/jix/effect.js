@@ -28,14 +28,11 @@ const TARGET_CONTEXT = createContext(null)
 export const withTarget = (target, fn=null) => {
   if(!(target.host.constructor.name === 'Host'))
     throw TypeError(`${target.host}`)
-  
+
   if(!(target.user.constructor.name === 'User'))
     throw TypeError(`${target.user}`)
 
-  if(fn)
-    return TARGET_CONTEXT.provide(target, fn)
-  else
-    TARGET_CONTEXT.defaultValue = target
+  return TARGET_CONTEXT.provide(target, fn)
 }
 
 /**
@@ -308,7 +305,7 @@ export class Effect {
 const targetizeString = (str) => {
   const tgt = getTarget()
   if (!tgt.user.home)
-    throw Error(`Fatal: ${tgt}`)
+    throw Error(`Fatal: ${tgt.host} | ${tgt.user}`)
 
   return str
     .replaceAll(HOME_PLACEHOLDER, tgt.user.home)
