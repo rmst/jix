@@ -95,8 +95,10 @@ export const queryHostInfo = (address, user) => {
 
 		// Get machine ID for Linux with systemd
 		try {
-			machineId = sh`cat /etc/machine-id`.trim()
-			if (!machineId) {
+			machineId = address === "localhost"
+				? sh`cat /etc/machine-id || echo ""`.trim()
+				: sh`cat /etc/machine-id`.trim()
+			if (address !== "localhost" && !machineId) {
 				throw new UserError("Failed to obtain machine ID from /etc/machine-id")
 			}
 		} catch (e) {
