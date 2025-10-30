@@ -8,26 +8,26 @@ import { createContext, useContext } from "../useContext"
 
 /**
 	@typedef {Object} NixOptions
-	@property {string | null} [nixpkgsPath] - Path to nixpkgs (e.g. https://github.com/NixOS/nixpkgs/archive/COMMIT_HASH.tar.gz)
+	@property {import("../effect").EffectOrFn | string | null} [nixpkgs] - Path to nixpkgs (e.g. https://github.com/NixOS/nixpkgs/archive/COMMIT_HASH.tar.gz)
 	@property {Record<string, string>} [extraArgs] - Additional nix-build arguments
 */
 
-const NIX_CONTEXT = createContext(/** @type {NixOptions} */({ nixpkgsPath: null, extraArgs: {} }))
+const NIX_CONTEXT = createContext(/** @type {NixOptions} */({ nixpkgs: null, extraArgs: {} }))
 
 /**
 	@template T
 	@param {NixOptions} options - Nix build options
-	@param {() => T} fn - Function to execute with these options
+	@param {() => T} [fn] - Function to execute with these options
 	@returns {T}
 */
-export const withNixOptions = (options, fn) => {
+export const withOptions = (options, fn) => {
 	return NIX_CONTEXT.provide(options, fn)
 }
 
 /**
 	@returns {NixOptions}
 */
-const getNixOptions = () => {
+const getOptions = () => {
 	return useContext(NIX_CONTEXT)
 }
 
@@ -49,14 +49,14 @@ export const pkg = ({name, options={}}) => {
 	let target = jix.target()
 
 	// Merge context options with provided options (provided options override context)
-	options = {...getNixOptions(), ...options}
+	options = {...getOptions(), ...options}
 
-	let nixbuildPath = target.host.os == "nixos"
-		? "/run/current-system/sw/bin/nix-build"
-		: "/nix/var/nix/profiles/default/bin/nix-build"
+	let nixBinPath = target.host.os == "nixos"
+		? "/run/current-system/sw/bin"
+		: "/nix/var/nix/profiles/default/bin"
 
-	let nixbuildArgs = options.nixpkgsPath
-		? `-I nixpkgs='${options.nixpkgsPath}'`
+	let nixbuildArgs = options.nixpkgs
+		? `'${options.nixpkgs}'`
 		: `'<nixpkgs>'`  // uses whatever is the current channel (TODO: this isn't reproducible and won't even trigger a re-evaluation if nixpkgs is updated)
 
 	// Add any extra args
@@ -65,7 +65,9 @@ export const pkg = ({name, options={}}) => {
 		.join(' ')
 
 	let derivation = jix.build`
-		"${nixbuildPath}" ${nixbuildArgs} ${extraArgsStr} -A "${name}" --out-link $out
+		result="$("${nixBinPath}"/nix-build ${extraArgsStr} ${nixbuildArgs} -A "${name}" --no-out-link | tail -n 1)"
+		"${nixBinPath}"/nix-store --add-root "$out" --indirect --realise "$result"
+
 	`
 
 	return derivation
@@ -95,5 +97,5 @@ export const pkgs = new Proxy({}, {
 export default {
 	pkg,
 	pkgs,
-	withNixOptions,
+	withOptions,
 }
