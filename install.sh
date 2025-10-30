@@ -8,6 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Build directory (passed from Makefile or default to bin)
 BUILD_DIR="${BUILD_DIR:-bin}"
 
+# Install mode: "dev" for symlinks, otherwise copy
+INSTALL_MODE="${INSTALL_MODE:-}"
+
 echo "📦 Installing to ~/.jix/jix..."
 mkdir -p "${HOME}/.jix/jix"
 mkdir -p "${HOME}/.jix/bin"
@@ -25,11 +28,14 @@ rm -rf "${HOME}/.jix/jix/modules"
 mkdir -p "${HOME}/.jix/jix/modules"
 cp -R "$SCRIPT_DIR/quickjs-x/qjsx-node/node" "${HOME}/.jix/jix/modules/node"
 
-# TODO: use copy not symlink in prod
-# cp -R "$SCRIPT_DIR/src/jix" "${HOME}/.jix/jix/modules/jix"
-# cp -R "$SCRIPT_DIR/src/jix-cli" "${HOME}/.jix/jix/modules/jix-cli"
-ln -s "$SCRIPT_DIR/src/jix" "${HOME}/.jix/jix/modules/jix"
-ln -s "$SCRIPT_DIR/src/jix-cli" "${HOME}/.jix/jix/modules/jix-cli"
+# Install jix modules based on mode
+if [ "$INSTALL_MODE" = "dev" ]; then
+	ln -s "$SCRIPT_DIR/src/jix" "${HOME}/.jix/jix/modules/jix"
+	ln -s "$SCRIPT_DIR/src/jix-cli" "${HOME}/.jix/jix/modules/jix-cli"
+else
+	cp -R "$SCRIPT_DIR/src/jix" "${HOME}/.jix/jix/modules/jix"
+	cp -R "$SCRIPT_DIR/src/jix-cli" "${HOME}/.jix/jix/modules/jix-cli"
+fi
 
 
 # Create wrapper script for jix
