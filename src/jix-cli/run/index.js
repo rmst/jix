@@ -125,7 +125,7 @@ export default {
 	async run(args) {
 		const { flags, positionals, sawDoubleDash } = parseArgs(
 			args,
-			{ v: true, verbose: true, f: 'value', file: 'value' },
+			{ v: true, verbose: true, f: 'value', file: 'value', 'find-manifest': true },
 			{ stopAtPositional: true }
 		)
 
