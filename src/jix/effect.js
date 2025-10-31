@@ -59,7 +59,14 @@ const EFFECT_CONTEXT = createContext(null)
  */
 export const collectEffects = (fn) => {
   let allEffects = []
-  EFFECT_CONTEXT.provide(allEffects, fn)
+  let result = EFFECT_CONTEXT.provide(allEffects, fn)
+  if(result){
+     if(! (result instanceof Effect))
+        throw Error(`Expected Effect but got: ${result}`)
+
+     return [result, ...allEffects]
+  }
+
   return allEffects
 }
 

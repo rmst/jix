@@ -61,22 +61,14 @@ export default async function install({
 
 	// Build effects (non-uninstall mode)
 	if (!uninstall) {
+
+    let host = new Host("localhost", {[process.env.USER]: {}})
+    withTarget({host, user: host.users[process.env.USER]})
+
 		globalThis.jix = jix
 		addQjsxPathForFile(manifestPath)
 		const module = await import(sourcePath)
-		// Migration helper: if a manifest still exports an explicit ID,
-		// rename its key in active.json to the absolute path-based ID.
-		// Safe to delete this block once explicit IDs are no longer encountered.
-		if (module && module.ID) {
-      let active = db.active.exists()
-        ? db.active.read()
-        : {}
-      if (active[module.ID]) {
-        active[jixId] = active[module.ID]
-        delete active[module.ID]
-        db.active.write(active)
-      }
-    }
+
 		// Warn about stale manifest IDs referencing missing files
 		warnAboutStaleManifestIds()
 
@@ -95,13 +87,15 @@ export default async function install({
 
           if(typeof fn === 'string')
             script = fn
+          else if(fn instanceof Effect)
+            script = fn
           else if(typeof fn === 'function')
             script = fn()
           else
-            throw new UserError(`export const run = { name: value }, expects value of type function, instead got: ${typeof fn}`)
+            throw new UserError(`export const run = { name: value }, expects value of type string, function or Effect, instead got: ${typeof fn}`)
 
           let effect = typeof script === 'string'
-            ? jix.script(script)
+            ? jix.script`${script}`
             : script
   
           if(!effect.path) {
