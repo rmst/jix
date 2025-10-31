@@ -1,22 +1,29 @@
 import jix from "../base"
+import nix from "../nix"
+
+let git = () => {
+	let target = jix.target()
+
+	if(target.host.os === "nixos") {
+		return nix.pkgs.git.git
+	}
+
+	return jix.existingCommand("git")
+}
 
 
 let checkout = ({repo, commit}) => jix.build`
 	repo_url="${repo}"
 	commit_hash="${commit}"
 
-	# Step 1: Clone the repository shallowly
-	git clone --no-checkout --depth 1 "$repo_url" ./repo
-	
-	# Step 2: Checkout the specified commit hash
+	alias git="${git}"
+
+	git -c advice.defaultBranchName=false init ./repo
 	cd ./repo
+	git remote add origin "$repo_url"
 	git fetch --depth 1 origin "$commit_hash"
-	git -c advice.detachedHead=false checkout "$commit_hash"
-	
-	# Step 3: Initialize and update submodules shallowly
-	git submodule update --init --depth 1
-	
-	# Step 4: Copy the repository to $out and remove .git directory
+	git -c advice.detachedHead=false checkout FETCH_HEAD
+	git submodule update --init --recursive --depth 1 --recommend-shallow
 	rm -rf ".git"
 	cd ..
 	cp -r ./repo "$out"
@@ -25,4 +32,5 @@ let checkout = ({repo, commit}) => jix.build`
 
 export default {
 	checkout,
+	git,
 }
