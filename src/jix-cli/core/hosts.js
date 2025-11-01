@@ -6,6 +6,7 @@ import { dedent } from "../../jix/dedent"
 import process from "node:process";
 import { UserError } from "./UserError.js"
 import db from "../db/index.js"
+import { log } from "../logger.js"
 
 /**
  * Describes the properties of a single system user.
@@ -286,9 +287,9 @@ export const hostInfoWithUser = (host, user, update=false) => {
 		throw new Error(`hostInfo requires non-null user (got user: ${user})`)
 
 	let hostInfo = getHostInfo(host)
-	
+
 	if(update || !hostInfo || !hostInfo.machineId) {
-		console.log(`Updating OS info for ${host} via user ${user}`)
+		log(`Updating OS info for ${host} via user ${user}`)
 
 		if(!("address" in host))
 			throw Error(`Needs host with address but got: ${host}`)
@@ -301,13 +302,13 @@ export const hostInfoWithUser = (host, user, update=false) => {
 		setHostInfo(hostInfo)
 	}
 
-	
+
 	if(!hostInfo?.users?.[user]) {
-		console.log(`Updating user info for ${user}@${hostInfo.address}`)
+		log(`Updating user info for ${user}@${hostInfo.address}`)
 
 		const userInfo = queryUserInfo({
 			host: hostInfo,
-			user,			
+			user,
 		})
 
 		hostInfo = {
