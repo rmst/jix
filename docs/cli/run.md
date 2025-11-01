@@ -29,6 +29,7 @@ Run a command defined in the current directory's `__jix__.js` manifest under `ex
 
 - `-v, --verbose` - Show jix install/uninstall logs for this run
 - `-f, --file <path>` - Use a specific manifest file or directory
+- `--find-manifest` - Search parent directories for manifest
 
 ## Examples
 

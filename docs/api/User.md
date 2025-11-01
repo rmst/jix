@@ -6,7 +6,7 @@ nav_order: 22
 
 # User
 
-Source: [`src/jix/targets.js#L69-114`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L69-114)
+Source: [`src/jix/targets.js#L69-113`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L69-113)
 
 Class representing a user on a host.
 

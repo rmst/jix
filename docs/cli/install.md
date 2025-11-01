@@ -28,6 +28,7 @@ Install a jix manifest from the current directory's `__jix__.js`.
 
 - `--dry-run` - Show what would be installed/uninstalled without making changes
 - `-f, --file <path>` - Use a specific manifest file or directory
+- `--find-manifest` - Search parent directories for manifest
 
 ## Examples
 
@@ -37,4 +38,5 @@ jix install default
 jix install foo
 jix install -f ./my-tools
 jix install --dry-run
+jix install --find-manifest
 ```
