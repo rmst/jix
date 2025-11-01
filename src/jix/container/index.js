@@ -122,11 +122,25 @@ export const imageFromDockerfile = (templateStrings, ...values) => {
 }
 
 
+
+
+
 /**
-  Run a user provided binary or script inside of docker container
-  @param {{exe: Effect, name?: string|null, args?: string[]}} options
+  Create a script that runs a docker container with specified options
+  @param {Object} options
+  @param {string} [options.workdir] - Working directory inside the container
+  @param {string} [options.basedir="/"] - Base directory for relative volume mounts
+  @param {Record<string, EffectOrFn>} [options.volumes] - Volume mounts (path: source)
+  @param {Record<string, string>} [options.env] - Environment variables
+  @param {string} [options.name] - Container name
+  @param {string[]} [options.args] - Additional docker run arguments
+  @returns {Effect}
+  @example
+  jix.script`
+    ${jix.container.run({workdir: "/wd", volumes: {wd: "$(pwd)"}})} myimage bash
+  `
  */
-export const run = ({exe, name=null, args=[]}) => {
+export const run = ({workdir=null, basedir="/", volumes={}, env={}, name=null, args=[]}={}) => {
   // TODO: always killing an existing container, doesn't seem to be generally desirable
 
   let killExisting = name 
@@ -137,6 +151,16 @@ export const run = ({exe, name=null, args=[]}) => {
     ? `${docker} rm -f ${name} > /dev/null 2>&1 || true`  // in case it was orphaned
     : ''
 
+  let volumeArgs = Object.entries(volumes).map(([k, v])=> {
+    return k.startsWith("/")
+      ? `-v "${v}:${k}"`
+      : `-v "${v}:${basedir}/${k}"`
+  })
+
+  let envArgs = Object.entries(env).map(([k,v]) => {
+    return `-e "${k}=${v}"`
+  })
+
   args = [
     '-i',  // "interactive" TODO: is this needed? document more
     '--log-driver=none',
@@ -144,8 +168,10 @@ export const run = ({exe, name=null, args=[]}) => {
     '--rm', // clean up image after run
     '--pull never',  // don't pull image from the internet (must exist locally)
     // ...(isPodman ? ['--replace'] : []), // necessary for podman
-    ...(name ? [`--name ${name}`] : []),  // set name
-    `-v ${exe}:/.jix-user-exe:ro`,
+    ...(workdir ? [`--workdir "${workdir}"`] : []),
+    ...(name ? [`--name ${name}`] : []),
+    ...volumeArgs,
+    ...envArgs,
     ...args,
   ]
 
@@ -161,7 +187,7 @@ export const run = ({exe, name=null, args=[]}) => {
     exec "${docker}" run \
     $USE_TTY \
     ${args.join(" \\\n")} \
-    /.jix-user-exe "$@"
+    "$@"
   `
 }
 
@@ -179,3 +205,11 @@ export default {
 
 }
 
+
+
+/*
+Notes:
+
+Potentially useful in the future:
+  WORKDIR="$(docker inspect --format='{{.Config.WorkingDir}}')"
+*/
