@@ -6,7 +6,7 @@ nav_order: 22
 
 # User
 
-Source: [`src/jix/targets.js#L69-113`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L69-113)
+Source: [`src/jix/targets.js#L69-113`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/targets.js#L69-113)
 
 Class representing a user on a host.
 
@@ -32,7 +32,7 @@ User instances are typically created automatically by Host constructor.
 ---
 
 ## `install(fn)`
-Source: [`src/jix/targets.js#L107-112`](https://github.com/rmst/jix/blob/main/src/jix/targets.js#L107-112)
+Source: [`src/jix/targets.js#L107-112`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/targets.js#L107-112)
 
 Execute a function with this user as the target context.
 

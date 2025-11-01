@@ -6,7 +6,7 @@ nav_order: 4
 
 # jix uninstall
 
-Source: [`src/jix-cli/uninstall.js`](https://github.com/rmst/jix/blob/main/src/jix-cli/uninstall.js)
+Source: [`src/jix-cli/uninstall.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix-cli/uninstall.js)
 
 Uninstall a jix manifest.
 

@@ -6,7 +6,7 @@ nav_order: 3
 
 # jix run
 
-Source: [`src/jix-cli/run/index.js`](https://github.com/rmst/jix/blob/main/src/jix-cli/run/index.js)
+Source: [`src/jix-cli/run/index.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix-cli/run/index.js)
 
 Execute a jix script or command.
 

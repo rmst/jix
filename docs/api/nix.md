@@ -6,12 +6,12 @@ nav_order: 11
 
 # nix
 
-Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js)
+Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/nix/index.js)
 
 Nix package management namespace.
 
 ## `pkg({name, options})`
-Source: [`src/jix/nix/index.js#L47`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js#L47)
+Source: [`src/jix/nix/index.js#L47`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/nix/index.js#L47)
 
 Build a Nix package using nix-build.
 
@@ -29,7 +29,7 @@ Uses `/run/current-system/sw/bin/nix-build` on NixOS, `/nix/var/nix/profiles/def
 ---
 
 ## `pkgs`
-Source: [`src/jix/nix/index.js#L78`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js#L78)
+Source: [`src/jix/nix/index.js#L78`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/nix/index.js#L78)
 
 Proxy object for accessing package binaries.
 
@@ -40,7 +40,7 @@ Returns a string effect pointing to the binary path.
 ---
 
 ## `with(options, fn)`
-Source: [`src/jix/nix/index.js#L23`](https://github.com/rmst/jix/blob/main/src/jix/nix/index.js#L23)
+Source: [`src/jix/nix/index.js#L23`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/nix/index.js#L23)
 
 Context manager for setting Nix build options.
 

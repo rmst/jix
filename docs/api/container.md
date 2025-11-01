@@ -6,12 +6,12 @@ nav_order: 9
 
 # container
 
-Source: [`src/jix/container/index.js`](https://github.com/rmst/jix/blob/main/src/jix/container/index.js)
+Source: [`src/jix/container/index.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js)
 
 Container operations namespace for Docker and compatible runtimes (e.g., podman).
 
 ## `docker()`
-Source: [`src/jix/container/index.js#L16`](https://github.com/rmst/jix/blob/main/src/jix/container/index.js#L16)
+Source: [`src/jix/container/index.js#L16`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L16)
 
 Get a reference to the Docker CLI or a compatible CLI (e.g., podman).
 
@@ -22,7 +22,7 @@ On NixOS, returns `nix.pkgs.podman.podman`. Otherwise, returns an effect for the
 ---
 
 ## `run({workdir, basedir, volumes, env, name, args}={})`
-Source: [`src/jix/container/index.js#L143`](https://github.com/rmst/jix/blob/main/src/jix/container/index.js#L143)
+Source: [`src/jix/container/index.js#L143`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L143)
 
 Create a script that runs a docker container with specified options.
 
@@ -48,7 +48,7 @@ jix.script`
 ---
 
 ## `tag(mapping)`
-Source: [`src/jix/container/index.js#L37`](https://github.com/rmst/jix/blob/main/src/jix/container/index.js#L37)
+Source: [`src/jix/container/index.js#L37`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L37)
 
 Create image tags.
 
@@ -61,7 +61,7 @@ Create image tags.
 ---
 
 ## `imageFromDockerfile`
-Source: [`src/jix/container/index.js#L69`](https://github.com/rmst/jix/blob/main/src/jix/container/index.js#L69)
+Source: [`src/jix/container/index.js#L69`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L69)
 
 Template tag function for building Docker images from Dockerfile content. Referenced effects are automatically copied into the build context.
 
@@ -84,7 +84,7 @@ let myImage = jix.container.imageFromDockerfile`
 ---
 
 ## `network(name)`
-Source: [`src/jix/container/index.js#L47`](https://github.com/rmst/jix/blob/main/src/jix/container/index.js#L47)
+Source: [`src/jix/container/index.js#L47`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L47)
 
 Create an internal Docker network.
 
@@ -97,7 +97,7 @@ Create an internal Docker network.
 ---
 
 ## `volume(name)`
-Source: [`src/jix/container/index.js#L54`](https://github.com/rmst/jix/blob/main/src/jix/container/index.js#L54)
+Source: [`src/jix/container/index.js#L54`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L54)
 
 Create a Docker volume.
 
@@ -110,6 +110,6 @@ Create a Docker volume.
 ---
 
 ## `aptInstall`
-Source: [`src/jix/container/util.js`](https://github.com/rmst/jix/blob/main/src/jix/container/util.js)
+Source: [`src/jix/container/util.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/util.js)
 
 Utility for installing apt packages in Dockerfiles.
