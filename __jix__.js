@@ -1,3 +1,5 @@
+import jix_docker from "./.jix/jix_docker"
+
 const { watchfs } = jix.experimental.shelltools
 
 
@@ -11,9 +13,9 @@ export const run = {
 
 	default: "echo Hello from Jix!",
 
-	installAndWatch: () => `${watchfs} -r --wait . make install`,
+	installAndWatch: `${watchfs} -r --wait . make install`,
 
-	docs: () => jix.script`
+	docs: jix.script`
 		${jix.container.docker} run -it --rm \
 			-v "$PWD/docs:/srv/jekyll" \
 			-e BUNDLE_PATH=/srv/jekyll/vendor/bundle \
@@ -21,9 +23,13 @@ export const run = {
 			${jekyll} \
 			/bin/sh -c "bundle install && bundle exec jekyll serve --host 0.0.0.0"
 	`,
+
+	jido: jix_docker.jido,
 }
 
 
 export const install = {
-	
+	dev: () => {
+		jix_docker.install()  // optional volumes for build caches
+	}
 }
