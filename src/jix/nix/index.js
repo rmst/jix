@@ -66,7 +66,7 @@ export const pkg = ({name, options={}}) => {
 
 	let derivation = jix.build`
 		result="$("${nixBinPath}"/nix-build ${extraArgsStr} ${nixbuildArgs} -A "${name}" --no-out-link | tail -n 1)"
-		"${nixBinPath}"/nix-store --add-root "$out" --indirect --realise "$result"
+		"${nixBinPath}"/nix-store --add-root "$out" --indirect --realise "$result" > /dev/null
 
 	`
 
@@ -97,5 +97,5 @@ export const pkgs = new Proxy({}, {
 export default {
 	pkg,
 	pkgs,
-	withOptions,
+	with: withOptions,
 }
