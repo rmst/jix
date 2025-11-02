@@ -2,6 +2,8 @@ import install from './core/install.js'
 import { dedent } from '../jix/dedent.js'
 import { MANIFEST_BASENAME } from '../jix/context.js'
 import { parseArgs } from './parseArgs.js'
+import { sh } from './util.js'
+import db from './db/index.js'
 
 export default {
 	name: 'uninstall',
@@ -30,8 +32,16 @@ export default {
 		}
 
 		const name = positionals[0] || 'default'
-		let path = flags.f || flags.file
+		const inputPath = flags.f || flags.file || '.'
+		const path = sh`realpath -m ${inputPath}`.trim()
 
-		await install({ sourcePath: path, name, uninstall: true })
+		// Check active.json to determine if path is a directory containing __jix__.js
+		db.init()
+		const activeHashesById = db.active.read()
+		const sourcePath = `${path}/${MANIFEST_BASENAME}#${name}` in activeHashesById
+			? `${path}/${MANIFEST_BASENAME}`
+			: path
+
+		await install({ sourcePath, name, uninstall: true })
 	}
 }
