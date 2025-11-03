@@ -28,6 +28,9 @@ export default ({
 		if(typeof label !== "string" || !label)
 			throw Error(`Invalid arg "label": ${label}`)
 
+		if(!/^[a-zA-Z0-9._@-]+$/.test(label))
+			throw Error(`Invalid arg "label": Label can only contain alphanumerics, dots, hyphens, underscores, and @. Instead, got: ${label}`)
+
 		if(runscript === null || runscript === undefined)
 			throw Error(`Invalid arg "runscript": null/undefined`)
 		

@@ -61,10 +61,13 @@ export const collectEffects = (fn) => {
   let allEffects = []
   let result = EFFECT_CONTEXT.provide(allEffects, fn)
   if(result){
-     if(! (result instanceof Effect))
-        throw Error(`Expected Effect but got: ${result}`)
+    if(Array.isArray(result))
+      result = effect(result)
+    
+    if(! (result instanceof Effect))
+      throw Error(`Expected Effect but got: ${result}`)
 
-     return [result, ...allEffects]
+    return [result, ...allEffects]
   }
 
   return allEffects

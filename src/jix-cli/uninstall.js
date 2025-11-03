@@ -33,7 +33,12 @@ export default {
 
 		const name = positionals[0] || 'default'
 		const inputPath = flags.f || flags.file || '.'
-		const path = sh`realpath -m ${inputPath}`.trim()
+		let path
+		try {
+			path = sh`realpath ${inputPath}`.trim()
+		} catch {
+			path = inputPath
+		}
 
 		// Check active.json to determine if path is a directory containing __jix__.js
 		db.init()

@@ -44,16 +44,18 @@ export const tag = (mapping) => {
 }
 
 
-export const network = (name) => jix.customEffect({
-  install: `${docker} network create --internal ${name}`,
-  uninstall: `${docker} network rm ${name}`,
+export const network = (name, args=[]) => jix.customEffect({
+  install: `${docker} network create ${args.join(" ")} ${name}`,
+  // sleep to give docker time to free the resources
+  uninstall: `sleep 0.5 && ${docker} network rm ${name}`,
   str: name,
 })
 
 
 export const volume = (name) => jix.customEffect({
   install: `${docker} volume create ${name}`,
-  uninstall: `${docker} volume rm ${name}`,
+  // sleep to give docker time to free the resources
+  uninstall: `sleep 0.5 && ${docker} volume rm ${name}`,
   str: name,
 })
 
@@ -133,14 +135,15 @@ export const imageFromDockerfile = (templateStrings, ...values) => {
   @param {Record<string, EffectOrFn>} [options.volumes] - Volume mounts (path: source)
   @param {Record<string, string>} [options.env] - Environment variables
   @param {string} [options.name] - Container name
-  @param {string[]} [options.args] - Additional docker run arguments
+  @param {(string|EffectOrFn)[]} [options.args] - Additional docker run arguments
+  @param {string|EffectOrFn} [options.image] - A docker image
   @returns {Effect}
   @example
   jix.script`
     ${jix.container.run({workdir: "/wd", volumes: {wd: "$(pwd)"}})} myimage bash
   `
  */
-export const run = ({workdir=null, basedir="/", volumes={}, env={}, name=null, args=[]}={}) => {
+export const run = ({workdir=null, basedir="/", volumes={}, env={}, name=null, args=[], image=null}={}) => {
   // TODO: always killing an existing container, doesn't seem to be generally desirable
 
   let killExisting = name 
@@ -173,6 +176,7 @@ export const run = ({workdir=null, basedir="/", volumes={}, env={}, name=null, a
     ...volumeArgs,
     ...envArgs,
     ...args,
+    ...(image ? [image] : []),
   ]
 
   return jix.script`
