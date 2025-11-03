@@ -17,7 +17,7 @@ File: [`./jix/__jix__.js`](./jix/__jix__.js)
 
 export const install = () => {
 
-	let target = jix.target()  // give us host/user info (e.g. target.user.name)
+	let target = jix.target()
 
 	let pkgs = jix.nix.pkgs
 

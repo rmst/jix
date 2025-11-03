@@ -10,7 +10,7 @@ import { createContext, useContext } from '../useContext.js';
 
 /**
   @typedef {Object} ContainerOptions
-  @property {import("../effect").EffectOrFn | string | null} [dockerCli] - Path to docker-cli (or compatible CLI like podman)
+  @property {import("../effect").EffectOrFn | (()=>string) | string | null} [dockerCli] - Path to docker-cli (or compatible CLI like podman)
  */
 
 const CONTAINER_CONTEXT = createContext(/** @type {ContainerOptions} */({ dockerCli: null }))
