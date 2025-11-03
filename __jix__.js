@@ -25,6 +25,10 @@ export const run = {
 	`,
 
 	jido: jix_docker.jido,
+
+	setup: jix.script`
+		find . -name "AGENTS.md" -type f -execdir ln -sf AGENTS.md CLAUDE.md \;
+	`,
 }
 
 

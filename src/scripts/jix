@@ -1,0 +1,7 @@
+#!/bin/sh
+# Jix CLI wrapper
+
+set -e
+
+# Run qjsx with module path set
+QJSXPATH="${HOME}/.jix/jix/modules" exec "${HOME}/.jix/jix/qjsx" --no-unhandled-rejection "${HOME}/.jix/jix/modules/jix-cli/main.js" "$@"
