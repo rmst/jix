@@ -9,8 +9,8 @@ The primary export is the `service` effect, which allows you to define a script 
 ```javascript
 
 export const myBackgroundService = jix.service({
-  label: 'com.mycompany.myservice',
-  runscript: `
+  name: 'com.mycompany.myservice',
+  exec: `
     #!/bin/sh
     echo "Service started."
     while true; do

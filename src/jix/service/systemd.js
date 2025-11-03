@@ -3,25 +3,26 @@ import nixos from "../nixos"
 
 
 export default ({
-	label,
-	runscript,
+	name,
+	exec,
 	system = false,
 	runOnInstall = true,
 	noUninstall = false,
+	dependencies = [],
 }) => {
 	const target = jix.target()
 
-	label ?? (()=>{throw Error("label is required")})()
-	runscript ?? (()=>{throw Error("runscript is required")})()
+	name ?? (()=>{throw Error("name is required")})()
+	exec ?? (()=>{throw Error("exec is required")})()
 
-	const serviceName = `${label}.service`;
+	const serviceName = `${name}.service`;
 
 	let serviceFile = jix.textfile`
 		[Unit]
-		Description=${label}
+		Description=${name}
 
 		[Service]
-		ExecStart=${runscript}
+		ExecStart=${exec}
 		Restart=no
 
 		[Install]
@@ -55,6 +56,9 @@ export default ({
 	// NOTE: "restart" will ensure we start our newly created service
 	const startCmd = runOnInstall ? `systemctl ${systemctlFlags} restart ${serviceName}` : '';
 
+	// TODO: this works but should ideally be health-check-based
+	let waitUntilSuccessfulStartup = runOnInstall ? "sleep 0.5" : ""
+
 	return jix.effect({
 		// if necessary, this will replace existing
 		install: ["execShV1", jix.dedent`
@@ -67,6 +71,7 @@ export default ({
 			systemctl ${systemctlFlags} enable "${serviceName}"
 			# Start the service now if requested
 			${startCmd}
+			${waitUntilSuccessfulStartup}
 		`],
 		uninstall: noUninstall ? null : ["execShV1", jix.dedent`
 			# Stop the service
@@ -76,6 +81,6 @@ export default ({
 			# Reload systemd
 			systemctl ${systemctlFlags} daemon-reload
 		`],
-		dependencies: [ serviceFile ]
+		dependencies: [ serviceFile, ...dependencies ]
 	})
 }

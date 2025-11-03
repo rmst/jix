@@ -1,4 +1,5 @@
 import jix, { dirWith } from "../base.js"
+import { Effect } from "../effect.js"
 import stateDir from "../stateDir.js"
 import launchdService from './launchd.js'
 import systemdService from './systemd.js'
@@ -9,38 +10,49 @@ export const systemServicesDir = () => stateDir("jix.services")
 const serviceImplementations = {
 	macos: launchdService,
 	nixos: systemdService,
-	linux: systemdService,
-};
+}
 
+/**
+	Create a persistent background service
+	@param {Object} config - Service configuration
+	@param {string} config.name - Service identifier (alphanumerics, dots, hyphens, underscores, and @ only)
+	@param {string|import("../effect.js").EffectOrFn} config.exec - Path to executable or script effect
+	@param {boolean} [config.system=false] - Install as system service if true
+	@param {boolean} [config.runOnInstall=true] - Start service on install
+	@param {boolean} [config.noUninstall=false] - Skip uninstallation
+	@param {Array} [config.dependencies=[]] - Additional dependencies for the service
+	@returns {Effect}
+ */
 export default ({
-	label, 
-	runscript, 
-	system = false, 
+	name,
+	exec,
+	system = false,
 	runOnInstall = true,
 	noUninstall = false,
+	dependencies = [],
 }) => {
 
 	const target = jix.target()
 	const targetUser = target.host.users[system ? "root" : target.user.name]
 
 	return targetUser.install(() => {
-			
-		if(typeof label !== "string" || !label)
-			throw Error(`Invalid arg "label": ${label}`)
 
-		if(!/^[a-zA-Z0-9._@-]+$/.test(label))
-			throw Error(`Invalid arg "label": Label can only contain alphanumerics, dots, hyphens, underscores, and @. Instead, got: ${label}`)
+		if(typeof name !== "string" || !name)
+			throw Error(`Invalid arg "name": ${name}`)
 
-		if(runscript === null || runscript === undefined)
-			throw Error(`Invalid arg "runscript": null/undefined`)
+		if(!/^[a-zA-Z0-9._@-]+$/.test(name))
+			throw Error(`Invalid arg "name": Name can only contain alphanumerics, dots, hyphens, underscores, and @. Instead, got: ${name}`)
+
+		if(exec === null || exec === undefined)
+			throw Error(`Invalid arg "exec": null/undefined`)
 		
 		const servicesDir = system ? systemServicesDir : userServicesDir
-		
+
 		const PATH = target.host.os === "nixos"
 			? "PATH=" + [
-				"/bin", 
-				"/usr/bin", 
-				"/run/current-system/sw/bin", 
+				"/bin",
+				"/usr/bin",
+				"/run/current-system/sw/bin",
 				"/nix/var/nix/profiles/default/bin",
 			].join(":")  // these are necessary to get a POSIX shell on NixOS
 			: ""
@@ -51,7 +63,7 @@ export default ({
 			${PATH}
 
 			# ensure log dirs exist
-			mkdir -p "${servicesDir}/${label}"
+			mkdir -p "${servicesDir}/${name}"
 
 			add_timestamp() {
 				while IFS= read -r line; do
@@ -59,31 +71,31 @@ export default ({
 				done
 			}
 
-			DPATH="${servicesDir}/${label}/details"
-			
+			DPATH="${servicesDir}/${name}/details"
+
 			set -o pipefail  # important
 
 			while true; do
-				
-				START_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-				
-				echo "$START_TIME,started,$$" >> "${servicesDir}/${label}/status"
 
-				echo "exec=${runscript}" > "$DPATH"
+				START_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+				echo "$START_TIME,started,$$" >> "${servicesDir}/${name}/status"
+
+				echo "exec=${exec}" > "$DPATH"
 				echo "state=started" >> "$DPATH"
 				echo "start_time=$START_TIME" >> "$DPATH"
 				echo "pid=$$" >> "$DPATH"
 
 				# Execute the actual runscript, redirecting its output to the log file
-				( ${runscript} ) 2>&1 | add_timestamp >> "${servicesDir}/${label}/log"
-				
+				( ${exec} ) 2>&1 | add_timestamp >> "${servicesDir}/${name}/log"
+
 				EXIT_CODE=$?
-				
+
 				EXIT_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-				echo "$EXIT_TIME,exited,$EXIT_CODE" >> "${servicesDir}/${label}/status"
+				echo "$EXIT_TIME,exited,$EXIT_CODE" >> "${servicesDir}/${name}/status"
 
-				echo "exec=${runscript}" > "$DPATH"
+				echo "exec=${exec}" > "$DPATH"
 				echo "state=exited" >> "$DPATH"
 				echo "start_time=$START_TIME" >> "$DPATH"
 				# echo "" >> "$DPATH"
@@ -99,22 +111,22 @@ export default ({
 		`;
 
 		// this is just so MacOS shows a nice name in various UIs and not a hash
-		wrapperScript = jix.str`${dirWith({[label]: wrapperScript })}/${label}`
+		wrapperScript = jix.str`${dirWith({[name]: wrapperScript })}/${name}`
 
-		const serviceImplementation = serviceImplementations[target.host.os]
+		const serviceImplementation = target.host.os === "macos"
+			? launchdService
+			: target.host.kernel_name === "Linux"
+			? systemdService
+			: (()=>{throw new Error(`Unsupported platform: ${target.host.os}`)})()
 
-		if (serviceImplementation) {
 
-			return serviceImplementation({
-				label,
-				runscript: wrapperScript,
-				system,
-				runOnInstall,
-				noUninstall,
-			})
-
-		} else {
-			throw new Error(`Unsupported platform: ${target.host.os}`);
-		}
+		return serviceImplementation({
+			name,
+			exec: wrapperScript,
+			system,
+			runOnInstall,
+			noUninstall,
+			dependencies,
+		})
 	})
 }

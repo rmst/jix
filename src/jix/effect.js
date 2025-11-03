@@ -93,7 +93,7 @@ const addEffect = (e) => {
  * @property {string} [path]
  * @property {string} [str]
  * @property {string} [hash]
- * @property {Array} [dependencies]
+ * @property {Array<EffectOrFn>} [dependencies]
  */
 
 /**
@@ -185,7 +185,8 @@ export class Effect {
     /** @private */
     this._stack = (new Error()).stack.split('\n').slice(2).join("\n")
 
-    const dependencies = props.dependencies?.flat(Infinity) ?? []
+    const dependencies = (props.dependencies?.flat(Infinity) ?? [])
+      .map(x => typeof x === "function" ? x() : x)
 
     // process values in the arguments to install, uninstall, etc
     var { install, uninstall, build, str, path } = props

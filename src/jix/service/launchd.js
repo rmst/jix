@@ -2,25 +2,26 @@ import jix from "../base"
 
 
 export default ({
-	label, 
-	runscript, 
-	system = false, 
+	name,
+	exec,
+	system = false,
 	runOnInstall = true,
 	noUninstall = false,
+	dependencies = [],
 }) => {
 
 	const target = jix.target()
 
-	label ?? (()=>{throw Error("label is required")})()
-	runscript ?? (()=>{throw Error("runscript is required")})()
+	name ?? (()=>{throw Error("name is required")})()
+	exec ?? (()=>{throw Error("exec is required")})()
 
 	const plistPath = system
-		? `/Library/LaunchDaemons/${label}.plist`
-		: `${target.user.home}/Library/LaunchAgents/${label}.plist`;
+		? `/Library/LaunchDaemons/${name}.plist`
+		: `${target.user.home}/Library/LaunchAgents/${name}.plist`;
 
 	const launchdTarget = system ? "system" : `gui/$(id -u)`;
 
-	const runAtLoadConfig = runOnInstall 
+	const runAtLoadConfig = runOnInstall
 		? `<key>RunAtLoad</key><true/>`
 		: '';
 
@@ -30,10 +31,10 @@ export default ({
 		<plist version="1.0">
 		<dict>
 			<key>Label</key>
-			<string>${label}</string>
+			<string>${name}</string>
 			<key>ProgramArguments</key>
 			<array>
-				<string>${runscript}</string>
+				<string>${exec}</string>
 			</array>
 			${runAtLoadConfig}
 		</dict>
@@ -41,21 +42,25 @@ export default ({
 	`.symlinkTo(plistPath)
 
 
+	// TODO: this works but should ideally be health-check-based
+	let waitUntilSuccessfulStartup = runOnInstall ? "sleep 0.5" : ""
+
 	return jix.effect({
 		// if necessary, this will replace existing
 		install: ["execShV1", jix.dedent`
 			# Unload existing job to ensure it's updated
-			launchctl list | grep -q ${label} && launchctl bootout ${launchdTarget}/${label} || true
+			launchctl list | grep -q ${name} && launchctl bootout ${launchdTarget}/${name} || true
 			# Load the new job
 			launchctl bootstrap ${launchdTarget} "${plist}"
+			${waitUntilSuccessfulStartup}
 		`],
 		uninstall: noUninstall ? null : ["execShV1", jix.dedent`
 			# Do nothing if the job isn't loaded
-			launchctl list | grep -q ${label} || exit 0
+			launchctl list | grep -q ${name} || exit 0
 			# Unload the job
-			launchctl bootout ${launchdTarget}/${label}
+			launchctl bootout ${launchdTarget}/${name}
 		`],
-		dependencies: [ plist ]
+		dependencies: [ plist, ...dependencies ]
 	})
 	
 	
