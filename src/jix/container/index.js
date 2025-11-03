@@ -2,31 +2,59 @@ import { Effect } from '../effect.js';
 import { aptInstall } from './util.js';
 import jix, { HASH, scriptWithTempdir } from '../base.js';
 import nix from '../nix/index.js';
+import { createContext, useContext } from '../useContext.js';
 
 /**
   @typedef {import('../effect.js').EffectOrFn} EffectOrFn
  */
 
+/**
+  @typedef {Object} ContainerOptions
+  @property {import("../effect").EffectOrFn | string | null} [dockerCli] - Path to docker-cli (or compatible CLI like podman)
+ */
+
+const CONTAINER_CONTEXT = createContext(/** @type {ContainerOptions} */({ dockerCli: null }))
+
+/**
+  @template T
+  @param {ContainerOptions} options - Container options
+  @param {() => T} [fn] - Function to execute with these options
+  @returns {T}
+ */
+export const withOptions = (options, fn) => {
+	return CONTAINER_CONTEXT.provide(options, fn)
+}
+
+/**
+  @returns {ContainerOptions}
+ */
+const getOptions = () => {
+	return useContext(CONTAINER_CONTEXT)
+}
 
 /**
   Reference to the docker-cli (or a compatible cli such as podman)
-  TODO: should be configurable via context manager, e.g. jix.experimental.container.withContainer({ dockerCli: customPathOfEffect })
   @returns {Effect}
  */
 export const docker = () => {
-  let target = jix.target()
+	let options = getOptions()
 
-  if(false) {
-    // TODO: use this condition if we have custom docker-cli set via jix.experimental.container.withContainer
-  }
+	if(options.dockerCli) {
+    let result = options.dockerCli
+    if(typeof result === "function")
+		  result = result()
+    if(typeof result === "string")
+      result = jix.str`${result}`
+    return result
+	}
 
-  else if (target.host.os === "nixos") {
-    return nix.pkgs.podman.podman
-  }
+	let target = jix.target()
 
-  else {
-    return jix.existingCommand("docker")
-  }
+	if (target.host.os === "nixos") {
+		return nix.pkgs.podman.podman
+	}
+
+	return jix.existingCommand("docker")
 }
 
 
@@ -207,6 +235,7 @@ export default {
   network,
   volume,
 
+  with: withOptions,
 }
 
 
