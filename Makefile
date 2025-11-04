@@ -10,17 +10,15 @@ install-dev:
 	@ln -sf "$(CURDIR)/src/jix" "$(HOME)/.jix/jix/modules/jix"
 	@ln -sf "$(CURDIR)/src/jix-cli" "$(HOME)/.jix/jix/modules/jix-cli"
 
-# Build qjsx in temp dir, then install common files
+# Build qjsx, then install common files
 _install:
-	@BUILD_DIR_TMP=$${BUILD_DIR:-$$(mktemp -d)}; \
-	[ -n "$(BUILD_DIR)" ] || trap 'rm -rf "$$BUILD_DIR_TMP"; cd quickjs-x && $(MAKE) clean-all' EXIT; \
-	mkdir -p $$BUILD_DIR_TMP; \
-	$(MAKE) -C quickjs-x BIN_DIR=$$BUILD_DIR_TMP/quickjs-x/bin $$BUILD_DIR_TMP/quickjs-x/bin/qjsx; \
+	@PLATFORM=$$(uname -s | tr '[:upper:]' '[:lower:]'); \
+	$(MAKE) -C quickjs-x build; \
 	mkdir -p "$(HOME)/.jix/jix" "$(HOME)/.jix/jix/modules" "$(HOME)/.jix/bin"; \
-	if [ "$$(uname)" = "Darwin" ]; then \
-		cp -c "$$BUILD_DIR_TMP/quickjs-x/bin/qjsx" "$(HOME)/.jix/jix/qjsx"; \
+	if [ "$$PLATFORM" = "darwin" ]; then \
+		cp -c "quickjs-x/bin/$$PLATFORM/qjsx" "$(HOME)/.jix/jix/qjsx"; \
 	else \
-		cp "$$BUILD_DIR_TMP/quickjs-x/bin/qjsx" "$(HOME)/.jix/jix/qjsx"; \
+		cp "quickjs-x/bin/$$PLATFORM/qjsx" "$(HOME)/.jix/jix/qjsx"; \
 	fi; \
 	chmod +x "$(HOME)/.jix/jix/qjsx"; \
 	rm -rf "$(HOME)/.jix/jix/modules"; \
@@ -52,4 +50,3 @@ update:
 
 clean:
 	cd quickjs-x && $(MAKE) clean-all
-	rm -rf $(BUILD_DIR)
