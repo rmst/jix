@@ -32,7 +32,7 @@ export function parseArgs(args, schema = {}, options = {}) {
 			// Check if it expects a value
 			const expectsValue = schema[key] === 'value'
 
-			if (expectsValue && i + 1 < args.length && !args[i + 1].startsWith('-')) {
+			if (expectsValue && i + 1 < args.length) {
 				flags[key] = args[i + 1]
 				i += 2
 			} else {

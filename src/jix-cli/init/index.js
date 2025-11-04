@@ -19,19 +19,19 @@ function setupVSCodeTasks(wd) {
 			{
 				label: 'jix install',
 				type: "shell",
-				command: 'jix install -f ${file}',
+				command: 'jix install --find-manifest -f ${file}',
 				group: { kind: "build" }
 			},
 			{
 				label: 'jix install --dry-run',
 				type: "shell",
-				command: 'jix install --dry-run -f ${file}',
+				command: 'jix install --dry-run --find-manifest -f ${file}',
 				group: { kind: "build" }
 			},
 			{
 				label: 'jix run',
 				type: "shell",
-				command: 'jix run -f ${file}',
+				command: 'jix run --find-manifest -f ${file}',
 				group: { kind: "build" }
 			}
 		]

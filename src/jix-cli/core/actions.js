@@ -77,7 +77,7 @@ export const buildV6 = (script, hash) => {
 			cd "$tmp"
 			
 			export out="$HOME"/${JIX_DIR}/out/${hash}
-			export NUX_HASH=${hash}
+			export JIX_HASH=${hash}
 			/bin/sh -c "$1"  # for build script string
 			# "$1"  # for build script path
 			exitcode=$?

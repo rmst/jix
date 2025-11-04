@@ -55,8 +55,8 @@ export default jix.alias({
 EOF
 
 # Apply the manifest
-if ! HOME="$FAKEHOME" USER="testuser" "$FAKEHOME/.jix/bin/jix" apply "$TESTMANIFEST" > /dev/null 2>&1; then
-	printf "%b\n" "${RED}❌ Failed to apply test manifest${NC}"
+if ! HOME="$FAKEHOME" USER="testuser" "$FAKEHOME/.jix/bin/jix" install "$TESTMANIFEST" > /dev/null 2>&1; then
+	printf "%b\n" "${RED}❌ Failed to install test manifest${NC}"
 	exit 1
 fi
 
@@ -95,7 +95,7 @@ if ! HOME="$FAKEHOME" "$FAKEHOME/.jix/bin/test_cmd" | grep -q "Hello from test";
 fi
 
 # Clean up test command
-HOME="$FAKEHOME" USER="testuser" "$FAKEHOME/.jix/bin/jix" delete "$TESTMANIFEST" > /dev/null 2>&1
+HOME="$FAKEHOME" USER="testuser" "$FAKEHOME/.jix/bin/jix" uninstall "$TESTMANIFEST" > /dev/null 2>&1
 
 printf "%b\n" "${GREEN}✅ Installation test passed!${NC}"
 printf "%b\n" "${GREEN}   - Jix installs successfully${NC}"

@@ -175,7 +175,6 @@ export function uuidV4() {
  * @returns {string|null} - Absolute path to manifest, or null if not found
  */
 export function resolveManifestPath(path = '.', findManifest = false) {
-	const join = (a, b) => (a.endsWith('/') || a.endsWith('\\')) ? a + b : a + '/' + b
 
 	if (findManifest) {
 		// For findManifest mode, start from the directory (not the file)
@@ -187,7 +186,7 @@ export function resolveManifestPath(path = '.', findManifest = false) {
 
 		// Search upward through parent directories
 		while (true) {
-			const candidate = join(searchPath, MANIFEST_BASENAME)
+			const candidate = `${searchPath}/${MANIFEST_BASENAME}`
 			if (fs.existsSync(candidate)) {
 				return sh`realpath ${candidate}`.trim()
 			}
@@ -200,7 +199,7 @@ export function resolveManifestPath(path = '.', findManifest = false) {
 	} else {
 		// Exact path mode: if directory, look inside; if file, use it
 		if (fs.existsSync(path) && fs.statSync(path).isDirectory()) {
-			path = join(path, MANIFEST_BASENAME)
+			path = `${path}/${MANIFEST_BASENAME}`
 		}
 		if (fs.existsSync(path)) {
 			return sh`realpath ${path}`.trim()
