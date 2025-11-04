@@ -1,35 +1,12 @@
 import * as fs from 'node:fs'
 import { ACTIVE_HASHES_PATH, LOCAL_STORE_PATH, EXISTING_HASHES_PATH, LOCAL_JIX_PATH, LOCAL_BIN_PATH } from '../../jix/context.js'
 import { UserError } from '../core/UserError.js'
-import set from '../core/set.js'
+import { makeWritable, syncShortPaths } from './util.js'
 
 const HOSTS_PATH = `${LOCAL_JIX_PATH}/hosts.json`
 const SHORT_PATH_DIR = `${LOCAL_JIX_PATH}/s`
 const LOCAL_OUT_PATH = `${LOCAL_JIX_PATH}/out`
 const STACK_TRACE_PATH = `${LOCAL_JIX_PATH}/stackTrace.json`
-
-function syncShortPaths() {
-	const existingHashes = fs.existsSync(EXISTING_HASHES_PATH)
-		? JSON.parse(fs.readFileSync(EXISTING_HASHES_PATH, 'utf8'))
-		: []
-
-	if (!fs.existsSync(SHORT_PATH_DIR)) {
-		fs.mkdirSync(SHORT_PATH_DIR, { recursive: true })
-	}
-
-	const existingShortHashes = set(existingHashes.map(hash => hash.slice(0, 7)))
-	const currentLinks = set(fs.readdirSync(SHORT_PATH_DIR))
-
-	// Remove symlinks that are no longer needed
-	currentLinks.minus(existingShortHashes).list().map(link =>
-		fs.unlinkSync(`${SHORT_PATH_DIR}/${link}`)
-	)
-
-	// Create symlinks for new hashes
-	existingHashes
-		.filter(hash => !currentLinks.has(hash.slice(0, 7)))
-		.map(hash => fs.symlinkSync(`../store/${hash}`, `${SHORT_PATH_DIR}/${hash.slice(0, 7)}`))
-}
 
 export default {
 	init: () => {
@@ -39,7 +16,7 @@ export default {
 		if (!fs.existsSync(LOCAL_OUT_PATH)) fs.mkdirSync(LOCAL_OUT_PATH, { recursive: true })
 		if (!fs.existsSync(SHORT_PATH_DIR)) fs.mkdirSync(SHORT_PATH_DIR, { recursive: true })
 
-		syncShortPaths()
+		syncShortPaths(EXISTING_HASHES_PATH, SHORT_PATH_DIR)
 	},
 
 	active: {
@@ -67,7 +44,7 @@ export default {
 		},
 		write: (arr) => {
 			fs.writeFileSync(EXISTING_HASHES_PATH, JSON.stringify(arr), 'utf8')
-			syncShortPaths()
+			syncShortPaths(EXISTING_HASHES_PATH, SHORT_PATH_DIR)
 		}
 	},
 
@@ -101,7 +78,15 @@ export default {
 			return fs.readdirSync(LOCAL_OUT_PATH)
 		},
 		delete: (hash) => {
-			fs.rmSync(`${LOCAL_OUT_PATH}/${hash}`, { force: true, recursive: true })
+			const path = `${LOCAL_OUT_PATH}/${hash}`
+			try {
+				fs.rmSync(path, { recursive: true })
+			} catch (e) {
+				// If delete failed (likely due to permissions), make writable and retry
+				makeWritable(path)
+				fs.rmSync(path, { recursive: true, force: true })
+				// FIXME: this isn't actually a guarantee that it will be deleted
+			}
 		}
 	},
 
