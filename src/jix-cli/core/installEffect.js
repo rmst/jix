@@ -63,8 +63,18 @@ export const executeCmd = (command, address, user) => {
 }
 
 
+const withAnnotation = (str, fn) => {
+  if (process.stdout?.isTTY)
+    process.stdout.write(str + '\r')
 
-export const tryInstallEffect = (hash, manifestId) => {
+  fn()
+
+  if (process.stdout?.isTTY)
+    process.stdout.write(' '.repeat(80) + '\r')
+} 
+
+
+export const tryInstallEffect = (hash, manifestId) => {  
   let effectData = db.store.read(hash)
 
   var { install = null, build = null, host, user, debug = {} } = effectData
@@ -85,8 +95,7 @@ export const tryInstallEffect = (hash, manifestId) => {
       let cmd = actions[f](...args, hash);
 
 			try {
-				executeCmd(cmd, host, user)
-
+        executeCmd(cmd, host, user)
 			} catch (e) {
 				console.log(`Error with ${hash}:`)
 				prettyPrintEffect(effectData)
@@ -104,7 +113,9 @@ export const tryInstallEffect = (hash, manifestId) => {
     var [f, ...args] = install;
     let cmd = actions[f](...args, hash);
     try {
-      executeCmd(cmd, host, user)
+      withAnnotation(`Installing ${hash}`, () => 
+        executeCmd(cmd, host, user)
+      )
     } catch (e) {
       console.log(`Error with ${hash}:`)
       prettyPrintEffect(effectData)
@@ -140,8 +151,10 @@ export const tryUninstallEffect = (hash) => {
 
     try {
       let cmd = actions[f](...args, hash)
-      executeCmd(cmd, host, user)
 
+      withAnnotation(`Uninstalling ${hash}`, () => 
+        executeCmd(cmd, host, user)
+      )
     } catch (e) {
       console.log(`Error with ${hash}:`)
       prettyPrintEffect(effectData)
