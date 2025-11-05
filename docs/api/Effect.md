@@ -45,16 +45,15 @@ An [Effect](#effect) or a function that returns an Effect.
 
 ## Properties
 
-- `id` (number) - Unique effect identifier
-- `dependencies` ([Effect](#effect)[]) - Array of dependent effects
+- `dependencies` ([Effect](#effect)[]) - Array of dependencies
 - `install` (Array) - Install action specification
 - `uninstall` (Array) - Uninstall action specification
 - `build` (Array) - Build action specification
 - `host` (string) - Target host machine ID
 - `user` (string) - Target user name
 - `hash` (string) - Content hash of the effect
-- `path` (string) - File system path where effect output is stored
-- `str` (string) - String representation (defaults to `path`)
+- `path` (string) - Associated file system path
+- `str` (string) - Associated string (defaults to `path`)
 
 ---
 

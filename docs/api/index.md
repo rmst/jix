@@ -251,18 +251,19 @@ Create an effect from properties or dependencies.
 
 ---
 
-## `service({label, runscript, system, runOnInstall, noUninstall})`
+## `service({name, exec, system, runOnInstall, noUninstall, dependencies})`
 Source: [`src/jix/service/index.js#L15`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/service/index.js#L15)
 
 Create a persistent background service.
 
 **Parameters:**
 
-- `label` (string, required) - Service identifier
-- `runscript` (string \| [Effect](./Effect.md), required) - Path to executable or script effect
+- `name` (string, required) - Service identifier
+- `exec` (string \| [Effect](./Effect.md), required) - Path to executable or script effect
 - `system` (boolean, optional) - Install as system service if true (default: false)
 - `runOnInstall` (boolean, optional) - Start service on install (default: true)
 - `noUninstall` (boolean, optional) - Skip uninstallation (default: false)
+- `dependencies` (array, optional) - Additional dependencies for the service (default: [])
 
 **Returns:** [Effect](./Effect.md)
 

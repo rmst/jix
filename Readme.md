@@ -1,49 +1,94 @@
-# Jix
-Declarative development and system configurations using Javascript (or Typescript, maybe)
+## Jix: Configure Dev-Envs & Systems in JS
+(Experimental software – Do not use for production deployments)
+
+Documentation: https://rmst.github.io/jix
+
+Jix allows you to write reproducible, declarative development and system configurations in Javascript with good editor/type-checking support.
+
+Jix might be used as an ergonomic and lightweight alternative to
+- devenv (see [`examples/devenv/`](https://github.com/rmst/jix/tree/main/examples/devenv))
+- docker compose (see [`examples/docker-compose/`](https://github.com/rmst/jix/tree/main/examples/docker-compose))
+- nix home-manager (see [`examples/home-manager/`](https://github.com/rmst/jix/tree/main/examples/home-manager))
+- Ansible (see [remote targets](https://rmst.github.io/jix/remote-targets))
+
+Jix is conceptually similar to [Nix](https://en.wikipedia.org/wiki/Nix_(package_manager)). In Jix, "effects" are a generalization of Nix' "derivations". [Effects](https://rmst.github.io/jix/api/Effect.md) can have install and uninstall actions which allows them to influence state outside of the Jix store (the equivalent of /nix/store).
+
+[Nixpkgs](https://github.com/NixOS/nixpkgs) are available in Jix via `jix.nix.pkgs.<packageName>.<binaryName>` (see [example](https://github.com/rmst/jix/blob/main/examples/devenv/jix/__jix__.js)).
 
 
-#### Cluster management
-One use case for jix is to manage one or more machines based on a single git repository containing .js files describing the desired state of those machines.
+### Getting Started
+**Install Jix**: Run
 
-
-### Install
-This repo contains everything to build Jix from source (including the Quickjs Javascript engine). It only requires `make` and a C compiler and should take less than a minute to build.
 ```bash
-git clone --recurse-submodules "https://github.com/rmst/jix"
-cd jix
-make install
+git clone --recurse-submodules --depth 1 "https://github.com/rmst/jix.git"
+make -C jix install
+rm -rf jix
+```
+
+Follow the instruction to add `. "$HOME/.jix/jix/shell_integration"` to your shell rcfile.
+
+
+**Create a __jix__.js file**: in a new or existing dir run `jix init`, which will create a `__jix__.js` for you (also `.jix/` and `jsconfig.js` for code completion and type-checking).
+
+```js
+// __jix__.js
+const hellojix = jix.script`
+	echo "Hello from Jix!"
+`
+export const run = {
+	hellojix,
+}
+```
+
+You can run hellojix with `jix run hellojix`, which will output `Hello from Jix!`. Scripts, like all effects, behave like file paths or strings when composed/interpolated:
+
+```js
+// ...
+export const run = {
+	hellojix2: jix.script`
+		${hellojix}
+		which ${hellojix}
+	`,
+}
+```
+```text
+> jix run hellojix2
+Hello from Jix!
+/home/bob/.jix/out/f452f0d23f58307e5b758b7fec88b35055dcb8fe9839d8e7ef3f28e33ac7588b
 ```
 
 
-### Jix might (partially) replace the following tools
-- nix home-manager
-- docker compose (yes, but doesn't do health checks yet)
-- Ansible
-- [ ] devenv (cli commands still missing)
+**jix install**: To persistently add hellojix as a shell command, you can add
+
+```js
+// ...
+export const install = () => {
+	jix.alias({ hellojix })
+}
+```
+
+After running `jix install`, hellojix will be available as a shell command for your user. To remove it you can either comment out the `jix.alias` line and rerun `jix install` or you can run `jix uninstall`.
 
 
-### Design
-Why I chose Javascript for Jix:
-- Great multiline string and string interpolation support to embed shell scripts (and other scripts / config / text files)
-- Decent functional programming support (e.g. as opposed to Python, which lacks multi-line anonymous functions)
-- Great dev tools support (e.g. VSCode support for JS is outstanding)
+### Reference
+- [CLI Reference](https://rmst.github.io/jix/cli/) - Command-line interface documentation
+- [API Reference](https://rmst.github.io/jix/api/) - JavaScript API documentation
+
+
+### FAQ
+#### Why Javascript?
+Javascript was chosen for Jix because it has:
+- Great multiline string and string interpolation support to embed scripts and config files
+- Decent functional programming support (as opposed to Python, which lacks proper anonymous functions)
+- Great tooling (e.g. IDE support for JS is outstanding)
+- Great object/dictionary ergonomics
 - Great, super minimalist interpreter: Fabrice Bellard's Quickjs
 
-
-### Why was Jix built
-- Nix language is unfamiliar to most and poorly supported in editors
-- Nix seemed like a nightmare to install on MacOS
-  - needs to set up a new hard-drive partitition
-  - requires background services
-  - sometimes breaks on MacOS updates
-- With Jix: single binary built from source, all state is stored in `~/.jix`
-- On NixOS `nixos-rebuild switch` (required whenever updating anything) was too slow. E.g. trying to change a systemd service takes a few milliseconds when using systemd directly on Debian but on Nixos with `nixos-rebuild switch` it took/takes 15s or more. Now, with Jix (even on NixOS) it takes a few milliseconds again
-- It is non-trivial to build Nix from source without already having Nix
-
-
-### Additional goals
-Bootstrapability: Jix is (and should remain) buildable with nothing other than `make` and `gcc`
+#### Why not Typescript?
+Typescript support might be added in the future. Jix already supports typing via JSDoc. The entire Jix standard library is typed.
 
 
 ### Development
-The quickjs-x submodule provides a very incomplete Nodejs standard library shim but this allows us to write code that works both with Quickjs and Nodejs.
+This repo contains everything to build Jix from source (including the Quickjs Javascript engine). It only requires `make` and a C compiler, has no other dependencies and takes less than a minute to build.
+
+The quickjs-x git submodule provides a partial Nodejs standard library shim. This allows us to write code that works both with Quickjs and Nodejs.
