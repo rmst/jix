@@ -6,23 +6,23 @@ nav_order: 9
 
 # container
 
-Source: [`src/jix/container/index.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js)
+Source: [`src/jix/container/index.js`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/index.js)
 
 Container operations namespace for Docker and compatible runtimes (e.g., podman).
 
 ## `docker()`
-Source: [`src/jix/container/index.js#L16`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L16)
+Source: [`src/jix/container/index.js#L38`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/index.js#L38)
 
 Get a reference to the Docker CLI or a compatible CLI (e.g., podman).
 
 **Returns:** [Effect](./Effect.md) representing the docker/podman command
 
-On NixOS, returns `nix.pkgs.podman.podman`. Otherwise, returns an effect for the existing `docker` command.
+Can be configured via `jix.container.with({dockerCli: customPath})`. On NixOS, defaults to `nix.pkgs.podman.podman`. Otherwise, returns an effect for the existing `docker` command.
 
 ---
 
-## `run({workdir, basedir, volumes, env, name, args}={})`
-Source: [`src/jix/container/index.js#L143`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L143)
+## `run({workdir, basedir, volumes, env, name, args, image}={})`
+Source: [`src/jix/container/index.js#L174`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/index.js#L174)
 
 Create a script that runs a docker container with specified options.
 
@@ -34,6 +34,7 @@ Create a script that runs a docker container with specified options.
 - `env` (Object, optional) - Environment variables to set
 - `name` (string, optional) - Container name
 - `args` (Array, optional) - Additional docker run arguments
+- `image` (string \| [EffectOrFn](./Effect.md#effectorfn), optional) - Docker image to use
 
 **Returns:** [Effect](./Effect.md) - Script that can be used to run containers
 
@@ -48,7 +49,7 @@ jix.script`
 ---
 
 ## `tag(mapping)`
-Source: [`src/jix/container/index.js#L37`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L37)
+Source: [`src/jix/container/index.js#L64`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/index.js#L64)
 
 Create image tags.
 
@@ -61,7 +62,7 @@ Create image tags.
 ---
 
 ## `imageFromDockerfile`
-Source: [`src/jix/container/index.js#L69`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L69)
+Source: [`src/jix/container/index.js#L98`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/index.js#L98)
 
 Template tag function for building Docker images from Dockerfile content. Referenced effects are automatically copied into the build context.
 
@@ -83,21 +84,22 @@ let myImage = jix.container.imageFromDockerfile`
 
 ---
 
-## `network(name)`
-Source: [`src/jix/container/index.js#L47`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L47)
+## `network(name, args=[])`
+Source: [`src/jix/container/index.js#L74`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/index.js#L74)
 
-Create an internal Docker network.
+Create a Docker network.
 
 **Parameters:**
 
 - `name` (string, required) - Network name
+- `args` (Array, optional) - Additional docker network create arguments (default: [])
 
 **Returns:** [Effect](./Effect.md) with `str` property set to the network name
 
 ---
 
 ## `volume(name)`
-Source: [`src/jix/container/index.js#L54`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js#L54)
+Source: [`src/jix/container/index.js#L82`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/index.js#L82)
 
 Create a Docker volume.
 
@@ -109,7 +111,22 @@ Create a Docker volume.
 
 ---
 
+## `with(options, fn)`
+Source: [`src/jix/container/index.js#L23`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/index.js#L23)
+
+Context manager for setting container options.
+
+**Parameters:**
+
+- `options` (Object, required) - Container options
+  - `dockerCli` (string \| [EffectOrFn](./Effect.md#effectorfn) \| Function \| null, optional) - Path to docker-cli or compatible CLI like podman
+- `fn` (Function, optional) - Function to execute with these options
+
+**Returns:** Result of `fn()` if provided
+
+---
+
 ## `aptInstall`
-Source: [`src/jix/container/util.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/util.js)
+Source: [`src/jix/container/util.js`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/util.js)
 
 Utility for installing apt packages in Dockerfiles.

@@ -7,7 +7,7 @@ has_children: true
 # Jix API Reference
 
 ## `script`
-Source: [`src/jix/base.js#L190`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L190)
+Source: [`src/jix/base.js#L190`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L190)
 
 Template tag function for creating executable script files.
 
@@ -20,7 +20,7 @@ Template tag function for creating executable script files.
 ---
 
 ## `textfile`
-Source: [`src/jix/base.js#L181`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L181)
+Source: [`src/jix/base.js#L181`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L181)
 
 Template tag function for creating text files.
 
@@ -33,7 +33,7 @@ Template tag function for creating text files.
 ---
 
 ## `importScript(origin)`
-Source: [`src/jix/base.js#L240`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L240)
+Source: [`src/jix/base.js#L240`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L240)
 
 Import an executable script file.
 
@@ -46,7 +46,7 @@ Import an executable script file.
 ---
 
 ## `importTextfile(origin)`
-Source: [`src/jix/base.js#L227`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L227)
+Source: [`src/jix/base.js#L227`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L227)
 
 Read a text file from the filesystem and create an effect containing its contents.
 
@@ -59,7 +59,7 @@ Read a text file from the filesystem and create an effect containing its content
 ---
 
 ## `copy(from, to)`
-Source: [`src/jix/base.js#L57`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L57)
+Source: [`src/jix/base.js#L57`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L57)
 
 Copy a file to a destination path.
 
@@ -73,7 +73,7 @@ Copy a file to a destination path.
 ---
 
 ## `link(origin, path)`
-Source: [`src/jix/base.js#L25`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L25)
+Source: [`src/jix/base.js#L25`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L25)
 
 Create a hard link.
 
@@ -87,7 +87,7 @@ Create a hard link.
 ---
 
 ## `symlink(origin, path)`
-Source: [`src/jix/base.js#L49`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L49)
+Source: [`src/jix/base.js#L49`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L49)
 
 Create a symbolic link. Equivalent to `link(origin, path, true)`.
 
@@ -101,7 +101,7 @@ Create a symbolic link. Equivalent to `link(origin, path, true)`.
 ---
 
 ## `alias(mapping)`
-Source: [`src/jix/base.js#L68`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L68)
+Source: [`src/jix/base.js#L68`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L68)
 
 Create command aliases in the jix bin directory.
 
@@ -114,7 +114,7 @@ Create command aliases in the jix bin directory.
 ---
 
 ## `dir(path, extraArgs={})`
-Source: [`src/jix/base.js#L127`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L127)
+Source: [`src/jix/base.js#L127`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L127)
 
 Create a directory at the specified path using `mkdir -p`. Uninstall will only remove the directory if it is empty.
 
@@ -128,7 +128,7 @@ Create a directory at the specified path using `mkdir -p`. Uninstall will only r
 ---
 
 ## `customEffect({install, uninstall, dependencies, ...other})`
-Source: [`src/jix/base.js#L94`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L94)
+Source: [`src/jix/base.js#L94`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L94)
 
 Create an effect with custom shell commands for install/uninstall.
 
@@ -144,7 +144,7 @@ Create an effect with custom shell commands for install/uninstall.
 ---
 
 ## `existingCommand(command, {errorMessage}={})`
-Source: [`src/jix/base.js#L108`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L108)
+Source: [`src/jix/base.js#L108`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L108)
 
 Create an effect that verifies a command exists on the system.
 
@@ -158,7 +158,7 @@ Create an effect that verifies a command exists on the system.
 ---
 
 ## `stateDir(id)`
-Source: [`src/jix/stateDir.js#L8`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/stateDir.js#L8)
+Source: [`src/jix/stateDir.js#L8`](https://github.com/rmst/jix/blob/95d2999/src/jix/stateDir.js#L8)
 
 Create a state directory in `~/.jix/db/<id>` that persists across installs/uninstalls.
 
@@ -171,7 +171,7 @@ Create a state directory in `~/.jix/db/<id>` that persists across installs/unins
 ---
 
 ## `str`
-Source: [`src/jix/base.js#L143`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L143)
+Source: [`src/jix/base.js#L143`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L143)
 
 Template tag function for creating string effects with dependency tracking.
 
@@ -184,7 +184,7 @@ Template tag function for creating string effects with dependency tracking.
 ---
 
 ## `build`
-Source: [`src/jix/base.js#L254`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L254)
+Source: [`src/jix/base.js#L254`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L254)
 
 Template tag function for building artifacts from shell scripts. The build script is executed in a temporary directory, and the build result should be written to the path given by the `$out` environment variable.
 
@@ -197,7 +197,7 @@ Template tag function for building artifacts from shell scripts. The build scrip
 ---
 
 ## `dirWith(files)`
-Source: [`src/jix/base.js#L272`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L272)
+Source: [`src/jix/base.js#L272`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L272)
 
 Create a directory containing specified files.
 
@@ -210,7 +210,7 @@ Create a directory containing specified files.
 ---
 
 ## `target()`
-Source: [`src/jix/base.js#L318`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/base.js#L318)
+Source: [`src/jix/base.js#L318`](https://github.com/rmst/jix/blob/95d2999/src/jix/base.js#L318)
 
 Get the current target context (host and user).
 
@@ -219,7 +219,7 @@ Get the current target context (host and user).
 ---
 
 ## `dedent`
-Source: [`src/jix/dedent.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/dedent.js)
+Source: [`src/jix/dedent.js`](https://github.com/rmst/jix/blob/95d2999/src/jix/dedent.js)
 
 Remove common leading whitespace from template strings.
 
@@ -233,7 +233,7 @@ Remove common leading whitespace from template strings.
 ---
 
 ## `effect(obj)`
-Source: [`src/jix/effect.js#L125`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/effect.js#L125)
+Source: [`src/jix/effect.js#L128`](https://github.com/rmst/jix/blob/95d2999/src/jix/effect.js#L128)
 
 Create an effect from properties or dependencies.
 
@@ -252,13 +252,13 @@ Create an effect from properties or dependencies.
 ---
 
 ## `service({name, exec, system, runOnInstall, noUninstall, dependencies})`
-Source: [`src/jix/service/index.js#L15`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/service/index.js#L15)
+Source: [`src/jix/service/index.js#L26`](https://github.com/rmst/jix/blob/95d2999/src/jix/service/index.js#L26)
 
 Create a persistent background service.
 
 **Parameters:**
 
-- `name` (string, required) - Service identifier
+- `name` (string, required) - Service identifier (alphanumerics, dots, hyphens, underscores, and @ only)
 - `exec` (string \| [Effect](./Effect.md), required) - Path to executable or script effect
 - `system` (boolean, optional) - Install as system service if true (default: false)
 - `runOnInstall` (boolean, optional) - Start service on install (default: true)
@@ -272,22 +272,22 @@ Create a persistent background service.
 
 
 ### [container](./container.md)
-Source: [`src/jix/container/index.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/container/index.js)
+Source: [`src/jix/container/index.js`](https://github.com/rmst/jix/blob/95d2999/src/jix/container/index.js)
 
 Container operations for Docker and compatible runtimes.
 
 ### [git](./git.md)
-Source: [`src/jix/git/index.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/git/index.js)
+Source: [`src/jix/git/index.js`](https://github.com/rmst/jix/blob/95d2999/src/jix/git/index.js)
 
 Git repository operations.
 
 ### [nix](./nix.md)
-Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/nix/index.js)
+Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/95d2999/src/jix/nix/index.js)
 
 Nix package management integration.
 
 ### experimental
-Source: [`src/jix/index.js#L38-47`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/index.js#L38-47)
+Source: [`src/jix/index.js#L38-47`](https://github.com/rmst/jix/blob/95d2999/src/jix/index.js#L38-47)
 
 Contains experimental features: `nixos`, `shelltools`, `appendToFile`, `scriptWithTempdir`, `withTarget`, `getTarget`.
 
@@ -296,16 +296,16 @@ Contains experimental features: `nixos`, `shelltools`, `appendToFile`, `scriptWi
 
 
 ### [Effect](./Effect.md)
-Source: [`src/jix/effect.js#L160`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/effect.js#L160)
+Source: [`src/jix/effect.js#L163`](https://github.com/rmst/jix/blob/95d2999/src/jix/effect.js#L163)
 
 Core class representing a jix effect.
 
 ### [Host](./Host.md)
-Source: [`src/jix/targets.js#L6`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/targets.js#L6)
+Source: [`src/jix/targets.js#L5`](https://github.com/rmst/jix/blob/95d2999/src/jix/targets.js#L5)
 
 Represents a target host machine.
 
 ### [User](./User.md)
-Source: [`src/jix/targets.js#L69`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/targets.js#L69)
+Source: [`src/jix/targets.js#L71`](https://github.com/rmst/jix/blob/95d2999/src/jix/targets.js#L71)
 
 Represents a user on a host.

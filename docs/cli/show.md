@@ -6,7 +6,7 @@ nav_order: 5
 
 # jix show
 
-Source: [`src/jix-cli/show.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix-cli/show.js)
+Source: [`src/jix-cli/show.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/show.js)
 
 Display information about a jix effect.
 

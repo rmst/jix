@@ -6,7 +6,7 @@ nav_order: 21
 
 # Host
 
-Source: [`src/jix/targets.js#L6-66`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/targets.js#L6-66)
+Source: [`src/jix/targets.js#L5-67`](https://github.com/rmst/jix/blob/95d2999/src/jix/targets.js#L5-67)
 
 Class representing a target host machine.
 
@@ -28,11 +28,12 @@ Host information is automatically queried from the target machine.
 - `architecture` (string) - CPU architecture
 - `os_version` (string) - OS version string
 - `machineId` (string) - Unique machine identifier
+- `hostname` (string) - Hostname of the machine
 
 ---
 
 ## `install(fn)`
-Source: [`src/jix/targets.js#L60-65`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/targets.js#L60-65)
+Source: [`src/jix/targets.js#L61-66`](https://github.com/rmst/jix/blob/95d2999/src/jix/targets.js#L61-66)
 
 Execute a function with this host and root user as the target context.
 

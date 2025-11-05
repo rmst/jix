@@ -6,7 +6,7 @@ nav_order: 8
 
 # jix host-info
 
-Source: [`src/jix-cli/host-info.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix-cli/host-info.js)
+Source: [`src/jix-cli/host-info.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/host-info.js)
 
 Query and display host and user information.
 

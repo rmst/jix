@@ -11,7 +11,7 @@ exclude:
   - Gemfile.lock
 
 # Site settings
-title: Jix Documentaion
+title: Jix Documentation
 description: Declarative development and deployment
 
 # Enable/disable features

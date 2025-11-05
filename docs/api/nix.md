@@ -6,14 +6,14 @@ nav_order: 11
 
 # nix
 
-Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/nix/index.js)
+Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/95d2999/src/jix/nix/index.js)
 
 Nix package management namespace.
 
 ## `pkg({name, options})`
-Source: [`src/jix/nix/index.js#L47`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/nix/index.js#L47)
+Source: [`src/jix/nix/index.js#L47`](https://github.com/rmst/jix/blob/95d2999/src/jix/nix/index.js#L47)
 
-Build a Nix package using nix-build.
+Build a Nix package using nix-build. Requires Nix to be installed.
 
 **Parameters:**
 
@@ -24,12 +24,10 @@ Build a Nix package using nix-build.
 
 **Returns:** [Effect](./Effect.md) representing the nix package derivation output path
 
-Uses `/run/current-system/sw/bin/nix-build` on NixOS, `/nix/var/nix/profiles/default/bin/nix-build` elsewhere.
-
 ---
 
 ## `pkgs`
-Source: [`src/jix/nix/index.js#L78`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/nix/index.js#L78)
+Source: [`src/jix/nix/index.js#L83`](https://github.com/rmst/jix/blob/95d2999/src/jix/nix/index.js#L83)
 
 Proxy object for accessing package binaries.
 
@@ -40,7 +38,7 @@ Returns a string effect pointing to the binary path.
 ---
 
 ## `with(options, fn)`
-Source: [`src/jix/nix/index.js#L23`](https://github.com/rmst/jix/blob/cf7ca20/src/jix/nix/index.js#L23)
+Source: [`src/jix/nix/index.js#L23`](https://github.com/rmst/jix/blob/95d2999/src/jix/nix/index.js#L23)
 
 Context manager for setting Nix build options.
 
@@ -56,7 +54,10 @@ Context manager for setting Nix build options.
 **Example:**
 
 ```javascript
-jix.nix.with({nixpkgs: "https://github.com/NixOS/nixpkgs/archive/HASH.tar.gz"}, () => {
-  return jix.nix.pkg({name: "git"})
+jix.nix.with({
+  nixpkgs: jix.git.checkout({
+    repo: "https://github.com/NixOS/nixpkgs",
+    commit: "11cb3517b3af6af300dd6c055aeda73c9bf52c48"
+  })
 })
 ```

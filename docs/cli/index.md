@@ -6,7 +6,7 @@ has_children: true
 
 # Jix CLI Reference
 
-Source: [`src/jix-cli/main.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix-cli/main.js)
+Source: [`src/jix-cli/main.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/main.js)
 
 Jix provides a command-line interface for managing configurations, running scripts, and controlling effects.
 

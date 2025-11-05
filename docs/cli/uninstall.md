@@ -6,7 +6,7 @@ nav_order: 4
 
 # jix uninstall
 
-Source: [`src/jix-cli/uninstall.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix-cli/uninstall.js)
+Source: [`src/jix-cli/uninstall.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/uninstall.js)
 
 Uninstall a jix manifest.
 
@@ -32,6 +32,5 @@ Uninstall all effects currently active for a given jix manifest.
 
 ```bash
 jix uninstall
-jix uninstall default
 jix uninstall -f ~/work/my-tools
 ```

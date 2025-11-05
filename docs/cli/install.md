@@ -6,7 +6,7 @@ nav_order: 2
 
 # jix install
 
-Source: [`src/jix-cli/install/index.js`](https://github.com/rmst/jix/blob/cf7ca20/src/jix-cli/install/index.js)
+Source: [`src/jix-cli/install/index.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/install/index.js)
 
 Install a jix configuration.
 
@@ -34,9 +34,7 @@ Install a jix manifest from the current directory's `__jix__.js`.
 
 ```bash
 jix install
-jix install default
 jix install foo
 jix install -f ./my-tools
 jix install --dry-run
-jix install --find-manifest
 ```
