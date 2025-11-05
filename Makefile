@@ -13,7 +13,8 @@ install-dev:
 # Build qjsx, then install common files
 _install:
 	@PLATFORM=$$(uname -s | tr '[:upper:]' '[:lower:]'); \
-	$(MAKE) -C quickjs-x build; \
+	echo "Building..."; \
+	$(MAKE) -s -C quickjs-x build > /dev/null 2>&1 || { echo "Build failed"; exit 1; }; \
 	mkdir -p "$(HOME)/.jix/jix" "$(HOME)/.jix/jix/modules" "$(HOME)/.jix/bin"; \
 	if [ "$$PLATFORM" = "darwin" ]; then \
 		cp -c "quickjs-x/bin/$$PLATFORM/qjsx" "$(HOME)/.jix/jix/qjsx"; \
@@ -29,10 +30,7 @@ _install:
 	rm -f "$(HOME)/.jix/bin/jix"; \
 	ln -sf "$(HOME)/.jix/jix/jix" "$(HOME)/.jix/bin/jix"; \
 	cp src/scripts/shell_integration "$(HOME)/.jix/jix/shell_integration"; \
-	echo "✅ Installation complete!"; \
-	echo ""; \
-	echo "Jix installed to: $(HOME)/.jix/jix/jix"; \
-	echo "Symlink created: $(HOME)/.jix/bin/jix"; \
+	echo "✅ Jix installed to: $(HOME)/.jix"; \
 	echo ""; \
 	case ":$$PATH:" in \
 		*:"$(HOME)/.jix/bin":*) \
