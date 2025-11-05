@@ -18,6 +18,8 @@ export class Host {
 	os_version
 	/** @type {string} */
 	machineId
+	/** @type {string} */
+	hostname 
 
 	// TODO: add missing properties
 
