@@ -71,6 +71,27 @@ function initCmd(options = {}) {
 	sh`ln -sfn '${LOCAL_JIX_PATH}/jix/modules/jix-cli' '${wd}/${JIX_DIR}/modules/jix-cli'`
 	if (!jixDirExisted) created.push(`${JIX_DIR}/`)
 
+	const jixJsPath = `${wd}/__jix__.js`
+	if (!existsSync(jixJsPath)) {
+		const jixJsContent = dedent`
+			export const run = {
+				default: jix.script\`
+					echo "Hello, jix run!"
+				\`,
+				test: jix.script\`
+					echo "Hello, jix run test!"
+				\`,
+			}
+
+			export const install = () => {
+
+			}
+
+		`
+		writeFileSync(jixJsPath, jixJsContent)
+		created.push('__jix__.js')
+	}
+
 	if (options.vscode) {
 		const tasksStatus = setupVSCodeTasks(wd)
 		if (tasksStatus === 'created') {

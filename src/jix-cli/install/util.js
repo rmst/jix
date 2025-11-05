@@ -24,7 +24,7 @@ export function warnAboutStaleManifestIds() {
 			Consider cleaning up with:
 			  ${stale.map(id => {
 				const [path, name] = id.split('#')
-				return `jix uninstall ${name} -f ${path}`
+				return `jix uninstall -f ${path} ${name}`
 			}).join('\n  ')}
     ` + "\n")
   }
