@@ -14,12 +14,12 @@ In `cli` we want to document every available subcommand and possible args.
 
 The docs you write should be in markdown and read as if they were auto-generated from the code. IMPORTANT: They should only contain information that you can infer from the code with absolute certainty.
 
-The entrypoint should be a `Readme.md`. In `api`, properties should be split into subsections for classes, namespaces, functions, etc.
+The entrypoint should be a `index.md`. In `api`, properties should be split into subsections for classes, namespaces, functions, etc.
 
 Only for classes/namespaces/objects maintain a separate file where their functions/properties are documented.
 
 Always use of Markdown links to link to the file/section whenever you reference something.
 
-Provide links to the source files (including line numbers, e.g. `./my/file.js#L53`) as well.
+Provide links to the source files on Github at the last-updated commit and using the correct line numbers, e.g. `./my/file.js#L53`.
 
-When including line numbers always make sure you always look at the relevant files including the line number (e.g. using `cat -n`)
+When including line numbers always make sure you always look at the relevant files including the line number (e.g. using `cat -n`). For every code file that changed make sure you re-check all the associated line number in the documentation.
