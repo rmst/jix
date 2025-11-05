@@ -7,6 +7,7 @@ import process from "node:process";
 import { UserError } from "./UserError.js"
 import db from "../db/index.js"
 import { log } from "../logger.js"
+import { getCurrentUser } from "../util.js"
 
 /**
  * Describes the properties of a single system user.
@@ -145,7 +146,7 @@ export const queryHostInfo = (address, user) => {
  */
 export const queryUserInfo = ({host, user}) => {
 	let asUser = host.address === "localhost"
-		? process.env.USER
+		? getCurrentUser()
 		: user
 
 	let sh = (...args) => executeCmd({
@@ -247,11 +248,11 @@ export const resolveEffectTarget = (
 	if (!userMayBeNull) {
 		if(machineIdOrFriendlyName)
 			throw Error(`User can only be null for localhost not ${machineIdOrFriendlyName}`)
-		userMayBeNull = process.env.USER
+		userMayBeNull = getCurrentUser()
 	}
 
 	if (!userMayBeNull) {
-		throw new UserError("Could not determine user (USER environment variable not set)")
+		throw new UserError("Could not determine user")
 	}
 
 	// TODO: Backward compatibility - remove in future

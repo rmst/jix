@@ -5,6 +5,7 @@ import set from './core/set.js'
 import { shortPath } from './effectUtil.js'
 import process from 'node:process'
 import { JIX_DIR } from '../jix/context.js'
+import { getCurrentUser } from './util.js'
 
 export default {
 	name: 'host-info',
@@ -27,9 +28,9 @@ export default {
 			return
 		}
 		const host = a[0] || "localhost"
-		const user = a[1] || process.env.USER
-		
-		let hostInfo = hostInfoWithUser(host, user, true)
+		const user = a[1] || getCurrentUser()
+
+		let hostInfo = hostInfoWithUser({address: host}, user, true)
 		console.log(JSON.stringify({...hostInfo, users: undefined}, null, 2))
 		const userInfo = hostInfo.users[user]
 		console.log(JSON.stringify(userInfo, null, 2))
@@ -40,7 +41,7 @@ export default {
 			let activeHashes = set(Object.values(activeHashesById).flat()).list()
 
 			// Get the machineId for the requested host
-			const targetHostInfo = hostInfoWithUser(host, user)
+			const targetHostInfo = hostInfoWithUser({address: host}, user)
 			const targetMachineId = targetHostInfo.machineId
 
 			let effectsForTarget = activeHashes

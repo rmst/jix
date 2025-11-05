@@ -9,7 +9,7 @@ import { tryInstallEffect, tryUninstallEffect } from './installEffect.js'
 import set from './set.js'
 import { checkOrphanedEffects } from './util.js'
 
-import { sh } from '../util.js'
+import { sh, getCurrentUser } from '../util.js'
 import { warnAboutStaleManifestIds } from '../install/util.js'
 import { UserError } from './UserError.js'
 import { log } from '../logger.js'
@@ -62,8 +62,8 @@ export default async function install({
 	// Build effects (non-uninstall mode)
 	if (!uninstall) {
 
-    let host = new Host("localhost", {[process.env.USER]: {}})
-    withTarget({host, user: host.users[process.env.USER]})
+    let host = new Host("localhost", {[getCurrentUser()]: {}})
+    withTarget({host, user: host.users[getCurrentUser()]})
 
 		globalThis.jix = jix
 		addQjsxPathForFile(manifestPath)
@@ -79,8 +79,8 @@ export default async function install({
 				if (!fn)
 					throw new UserError(`run script not found: ${runName}`)
 
-        drvs = (new Host("localhost", {[process.env.USER]: {}}))
-          .users[process.env.USER]
+        drvs = (new Host("localhost", {[getCurrentUser()]: {}}))
+          .users[getCurrentUser()]
           .install(() => effect(collectEffects(() => {
           
           let script
@@ -129,8 +129,8 @@ export default async function install({
 				throw new TypeError(`Expected function or object, instead got: ${typeof exported}`)
 			}
 
-			drvs = (new Host("localhost", {[process.env.USER]: {}}))
-				.users[process.env.USER]
+			drvs = (new Host("localhost", {[getCurrentUser()]: {}}))
+				.users[getCurrentUser()]
 				.install(() => effect(collectEffects(() => fn())))
 		}
     

@@ -30,6 +30,19 @@ export const sh = (...args) => {
 export const shVerbose = sh
 
 
+let _currentUser = null
+/**
+ * Get the current username (cached)
+ * @returns {string}
+ */
+export const getCurrentUser = () => {
+	if (_currentUser === null) {
+		_currentUser = sh`id -un`.trim()
+	}
+	return _currentUser
+}
+
+
 export const time = () => {
 	return Math.floor(Date.now() / 1000)
 }

@@ -12,6 +12,7 @@ import db from '../db/index.js'
 import { resolveEffectTarget } from './hosts.js'
 import { shellEscape } from '../../jix/util.js'
 import * as logger from '../logger.js'
+import { getCurrentUser } from '../util.js'
 
 
 /**
@@ -48,7 +49,7 @@ export const executeCmd = (command, address, user) => {
     args = [`${user}@${address}`, "--", ...args]
   }
 
-  else if ( user && user != process.env.USER ) {
+  else if ( user && user != getCurrentUser() ) {
     args = [cmd, ...args]
     args = args.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)  // escape all args
     options.input = args.join(' ')
