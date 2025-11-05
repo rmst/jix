@@ -74,6 +74,13 @@ const withAnnotation = (str, fn) => {
 } 
 
 
+const shortenExecErrorMsg = (msg) => {
+  if(!msg.includes("Stderr:\n  "))
+    return msg
+  let [a, b] = msg.split("Stderr:\n  ", 2)
+  return b
+}
+
 export const tryInstallEffect = (hash, manifestId) => {  
   let effectData = db.store.read(hash)
 
@@ -97,12 +104,11 @@ export const tryInstallEffect = (hash, manifestId) => {
 			try {
         executeCmd(cmd, host, user)
 			} catch (e) {
-				console.log(`Error with ${hash}:`)
-				prettyPrintEffect(effectData)
-				console.log(`\n${e.message}`)
-
+				console.log(`Error while building ${hash}:`)
+				// prettyPrintEffect(effectData)
+				console.log(`\n${shortenExecErrorMsg(e.message)}`)
 				const trace = db.stackTrace.read()[manifestId][hash]
-        console.log(`\nStack trace:\n${trace}\n`)
+        console.log(`${trace}\n`)
    
 				return e
 			}
@@ -117,12 +123,11 @@ export const tryInstallEffect = (hash, manifestId) => {
         executeCmd(cmd, host, user)
       )
     } catch (e) {
-      console.log(`Error with ${hash}:`)
-      prettyPrintEffect(effectData)
-      console.log(`\n${e.message}`)
-
+      console.log(`Error while installing ${hash}:`)
+      // prettyPrintEffect(effectData)
+      console.log(`\n${shortenExecErrorMsg(e.message)}`)
       const trace = db.stackTrace.read()[manifestId][hash]
-      console.log(`\nStack trace:\n${trace}\n`)
+      console.log(`${trace}\n`)
 
       return e
     }
@@ -156,11 +161,10 @@ export const tryUninstallEffect = (hash) => {
         executeCmd(cmd, host, user)
       )
     } catch (e) {
-      console.log(`Error with ${hash}:`)
-      prettyPrintEffect(effectData)
-      console.log(`\n${e.message}`)
-
-      console.log("\n...uninstall continuing...\n")
+      console.log(`Error while uninstalling ${hash}:`)
+      // prettyPrintEffect(effectData)
+      console.log(`\n${shortenExecErrorMsg(e.message)}`)
+      // console.log("\n...uninstall continuing...\n")
       return e
     }
   }

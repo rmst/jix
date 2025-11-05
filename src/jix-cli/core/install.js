@@ -245,7 +245,6 @@ export default async function install({
     }
 
     console.log(`Trying to restore old install...\n`)
-
 		let reinstalledHashes = [...(function*(){
 			for (const hash of hashesToUninstall) {
 				let e = tryInstallEffect(hash, jixId)   // continue despite errors this time
@@ -259,17 +258,18 @@ export default async function install({
         .minus(reinstalledHashes)
         .list()
 
-      console.log(dedent`
-        ${style.red('Error:')} Partial re-install: ${reinstalledHashes.length} of the removed ${hashesToUninstall.length} re-installed. Missing ${missingHashes.length}:
+      throw new UserError(dedent`
+        Partial install. Attempted to restore the previous install but only ${reinstalledHashes.length} of the removed ${hashesToUninstall.length} could be re-installed. Missing ${missingHashes.length}:
           ${missingHashes.join('\n  ')}
-      `)   
+          
+        See logs above for more details.
+      `)
 
     } else {
 
-      console.log(`Successfully restored previous install`)
+      throw new UserError(`Partial install. Successfully restored previous install. See logs above for details.`)
     }
 
-    throw new UserError('Partial install encountered; attempted restore. See logs above for details.')
 
   }
 

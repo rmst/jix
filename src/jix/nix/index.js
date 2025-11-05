@@ -48,6 +48,10 @@ export const pkg = ({name, options={}}) => {
 
 	let target = jix.target()
 
+	let nixCmd = jix.existingCommand("nix", { 
+		errorMessage: "To use jix.nix you need to install Nix first"
+	})
+
 	// Merge context options with provided options (provided options override context)
 	options = {...getOptions(), ...options}
 
@@ -65,6 +69,7 @@ export const pkg = ({name, options={}}) => {
 		.join(' ')
 
 	let derivation = jix.build`
+		# ${nixCmd}
 		result="$("${nixBinPath}"/nix-build ${extraArgsStr} ${nixbuildArgs} -A "${name}" --no-out-link | tail -n 1)"
 		"${nixBinPath}"/nix-store --add-root "$out" --indirect --realise "$result" > /dev/null
 
