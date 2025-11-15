@@ -52,7 +52,7 @@ let previewDocs = () => jix.script`
 
 /**
 	From the root of this repo run via:
-	jix run -f examples/docker.__jix__.js`
+		jix run -f examples/docker.__jix__.js
 */
 export const run = {
 	default: previewDocs,
