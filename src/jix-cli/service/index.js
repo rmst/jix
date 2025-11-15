@@ -1,26 +1,44 @@
-import db from './db/index.js'
-import set from './core/set.js'
+import db from '../db/index.js'
+import set from '../core/set.js'
 import { existsSync, readFileSync } from 'node:fs'
 import process from 'node:process'
-import { dedent } from '../jix/dedent.js'
-import { hostInfoWithUser } from './core/hosts.js'
-import { getCurrentUser } from './util.js'
+import { dedent } from '../../jix/dedent.js'
+import { hostInfoWithUser } from '../core/hosts.js'
+import { getCurrentUser } from '../util.js'
+import { style } from '../prettyPrint.js'
+import statusSubcommand from './status.js'
 
-const userServicesDir = (home) => `${home}/.jix/db/jix.user-services`
-const systemServicesDir = (home) => `${home}/.jix/db/jix.services`
+export const userServicesDir = (home) => `${home}/.jix/db/jix.user-services`
+export const systemServicesDir = (home) => `${home}/.jix/db/jix.services`
 
 export default {
 	name: 'service',
 	description: 'Display running services',
-	usage: 'jix service',
+	usage: 'jix service [status <service-name>]',
 	help: dedent`
 	Display running services for all Jix manifests in the current directory
 
-	Example:
+	Subcommands:
+	  status <service-name>  Show detailed status for a specific service
+
+	Examples:
 	  jix service
+	  jix service status my-service
 	`,
 	run(args) {
 		if (args.includes('--help') || args.includes('-h')) {
+			console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
+			return
+		}
+
+		// Handle subcommands
+		if (args[0] === 'status') {
+			this.status(args.slice(1))
+			return
+		}
+
+		if (args.length > 0) {
+			console.error(`Unknown service subcommand: ${args[0]}`)
 			console.log(`Usage:\n  ${this.usage}\n\n${this.help}`)
 			return
 		}
@@ -111,5 +129,15 @@ export default {
 			})
 			console.log()
 		})
-	}
+	},
+
+	status(args) {
+		if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
+			console.log('Usage:\n  jix service status <service-name>')
+			console.log('\nShow detailed status for a specific service')
+			return
+		}
+
+		statusSubcommand(args)
+	},
 }

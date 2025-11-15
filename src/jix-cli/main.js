@@ -11,7 +11,7 @@ import showCmd from './show.js'
 import forceRemoveCmd from './forceRemove.js'
 import uninstallCmd from './uninstall.js'
 import hostInfoCmd from './host-info.js'
-import serviceCmd from './service.js'
+import serviceCmd from './service'
 import gcCmd from './gc.js'
 
 
