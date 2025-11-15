@@ -46,6 +46,7 @@ async function run(cmd, args, { verbose = false, file, findManifest = false } = 
 
 	// Apply only the effects required for this specific run script
 	let scriptPath
+	globalThis.__jix_service_transient = true
 	scriptPath = await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, name }))
   console.log()
 

@@ -113,6 +113,27 @@ export default ({
 		// this is just so MacOS shows a nice name in various UIs and not a hash
 		wrapperScript = jix.str`${dirWith({[name]: wrapperScript })}/${name}`
 
+		if (globalThis.__jix_service_transient) {
+			const waitUntilSuccessfulStartup = runOnInstall ? "sleep 0.5" : ""
+			const startCmd = runOnInstall ? `${wrapperScript} > /dev/null 2>&1 < /dev/null &` : ''
+
+			return jix.effect({
+				install: ["execShV1", jix.dedent`
+					${startCmd}
+					${waitUntilSuccessfulStartup}
+				`],
+				uninstall: noUninstall ? null : ["execShV1", jix.dedent`
+					# Kill process if PID file exists
+					if [ -f "${servicesDir}/${name}/details" ]; then
+						PID=$(grep "^pid=" "${servicesDir}/${name}/details" | cut -d= -f2)
+						[ -n "$PID" ] && kill "$PID" 2>/dev/null || true
+					fi
+				`],
+				dependencies: [...dependencies],
+				str: name,
+			})
+		}
+
 		const serviceImplementation = target.host.os === "macos"
 			? launchdService
 			: target.host.kernel_name === "Linux"
