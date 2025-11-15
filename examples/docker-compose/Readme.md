@@ -2,7 +2,7 @@
 
 Here, we are comparing between Jix and Docker Compose.
 
-While our Jix example here is more verbose, it uses standard components such as `jix.service` that allow for composition with non-docker scripts/services/dependencies.
+While our Jix example here is slightly more verbose, it uses standard components such as `jix.service` that allow for composition with non-docker scripts/services/dependencies.
 
 ### Jix version
 
@@ -24,35 +24,29 @@ File: [`./jix/__jix__.js`](./jix/__jix__.js)
 ```javascript
 // ...
 
-let webService = () => {
-	let name = NAME
-	let image = jix.container.imageFromDockerfile`
-		FROM python:3.10-alpine
-		WORKDIR /code
-		ENV FLASK_APP=app.py
-		ENV FLASK_RUN_HOST=0.0.0.0
-		RUN apk add --no-cache gcc musl-dev linux-headers
-		COPY ${jix.importTextfile(import.meta.dirname+"/requirements.txt")} /code/requirements.txt
-		RUN pip install -r requirements.txt
-		EXPOSE 5000
-		COPY ${jix.importTextfile(import.meta.dirname+"/app.py")} /code/app.py
-		CMD ["flask", "run", "--debug"]
-	`
-
-	return jix.service({
-		name,
-		exec: jix.container.run({
-			name,
-			args: [
-				"--network", network,
-				"-p", "8000:5000",
-			],
-			image
-		}),
-		dependencies: [redisService]
-	})
-
-}
+let webService = () => jix.service({
+	name: NAME,
+	exec: jix.container.run({
+		name: NAME,
+		args: [
+			"--network", network,
+			"-p", "8000:5000",
+		],
+		image: jix.container.imageFromDockerfile`
+			FROM python:3.10-alpine
+			WORKDIR /code
+			ENV FLASK_APP=app.py
+			ENV FLASK_RUN_HOST=0.0.0.0
+			RUN apk add --no-cache gcc musl-dev linux-headers
+			COPY ${jix.importTextfile(import.meta.dirname+"/requirements.txt")} /code/requirements.txt
+			RUN pip install -r requirements.txt
+			EXPOSE 5000
+			COPY ${jix.importTextfile(import.meta.dirname+"/app.py")} /code/app.py
+			CMD ["flask", "run", "--debug"]
+		`
+	}),
+	dependencies: [redisService]
+})
 
 export const install = () => {
 	webService()

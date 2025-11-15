@@ -7,7 +7,6 @@
 */
 
 
-
 // Optional - This allows us to specify our docker-cli implementation
 jix.container.with({
 	dockerCli: () => {
@@ -23,61 +22,53 @@ let NAME = "myapp"
 let network = jix.container.network(NAME)
 
 
-let redisService = () => {
-	let name = `${NAME}.redis`
-	let image = jix.container.imageFromDockerfile`
-		FROM redis:alpine
-	`
-
-	return jix.service({
-		name,
-		exec: jix.container.run({
-			name,
-			args: [
-				"--network", network,
-				"--hostname", "redis",
-			],
-			image
-		})
+let redisService = () => jix.service({
+	name: `${NAME}.redis`,
+	exec: jix.container.run({
+		args: [
+			"--network", network,
+			"--hostname", "redis",
+		],
+		image: jix.container.imageFromDockerfile`
+			FROM redis:alpine
+		`
 	})
-}
+})
 
 
-
-let webService = () => {
-	let name = NAME
-	let image = jix.container.imageFromDockerfile`
-		FROM python:3.10-alpine
-		WORKDIR /code
-		ENV FLASK_APP=app.py
-		ENV FLASK_RUN_HOST=0.0.0.0
-		RUN apk add --no-cache gcc musl-dev linux-headers
-		COPY ${jix.importTextfile(import.meta.dirname+"/requirements.txt")} /code/requirements.txt
-		RUN pip install -r requirements.txt
-		EXPOSE 5000
-		COPY ${jix.importTextfile(import.meta.dirname+"/app.py")} /code/app.py
-		CMD ["flask", "run", "--debug"]
-	`
-	
-	return jix.service({
-		name,
-		exec: jix.container.run({
-			name,
-			args: [
-				"--network", network,
-				"-p", "8000:5000",
-			],
-			image
-		}),
-		dependencies: [redisService]
-	})
-	
-}
+let webService = () => jix.service({
+	name: NAME,
+	exec: jix.container.run({
+		name: NAME,
+		args: [
+			"--network", network,
+			"-p", "8000:5000",
+		],
+		image: jix.container.imageFromDockerfile`
+			FROM python:3.10-alpine
+			WORKDIR /code
+			ENV FLASK_APP=app.py
+			ENV FLASK_RUN_HOST=0.0.0.0
+			RUN apk add --no-cache gcc musl-dev linux-headers
+			COPY ${jix.importTextfile(import.meta.dirname+"/requirements.txt")} /code/requirements.txt
+			RUN pip install -r requirements.txt
+			EXPOSE 5000
+			COPY ${jix.importTextfile(import.meta.dirname+"/app.py")} /code/app.py
+			CMD ["flask", "run", "--debug"]
+		`
+	}),
+	dependencies: [redisService]
+})
 
 
 /*
 	In this directory run
 		jix install
+
+	Then, to get status of both services you can run
+		jix service  # (overview)
+		jix service status myapp  # (detailed info for the web service)
+		jix service logs myapp.redis  # (full logs for the redis service)
 */
 export const install = () => {
 	webService()

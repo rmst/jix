@@ -20,8 +20,8 @@ const helloService = () => jix.service({
 export const run = {
 	default: jix.script`
 		# ${helloService} (adds helloService as a dependency)
-		echo "Service started. Press Ctrl+C to stop. Logs:"
-		tail -f ~/.jix/db/jix.user-services/hello-service/log
+		echo "Service started. Press Ctrl+C to stop. Status:"
+		${jix.experimental.shelltools.watch} -n 5 "jix service status hello-service"
 	`,
 }
 
