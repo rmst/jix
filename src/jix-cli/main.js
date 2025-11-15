@@ -11,6 +11,7 @@ import showCmd from './show.js'
 import forceRemoveCmd from './forceRemove.js'
 import uninstallCmd from './uninstall.js'
 import hostInfoCmd from './host-info.js'
+import serviceCmd from './service.js'
 import gcCmd from './gc.js'
 
 
@@ -34,6 +35,7 @@ const main = async () => {
 		'force-remove': forceRemoveCmd,
 		gc: gcCmd,
 		'host-info': hostInfoCmd,
+		service: serviceCmd,
 		show: showCmd,
 		run: runCmd,
 		init: initCmd,
