@@ -7,6 +7,7 @@ import { hostInfoWithUser } from '../core/hosts.js'
 import { getCurrentUser } from '../util.js'
 import { style } from '../prettyPrint.js'
 import statusSubcommand from './status.js'
+import logSubcommand from './log.js'
 
 export const userServicesDir = (home) => `${home}/.jix/db/jix.user-services`
 export const systemServicesDir = (home) => `${home}/.jix/db/jix.services`
@@ -20,10 +21,12 @@ export default {
 
 	Subcommands:
 	  status <service-name>  Show detailed status for a specific service
+	  log <service-name>     Show logs for a specific service
 
 	Examples:
 	  jix service
 	  jix service status my-service
+	  jix service log my-service
 	`,
 	run(args) {
 		if (args.includes('--help') || args.includes('-h')) {
@@ -34,6 +37,11 @@ export default {
 		// Handle subcommands
 		if (args[0] === 'status') {
 			this.status(args.slice(1))
+			return
+		}
+
+		if (args[0] === 'log') {
+			this.log(args.slice(1))
 			return
 		}
 
@@ -139,5 +147,15 @@ export default {
 		}
 
 		statusSubcommand(args)
+	},
+
+	log(args) {
+		if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
+			console.log('Usage:\n  jix service log <service-name>')
+			console.log('\nShow logs for a specific service')
+			return
+		}
+
+		logSubcommand(args)
 	},
 }

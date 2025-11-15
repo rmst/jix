@@ -1,11 +1,8 @@
-import db from '../db/index.js'
-import set from '../core/set.js'
 import { existsSync, readFileSync } from 'node:fs'
 import process from 'node:process'
-import { hostInfoWithUser } from '../core/hosts.js'
-import { getCurrentUser } from '../util.js'
+import { dedent } from '../../jix/dedent.js'
 import { style } from '../prettyPrint.js'
-import { userServicesDir, systemServicesDir } from './index.js'
+import { findServiceByName, getServicePaths } from './util.js'
 
 export default function status(args) {
 	if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
@@ -21,55 +18,16 @@ export default function status(args) {
 
 	const serviceName = args[0]
 	const currentDir = process.cwd()
-	const targetInfo = hostInfoWithUser({ address: 'localhost' }, getCurrentUser())
-	const targetMachineId = targetInfo.machineId
-	const currentUser = getCurrentUser()
-	const home = process.env.HOME || getCurrentUser()
+	const home = process.env.HOME || process.env.USER
 
-	if (db.active.exists() === false) {
-		console.log('No active jix configurations found.')
-		return
-	}
-
-	const activeHashesById = db.active.read()
-	let foundService = null
-
-	// Search for the service
-	for (const [jixId, hashes] of Object.entries(activeHashesById)) {
-		const [jixIdPath] = jixId.split('#')
-		if (!jixIdPath.startsWith(currentDir)) continue
-
-		for (const hash of set(hashes).list()) {
-			try {
-				const effectData = db.store.read(hash)
-				if (effectData.host !== targetMachineId || effectData.user !== currentUser) continue
-
-				if (effectData.info && effectData.info.type === 'jix.service' && effectData.info.name === serviceName) {
-					foundService = {
-						jixId,
-						hash,
-						name: effectData.info.name,
-						system: effectData.info.system || false,
-					}
-					break
-				}
-			} catch {
-				continue
-			}
-		}
-		if (foundService) break
-	}
+	const foundService = findServiceByName(serviceName, currentDir)
 
 	if (!foundService) {
 		console.log(`Service '${serviceName}' not found in current directory. Run 'jix service' to see available services.`)
 		return
 	}
 
-	const servicesBaseDir = foundService.system ? systemServicesDir(home) : userServicesDir(home)
-	const serviceDir = `${servicesBaseDir}/${serviceName}`
-	const detailsPath = `${serviceDir}/details`
-	const logPath = `${serviceDir}/log`
-	const statusPath = `${serviceDir}/status`
+	const { detailsPath, logPath, statusPath } = getServicePaths(serviceName, foundService.system, home)
 
 	console.log(`${style.key('name')} ${serviceName}`)
 	console.log(`${style.key('system-service')} ${foundService.system}`)
