@@ -60,7 +60,8 @@ export default ({
 			# Unload the job
 			launchctl bootout ${launchdTarget}/${name}
 		`],
-		dependencies: [ plist, ...dependencies ]
+		dependencies: [ plist, ...dependencies ],
+		str: name,
 	})
 	
 	

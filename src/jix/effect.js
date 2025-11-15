@@ -310,7 +310,18 @@ export class Effect {
 
 
 /**
- * @param {string} str 
+ * @param {Effect} e
+ * @returns {string}
+ */
+const checkedStr = (e) => {
+  if (e.str === undefined) {
+    throw Error(`Effect has undefined str property: ${e.toDebugString ? e.toDebugString() : e}`)
+  }
+  return e.str
+}
+
+/**
+ * @param {string} str
  * @returns {string}
  */
 const targetizeString = (str) => {
@@ -351,7 +362,7 @@ export const parseEffectValues = (values) => {
           if(v.includes(k)) {
             let eff = effectPlaceholderMap.get(k)
             dependencies.push(eff)
-            v = v.replaceAll(k, eff.str)
+            v = v.replaceAll(k, checkedStr(eff))
           }
         })
 
@@ -363,7 +374,7 @@ export const parseEffectValues = (values) => {
               throw TypeError(`Expected Effect, got: ${eff}`)
             }
             dependencies.push(eff)
-            v = v.replaceAll(k, eff.str)
+            v = v.replaceAll(k, checkedStr(eff))
           }
         })
       }
@@ -382,14 +393,14 @@ export const parseEffectValues = (values) => {
         throw TypeError(`Expected Effect, got: ${x} of type ${typeof x === "object" ? x.constructor.name : typeof x}`)
       }
       dependencies.push(x)
-      return x.str
+      return checkedStr(x)
     }
 
     else if (v instanceof Effect) {
       // add it to the dependencies array
       // and replace the object with it's out path
       dependencies.push(v)
-      return v.str
+      return checkedStr(v)
     }
 
     else

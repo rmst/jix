@@ -81,6 +81,7 @@ export default ({
 			# Reload systemd
 			systemctl ${systemctlFlags} daemon-reload
 		`],
-		dependencies: [ serviceFile, ...dependencies ]
+		dependencies: [ serviceFile, ...dependencies ],
+		str: name,
 	})
 }
