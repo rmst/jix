@@ -4,17 +4,18 @@ title: Getting Started
 nav_order: 1
 ---
 
-## Jix: Configure Dev-Envs & Systems in JS
+## Jix: Declarative System Configs in JS
+(*alpha version – rough edges*)
 
-Jix allows you to write reproducible, declarative development and system configurations in Javascript with good editor/type-checking support.
+Jix is conceptually similar to [Nix](https://en.wikipedia.org/wiki/Nix_(package_manager)). In Jix, "effects" are a generalization of Nix' "derivations". [Effects](https://rmst.github.io/jix/api/Effect.md) can have install and uninstall actions which allows them to influence system state declaratively. Dependencies are tracked automatically.
 
-Jix might be used as an ergonomic and lightweight alternative to
+Jix itself has no dependencies. It does not depend on NPM or Node.js or Nix.
+
+Jix can be used as an ergonomic and lightweight alternative to
 - devenv (see [`examples/devenv/`](https://github.com/rmst/jix/tree/main/examples/devenv))
 - docker compose (see [`examples/docker-compose/`](https://github.com/rmst/jix/tree/main/examples/docker-compose))
 - nix home-manager (see [`examples/home-manager/`](https://github.com/rmst/jix/tree/main/examples/home-manager))
-- Ansible (no side-by-side example yet but see [remote targets](https://rmst.github.io/jix/remote-targets))
-
-Jix is conceptually similar to [Nix](https://en.wikipedia.org/wiki/Nix_(package_manager)). In Jix, "effects" are a generalization of Nix' "derivations". [Effects](https://rmst.github.io/jix/api/Effect.md) can have install and uninstall actions which allows them to influence state outside of the Jix store (the equivalent of /nix/store).
+- Ansible (see [remote targets](https://rmst.github.io/jix/remote-targets))
 
 [Nixpkgs](https://github.com/NixOS/nixpkgs) are available in Jix via `jix.nix.pkgs.<packageName>.<binaryName>` (see [example](https://github.com/rmst/jix/blob/main/examples/devenv/jix/__jix__.js)).
 
@@ -31,7 +32,7 @@ rm -rf jix
 Follow the instruction to add `. "$HOME/.jix/jix/shell_integration"` to your shell rcfile.
 
 
-**Create a __jix__.js file**: in a new or existing dir run `jix init`, which will create a `__jix__.js` for you (also `.jix/` and `jsconfig.js` for code completion and type-checking).
+**Create a __jix__.js file**: in a new or existing dir run `jix init`, which will create a `__jix__.js` for you (also `.jix/` and `jsconfig.json` for code completion and type-checking).
 
 ```js
 // __jix__.js
@@ -71,6 +72,30 @@ export const install = () => {
 ```
 
 After running `jix install`, hellojix will be available as a shell command for your user. To remove it you can either comment out the `jix.alias` line and rerun `jix install` or you can run `jix uninstall`.
+
+
+### Reference
+- [CLI Reference](https://rmst.github.io/jix/cli/) - Command-line interface documentation
+- [API Reference](https://rmst.github.io/jix/api/) - JavaScript API documentation
+
+
+### FAQ
+#### Why JavaScript?
+JavaScript was chosen for Jix because it has:
+- Great multiline string and string interpolation support to embed scripts and config files
+- Decent functional programming support (as opposed to Python, which lacks proper anonymous functions)
+- Great tooling (e.g. IDE support for JS is outstanding)
+- Great object/dictionary ergonomics
+- Great, super minimalist interpreter: Fabrice Bellard's Quickjs
+
+#### Why not Typescript?
+Typescript support might be added in the future. Jix already supports typing via JSDoc. The entire Jix standard library is typed.
+
+
+### Development
+This repo contains everything to build Jix from source (including the Quickjs Javascript engine). It only requires `make` and a C compiler, has no other dependencies and takes less than a minute to build.
+
+The quickjs-x git submodule provides a partial Nodejs standard library shim. This allows us to write code that works both with Quickjs and Nodejs.
 
 
 ### Next Steps

@@ -1,9 +1,9 @@
-## Jix: Configure Dev-Envs & Systems in JS
-(Experimental software – Do not use for production deployments)
+## Jix: Declarative System Configs in JS
+(*alpha version – rough edges*)
 
-Documentation: https://rmst.github.io/jix
+Jix is conceptually similar to [Nix](https://en.wikipedia.org/wiki/Nix_(package_manager)). In Jix, "effects" are a generalization of Nix' "derivations". [Effects](https://rmst.github.io/jix/api/Effect.md) can have install and uninstall actions which allows them to influence system state declaratively. Dependencies are tracked automatically.
 
-Jix allows you to write reproducible, declarative development and system configurations in Javascript with good editor/type-checking support.
+Jix itself has no dependencies. It does not depend on NPM or Node.js or Nix.
 
 Jix might be used as an ergonomic and lightweight alternative to
 - devenv (see [`examples/devenv/`](https://github.com/rmst/jix/tree/main/examples/devenv))
@@ -11,10 +11,10 @@ Jix might be used as an ergonomic and lightweight alternative to
 - nix home-manager (see [`examples/home-manager/`](https://github.com/rmst/jix/tree/main/examples/home-manager))
 - Ansible (see [remote targets](https://rmst.github.io/jix/remote-targets))
 
-Jix is conceptually similar to [Nix](https://en.wikipedia.org/wiki/Nix_(package_manager)). In Jix, "effects" are a generalization of Nix' "derivations". [Effects](https://rmst.github.io/jix/api/Effect.md) can have install and uninstall actions which allows them to influence state outside of the Jix store (the equivalent of /nix/store).
-
 [Nixpkgs](https://github.com/NixOS/nixpkgs) are available in Jix via `jix.nix.pkgs.<packageName>.<binaryName>` (see [example](https://github.com/rmst/jix/blob/main/examples/devenv/jix/__jix__.js)).
 
+
+**Documentation**: https://rmst.github.io/jix
 
 ### Getting Started
 **Install Jix**: Run
@@ -28,7 +28,7 @@ rm -rf jix
 Follow the instruction to add `. "$HOME/.jix/jix/shell_integration"` to your shell rcfile.
 
 
-**Create a __jix__.js file**: in a new or existing dir run `jix init`, which will create a `__jix__.js` for you (also `.jix/` and `jsconfig.js` for code completion and type-checking).
+**Create a __jix__.js file**: in a new or existing dir run `jix init`, which will create a `__jix__.js` for you (also `.jix/` and `jsconfig.json` for code completion and type-checking).
 
 ```js
 // __jix__.js
@@ -76,8 +76,8 @@ After running `jix install`, hellojix will be available as a shell command for y
 
 
 ### FAQ
-#### Why Javascript?
-Javascript was chosen for Jix because it has:
+#### Why JavaScript?
+JavaScript was chosen for Jix because it has:
 - Great multiline string and string interpolation support to embed scripts and config files
 - Decent functional programming support (as opposed to Python, which lacks proper anonymous functions)
 - Great tooling (e.g. IDE support for JS is outstanding)
