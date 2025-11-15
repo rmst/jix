@@ -94,6 +94,7 @@ const addEffect = (e) => {
  * @property {string} [str]
  * @property {string} [hash]
  * @property {Array<EffectOrFn>} [dependencies]
+ * @property {Object} [info] - Optional metadata about the effect (e.g. {type: "jix.service", name: "myservice"})
  */
 
 /**
@@ -189,7 +190,7 @@ export class Effect {
       .map(x => typeof x === "function" ? x() : x)
 
     // process values in the arguments to install, uninstall, etc
-    var { install, uninstall, build, str, path } = props
+    var { install, uninstall, build, str, path, info } = props
 
     // @ts-ignore  TODO: fix by adding type to parseEffectValues
     var [install, uninstall, build, [str], [path]]
@@ -228,8 +229,9 @@ export class Effect {
     this.build = build
     this.host = tgt.host.machineId
     this.user = tgt.user.name
+    this.info = info
 
-    
+
     this.normalize = () => ({
       install: this.install,
       uninstall: this.uninstall,
@@ -237,6 +239,7 @@ export class Effect {
       dependencies: this.dependencies.map(d => d.hash),
       host: this.host,
       user: this.user,
+      ...(this.info ? { info: this.info } : {}),
     })
 
 

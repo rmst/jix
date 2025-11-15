@@ -1,4 +1,4 @@
-import jix, { dirWith } from "../base.js"
+import jix, { dirWith, HASH } from "../base.js"
 import { Effect } from "../effect.js"
 import stateDir from "../stateDir.js"
 import launchdService from './launchd.js'
@@ -82,6 +82,7 @@ export default ({
 				echo "$START_TIME,started,$$" >> "${servicesDir}/${name}/status"
 
 				echo "exec=${exec}" > "$DPATH"
+				echo "hash=${HASH}" >> "$DPATH"
 				echo "state=started" >> "$DPATH"
 				echo "start_time=$START_TIME" >> "$DPATH"
 				echo "pid=$$" >> "$DPATH"
@@ -96,6 +97,7 @@ export default ({
 				echo "$EXIT_TIME,exited,$EXIT_CODE" >> "${servicesDir}/${name}/status"
 
 				echo "exec=${exec}" > "$DPATH"
+				echo "hash=${HASH}" >> "$DPATH"
 				echo "state=exited" >> "$DPATH"
 				echo "start_time=$START_TIME" >> "$DPATH"
 				# echo "" >> "$DPATH"
@@ -131,6 +133,7 @@ export default ({
 				`],
 				dependencies: [...dependencies],
 				str: name,
+				info: { type: "jix.service", name, system },
 			})
 		}
 

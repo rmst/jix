@@ -62,6 +62,7 @@ export default ({
 		`],
 		dependencies: [ plist, ...dependencies ],
 		str: name,
+		info: { type: "jix.service", name, system },
 	})
 	
 	

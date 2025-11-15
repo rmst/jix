@@ -83,5 +83,6 @@ export default ({
 		`],
 		dependencies: [ serviceFile, ...dependencies ],
 		str: name,
+		info: { type: "jix.service", name, system },
 	})
 }
