@@ -31,30 +31,56 @@ async function run(cmd, args, { verbose = false, file, findManifest = false } = 
     cmd = 'default'
 
 	const name = `run.${cmd}`
-	const jixId = `${absoluteManifestPath}#${name}`
+	const pid = process.pid
+	const jixId = `${absoluteManifestPath}#${name}@${pid}`
 
-	// If there is leftover state for this run id, try a full uninstall first
-	if (db.active.read()[jixId]) {
+	// Helper function to check if a PID is still running
+	const isPidRunning = (pid) => {
+		if (!pid) return false
+		const cleanPid = String(pid).trim()
+		if (!cleanPid || !/^\d+$/.test(cleanPid)) return false
 		try {
-			await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, name, uninstall: true }))
+			sh(`kill -0 ${cleanPid}`)
+			return true
+		} catch {
+			return false
+		}
+	}
+
+	// Clean up any leftover state from previous runs with the same base jixId
+	const activeManifests = db.active.read()
+	const baseJixId = `${absoluteManifestPath}#${name}@`
+	const staleJixIds = Object.keys(activeManifests).filter(id => {
+		if (!id.startsWith(baseJixId)) return false
+		const pidStr = id.slice(baseJixId.length)
+		const oldPid = parseInt(pidStr, 10)
+		return !isNaN(oldPid) && !isPidRunning(oldPid)
+	})
+
+	for (const staleId of staleJixIds) {
+		try {
+			// Extract the PID from the stale jixId to pass correct name to install
+			const stalePidStr = staleId.slice(baseJixId.length)
+			const nameWithPid = `${name}@${stalePidStr}`
+			await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, name: nameWithPid, uninstall: true }))
 		} catch (e) {
-			console.log(`${style.red('Error:')} Detected leftover effects from a previous 'jix run'. Tried to auto-clean them but failed. Specifically:\n`)
+			console.log(`${style.red('Warning:')} Failed to clean up leftover effects from PID ${staleId.slice(baseJixId.length)}:\n`)
 			console.log(e.message)
-			process.exit(1)
 		}
 	}
 
 	// Apply only the effects required for this specific run script
 	let scriptPath
+	const nameWithPid = `${name}@${pid}`
 	globalThis.__jix_service_transient = true
-	scriptPath = await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, name }))
+	scriptPath = await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, name: nameWithPid }))
   console.log()
 
 	// Cleanup function to uninstall effects
 	const cleanup = async () => {
 		console.log()
 		try {
-			await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, uninstall: true, name }))
+			await withLogger({ verbose }, async () => await install({ sourcePath: absoluteManifestPath, uninstall: true, name: nameWithPid }))
 		} catch (_) {
 			// Best effort cleanup
 		}

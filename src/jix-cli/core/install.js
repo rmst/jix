@@ -74,10 +74,15 @@ export default async function install({
 
 		// Determine which effects to apply based on name
 		if (name.startsWith('run.')) {
-			const runName = name.slice(4)
-				const fn = (module.run || {})[runName]
-				if (!fn)
-					throw new UserError(`run script not found: ${runName}`)
+			// Extract run name, ignoring the @pid suffix if present
+			let runName = name.slice(4)
+			const atIndex = runName.indexOf('@')
+			if (atIndex !== -1) {
+				runName = runName.slice(0, atIndex)
+			}
+			const fn = (module.run || {})[runName]
+			if (!fn)
+				throw new UserError(`run script not found: ${runName}`)
 
         drvs = (new Host("localhost", {[getCurrentUser()]: {}}))
           .users[getCurrentUser()]
