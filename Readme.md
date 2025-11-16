@@ -5,7 +5,7 @@ Jix is conceptually similar to [Nix](https://en.wikipedia.org/wiki/Nix_(package_
 
 Jix itself has no out-of-repo dependencies. It does not depend on NPM or Node.js or Nix.
 
-Jix can be used as a universal, ergonomic alternative[^1] to
+Jix can be used as an ergonomic, lightweight alternative[^1] to
 - devenv (see [`examples/devenv/`](https://github.com/rmst/jix/tree/main/examples/devenv))
 - docker compose (see [`examples/docker-compose/`](https://github.com/rmst/jix/tree/main/examples/docker-compose))
 - process-compose (see [`examples/process-compose/`](https://github.com/rmst/jix/tree/main/examples/process-compose))
