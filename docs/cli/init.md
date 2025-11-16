@@ -6,7 +6,7 @@ nav_order: 1
 
 # jix init
 
-Source: [`src/jix-cli/init/index.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/init/index.js)
+Source: [`src/jix-cli/init/index.js`](https://github.com/rmst/jix/blob/c79ce89/src/jix-cli/init/index.js)
 
 Initialize a new jix environment.
 

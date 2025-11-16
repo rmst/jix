@@ -6,7 +6,7 @@ nav_order: 7
 
 # jix force-remove
 
-Source: [`src/jix-cli/forceRemove.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/forceRemove.js)
+Source: [`src/jix-cli/forceRemove.js`](https://github.com/rmst/jix/blob/c79ce89/src/jix-cli/forceRemove.js)
 
 Forcefully remove derivations.
 

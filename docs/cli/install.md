@@ -6,7 +6,7 @@ nav_order: 2
 
 # jix install
 
-Source: [`src/jix-cli/install/index.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/install/index.js)
+Source: [`src/jix-cli/install/index.js`](https://github.com/rmst/jix/blob/c79ce89/src/jix-cli/install/index.js)
 
 Install a jix configuration.
 

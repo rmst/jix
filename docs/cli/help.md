@@ -6,7 +6,7 @@ nav_order: 9
 
 # jix help
 
-Source: [`src/jix-cli/main.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/main.js)
+Source: [`src/jix-cli/main.js`](https://github.com/rmst/jix/blob/c79ce89/src/jix-cli/main.js)
 
 Show help for a command.
 

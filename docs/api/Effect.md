@@ -6,14 +6,14 @@ nav_order: 20
 
 # Effect
 
-Source: [`src/jix/effect.js#L163-308`](https://github.com/rmst/jix/blob/95d2999/src/jix/effect.js#L163-308)
+Source: [`src/jix/effect.js#L163-308`](https://github.com/rmst/jix/blob/c79ce89/src/jix/effect.js#L163-308)
 
 Core class representing a jix effect. Effects are the fundamental building blocks in Jix that describe actions to build, install, and uninstall configurations.
 
 ## Type Definitions
 
 ## `EffectFn`
-Source: [`src/jix/effect.js#L97`](https://github.com/rmst/jix/blob/95d2999/src/jix/effect.js#L97)
+Source: [`src/jix/effect.js#L97`](https://github.com/rmst/jix/blob/c79ce89/src/jix/effect.js#L97)
 
 A function that returns an [Effect](#effect).
 
@@ -22,7 +22,7 @@ A function that returns an [Effect](#effect).
 ---
 
 ## `EffectOrFn`
-Source: [`src/jix/effect.js#L101`](https://github.com/rmst/jix/blob/95d2999/src/jix/effect.js#L101)
+Source: [`src/jix/effect.js#L101`](https://github.com/rmst/jix/blob/c79ce89/src/jix/effect.js#L101)
 
 An [Effect](#effect) or a function that returns an Effect.
 
@@ -58,7 +58,7 @@ An [Effect](#effect) or a function that returns an Effect.
 ---
 
 ## `symlinkTo(path)`
-Source: [`src/jix/effect.js#L298`](https://github.com/rmst/jix/blob/95d2999/src/jix/effect.js#L298)
+Source: [`src/jix/effect.js#L298`](https://github.com/rmst/jix/blob/c79ce89/src/jix/effect.js#L298)
 
 Create a symbolic link to this effect at the specified path.
 
@@ -71,7 +71,7 @@ Create a symbolic link to this effect at the specified path.
 ---
 
 ## `linkTo(path)`
-Source: [`src/jix/effect.js#L303`](https://github.com/rmst/jix/blob/95d2999/src/jix/effect.js#L303)
+Source: [`src/jix/effect.js#L303`](https://github.com/rmst/jix/blob/c79ce89/src/jix/effect.js#L303)
 
 Create a hard link to this effect at the specified path.
 
@@ -84,7 +84,7 @@ Create a hard link to this effect at the specified path.
 ---
 
 ## `copyTo(path)`
-Source: [`src/jix/effect.js#L308`](https://github.com/rmst/jix/blob/95d2999/src/jix/effect.js#L308)
+Source: [`src/jix/effect.js#L308`](https://github.com/rmst/jix/blob/c79ce89/src/jix/effect.js#L308)
 
 Copy this effect to the specified path.
 

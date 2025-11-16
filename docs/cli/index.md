@@ -6,7 +6,7 @@ has_children: true
 
 # Jix CLI Reference
 
-Source: [`src/jix-cli/main.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/main.js)
+Source: [`src/jix-cli/main.js`](https://github.com/rmst/jix/blob/c79ce89/src/jix-cli/main.js)
 
 Jix provides a command-line interface for managing configurations, running scripts, and controlling effects.
 
@@ -27,5 +27,6 @@ Run `jix <command> --help` for details on each command.
 - [`show`](./show.md) - Display information about a jix effect
 - [`force-remove`](./force-remove.md) - Forcefully remove derivations
 - [`host-info`](./host-info.md) - Query and display host and user information
+- [`service`](./service.md) - Display running services
 - [`gc`](./gc.md) - Delete unreferenced build outputs and effect files
 - [`help`](./help.md) - Show help for a command

@@ -6,7 +6,7 @@ nav_order: 6
 
 # jix gc
 
-Source: [`src/jix-cli/gc.js`](https://github.com/rmst/jix/blob/95d2999/src/jix-cli/gc.js)
+Source: [`src/jix-cli/gc.js`](https://github.com/rmst/jix/blob/c79ce89/src/jix-cli/gc.js)
 
 Delete unreferenced build outputs and effect files.
 
