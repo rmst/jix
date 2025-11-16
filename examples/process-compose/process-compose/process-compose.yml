@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/F1bonacc1/process-compose/main/schemas/process-compose-schema.json
+
+version: "0.5"
+
+processes:
+  data_processor:
+    command: |
+      echo "Starting data processor"
+      while true; do
+        echo "[PROCESSOR] Processing data at $(date)"
+        sleep 10
+      done
+    availability:
+      restart: "always"
+      backoff_seconds: 5
+
+  data_writer:
+    command: |
+      echo "Starting writer"
+      while true; do
+        echo "[WRITER] Writing processed data at $(date)"
+        sleep 10
+      done
+    availability:
+      restart: "always"
+    depends_on:
+      data_processor:
+        condition: process_started

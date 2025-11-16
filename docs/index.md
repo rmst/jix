@@ -9,11 +9,12 @@ nav_order: 1
 
 Jix is conceptually similar to [Nix](https://en.wikipedia.org/wiki/Nix_(package_manager)). In Jix, "effects" are a generalization of Nix' "derivations". [Effects](https://rmst.github.io/jix/api/Effect.md) can have install and uninstall actions which allows them to influence system state declaratively. Dependencies are tracked automatically.
 
-Jix itself has no dependencies. It does not depend on NPM or Node.js or Nix.
+Jix itself has no out-of-repo dependencies. It does not depend on NPM or Node.js or Nix.
 
-Jix can be used as an ergonomic and lightweight alternative to
+Jix can be used as a universal, ergonomic alternative[^1] to
 - devenv (see [`examples/devenv/`](https://github.com/rmst/jix/tree/main/examples/devenv))
 - docker compose (see [`examples/docker-compose/`](https://github.com/rmst/jix/tree/main/examples/docker-compose))
+- process-compose (see [`examples/process-compose/`](https://github.com/rmst/jix/tree/main/examples/process-compose))
 - nix home-manager (see [`examples/home-manager/`](https://github.com/rmst/jix/tree/main/examples/home-manager))
 - Ansible (see [remote targets](https://rmst.github.io/jix/remote-targets))
 
@@ -101,3 +102,9 @@ The quickjs-x git submodule provides a partial Nodejs standard library shim. Thi
 ### Next Steps
 - Check out examples in [examples/](https://github.com/rmst/jix/tree/main/examples/)
 - Check out Jix's own `__jix__.js`
+
+<br>
+
+---
+
+[^1]: Within each niche that each of the alternatives occupy Jix's built-in feature set is comparatively very basic. However, Jix should be flexible enough for users to work around missing features.
