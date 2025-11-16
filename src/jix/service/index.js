@@ -72,32 +72,36 @@ export default ({
 			}
 
 			DPATH="${servicesDir}/${name}/details"
+			EXITFILE="${servicesDir}/${name}/exitcode"
 
-			set -o pipefail  # important
+			# Exponential backoff: 1s, 5s, 10s, 30s, 2min, 10min, then stay at 10min
+			BACKOFF_DELAYS="1 5 10 30 120 600"
+			FAILURE_COUNT=0
 
 			while true; do
 
 				START_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+				START_EPOCH=$(date +%s)
 
 				echo "$START_TIME,started,$$" >> "${servicesDir}/${name}/status"
 
 				echo "exec=${exec}" > "$DPATH"
-				echo "hash=${HASH}" >> "$DPATH"
 				echo "state=started" >> "$DPATH"
 				echo "start_time=$START_TIME" >> "$DPATH"
 				echo "pid=$$" >> "$DPATH"
 
-				# Execute the actual runscript, redirecting its output to the log file
-				( ${exec} ) 2>&1 | add_timestamp >> "${servicesDir}/${name}/log"
+				# Execute the actual runscript, capture exit code via file
+				( ${exec}; echo $? > "$EXITFILE" ) 2>&1 | add_timestamp >> "${servicesDir}/${name}/log"
 
-				EXIT_CODE=$?
+				EXIT_CODE=$(cat "$EXITFILE")
 
 				EXIT_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+				EXIT_EPOCH=$(date +%s)
+				RUNTIME=$((EXIT_EPOCH - START_EPOCH))
 
 				echo "$EXIT_TIME,exited,$EXIT_CODE" >> "${servicesDir}/${name}/status"
 
 				echo "exec=${exec}" > "$DPATH"
-				echo "hash=${HASH}" >> "$DPATH"
 				echo "state=exited" >> "$DPATH"
 				echo "start_time=$START_TIME" >> "$DPATH"
 				# echo "" >> "$DPATH"
@@ -107,7 +111,15 @@ export default ({
 				if [ $EXIT_CODE -eq 0 ]; then
 					break  # Exit the loop on success
 				else
-					sleep 5
+					# Reset failure count if service ran for more than 60 seconds
+					if [ $RUNTIME -ge 60 ]; then
+						FAILURE_COUNT=0
+					fi
+
+					FAILURE_COUNT=$((FAILURE_COUNT + 1))
+					# Get delay for current failure count, use max delay if beyond list
+					DELAY=$(echo "$BACKOFF_DELAYS" | awk -v n="$FAILURE_COUNT" '{if (n <= NF) print $n; else print $NF}')
+					sleep "$DELAY"
 				fi
 			done
 		`;
@@ -117,7 +129,15 @@ export default ({
 
 		if (globalThis.__jix_service_transient) {
 			const waitUntilSuccessfulStartup = runOnInstall ? "sleep 0.5" : ""
-			const startCmd = runOnInstall ? `${wrapperScript} > /dev/null 2>&1 < /dev/null &` : ''
+			const startCmd = runOnInstall ? jix.dedent`
+				mkdir -p "${servicesDir}/${name}"
+				# Start in subshell with new process group
+				/bin/sh -c '
+					set -m  # Enable job control to create new process group
+					${wrapperScript} > /dev/null 2>&1 < /dev/null &
+					echo $!
+				' > "${servicesDir}/${name}/pid"
+			` : ''
 
 			return jix.effect({
 				install: ["execShV1", jix.dedent`
@@ -125,10 +145,21 @@ export default ({
 					${waitUntilSuccessfulStartup}
 				`],
 				uninstall: noUninstall ? null : ["execShV1", jix.dedent`
-					# Kill process if PID file exists
-					if [ -f "${servicesDir}/${name}/details" ]; then
-						PID=$(grep "^pid=" "${servicesDir}/${name}/details" | cut -d= -f2)
-						[ -n "$PID" ] && kill "$PID" 2>/dev/null || true
+					# Kill process group if PID file exists
+					if [ -f "${servicesDir}/${name}/pid" ]; then
+						PID=$(cat "${servicesDir}/${name}/pid" 2>/dev/null || true)
+						if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+							# Kill the process group (negative PID)
+							kill -TERM -"$PID" 2>/dev/null || true
+							# Wait for graceful shutdown
+							for i in 1 2 3 4 5 6 7 8 9 10; do
+								kill -0 "$PID" 2>/dev/null || break
+								sleep 0.5
+							done
+							# Force kill if still alive
+							kill -0 "$PID" 2>/dev/null && kill -KILL -"$PID" 2>/dev/null || true
+						fi
+						rm -f "${servicesDir}/${name}/pid"
 					fi
 				`],
 				dependencies: [...dependencies],

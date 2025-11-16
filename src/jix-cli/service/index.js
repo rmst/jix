@@ -8,6 +8,7 @@ import { getCurrentUser } from '../util.js'
 import { style } from '../prettyPrint.js'
 import statusSubcommand from './status.js'
 import logSubcommand from './log.js'
+import { isProcessAlive } from './util.js'
 
 export const userServicesDir = (home) => `${home}/.jix/db/jix.user-services`
 export const systemServicesDir = (home) => `${home}/.jix/db/jix.services`
@@ -124,8 +125,13 @@ export default {
 					if (existsSync(serviceDetailsPath)) {
 						const detailsContent = readFileSync(serviceDetailsPath, 'utf8')
 						const stateMatch = detailsContent.match(/^state=(.+)$/m)
-						if (stateMatch && stateMatch[1] === 'started') {
-							status = 'started'
+						const pidMatch = detailsContent.match(/^pid=(.+)$/m)
+
+						if (stateMatch && stateMatch[1] === 'started' && pidMatch) {
+							const pid = pidMatch[1]
+							if (isProcessAlive(pid)) {
+								status = 'started'
+							}
 						}
 					}
 				} catch {

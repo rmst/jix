@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import process from 'node:process'
 import { dedent } from '../../jix/dedent.js'
 import { style } from '../prettyPrint.js'
-import { findServiceByName, getServicePaths } from './util.js'
+import { findServiceByName, getServicePaths, isProcessAlive } from './util.js'
 
 export default function status(args) {
 	if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
@@ -57,9 +57,18 @@ export default function status(args) {
 	}
 
 	// Display status information
-	console.log(`${style.key('state')} ${details.state || 'unknown'}`)
+	let actualState = details.state || 'unknown'
 
-	if (details.state === 'started') {
+	// Verify process is actually running if state is 'started'
+	if (details.state === 'started' && details.pid) {
+		if (!isProcessAlive(details.pid)) {
+			actualState = 'stopped (stale pid)'
+		}
+	}
+
+	console.log(`${style.key('state')} ${actualState}`)
+
+	if (details.state === 'started' && actualState === 'started') {
 		console.log(`${style.key('pid')} ${details.pid || 'unknown'}`)
 		console.log(`${style.key('start')} ${details.start_time || 'unknown'}`)
 		console.log(`${style.key('exec')} ${details.exec || 'unknown'}`)

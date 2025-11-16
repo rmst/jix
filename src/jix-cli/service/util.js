@@ -1,7 +1,7 @@
 import db from '../db/index.js'
 import set from '../core/set.js'
 import { hostInfoWithUser } from '../core/hosts.js'
-import { getCurrentUser } from '../util.js'
+import { getCurrentUser, sh } from '../util.js'
 import { userServicesDir, systemServicesDir } from './index.js'
 import process from 'node:process'
 
@@ -53,6 +53,18 @@ export function getServicePaths(serviceName, isSystem, home) {
 		detailsPath: `${serviceDir}/details`,
 		logPath: `${serviceDir}/log`,
 		statusPath: `${serviceDir}/status`
+	}
+}
+
+export function isProcessAlive(pid) {
+	if (!pid) return false
+	const cleanPid = String(pid).trim()
+	if (!cleanPid || !/^\d+$/.test(cleanPid)) return false
+	try {
+		sh(`kill -0 ${cleanPid}`)
+		return true
+	} catch {
+		return false
 	}
 }
 
