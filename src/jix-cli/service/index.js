@@ -8,7 +8,7 @@ import { getCurrentUser } from '../util.js'
 import { style } from '../prettyPrint.js'
 import statusSubcommand from './status.js'
 import logSubcommand from './log.js'
-import { isProcessAlive } from './util.js'
+import { isProcessAlive, formatDuration } from './util.js'
 
 export const userServicesDir = (home) => `${home}/.jix/db/jix.user-services`
 export const systemServicesDir = (home) => `${home}/.jix/db/jix.services`
@@ -98,11 +98,75 @@ export default {
 			return
 		}
 
-		console.log(`Found ${serviceEffects.length} service(s):\n`)
+		// Helper function to get service status
+		const getServiceStatus = (service) => {
+			const servicesBaseDir = service.system ? systemServicesDir(process.env.HOME || getCurrentUser()) : userServicesDir(process.env.HOME || getCurrentUser())
+			const serviceDetailsPath = `${servicesBaseDir}/${service.name}/details`
 
-		// Group services by jix ID for better display
+			try {
+				if (existsSync(serviceDetailsPath)) {
+					const detailsContent = readFileSync(serviceDetailsPath, 'utf8')
+					const stateMatch = detailsContent.match(/^state=(.+)$/m)
+					const pidMatch = detailsContent.match(/^pid=(.+)$/m)
+					const exitCodeMatch = detailsContent.match(/^exit_code=(.+)$/m)
+					const startTimeMatch = detailsContent.match(/^start_time=(.+)$/m)
+					const exitTimeMatch = detailsContent.match(/^exit_time=(.+)$/m)
+
+					if (stateMatch && stateMatch[1] === 'started' && pidMatch) {
+						const pid = pidMatch[1]
+						if (isProcessAlive(pid)) {
+							// Calculate uptime
+							if (startTimeMatch) {
+								const startTime = new Date(startTimeMatch[1])
+								const now = new Date()
+								const uptimeSeconds = Math.floor((now - startTime) / 1000)
+								return { indicator: '●', status: 'uptime', time: formatDuration(uptimeSeconds) }
+							}
+							return { indicator: '●', status: 'running', time: null }
+						} else {
+							// Calculate time since start for error
+							if (startTimeMatch) {
+								const startTime = new Date(startTimeMatch[1])
+								const now = new Date()
+								const elapsedSeconds = Math.floor((now - startTime) / 1000)
+								return { indicator: '●', status: 'error', time: `${formatDuration(elapsedSeconds)} ago` }
+							}
+							return { indicator: '●', status: 'error', time: null }
+						}
+					} else if (stateMatch && stateMatch[1] === 'exited' && exitCodeMatch) {
+						const exitCode = exitCodeMatch[1]
+						if (exitCode === '0') {
+							// Calculate time since exit
+							if (exitTimeMatch) {
+								const exitTime = new Date(exitTimeMatch[1])
+								const now = new Date()
+								const elapsedSeconds = Math.floor((now - exitTime) / 1000)
+								return { indicator: '○', status: 'success', time: `${formatDuration(elapsedSeconds)} ago` }
+							}
+							return { indicator: '○', status: 'success', time: null }
+						} else {
+							// Calculate time since exit for error (cleanly exited with non-zero code)
+							if (exitTimeMatch) {
+								const exitTime = new Date(exitTimeMatch[1])
+								const now = new Date()
+								const elapsedSeconds = Math.floor((now - exitTime) / 1000)
+								return { indicator: '○', status: 'error', time: `${formatDuration(elapsedSeconds)} ago` }
+							}
+							return { indicator: '○', status: 'error', time: null }
+						}
+					}
+				}
+			} catch {
+				// Ignore errors checking service status
+			}
+
+			return { indicator: '○', status: 'error', time: null }
+		}
+
+		// Group services by jix ID and service type
 		const servicesByJixId = Object.groupBy(serviceEffects, s => s.jixId)
 
+		// Separate user and system services
 		Object.entries(servicesByJixId).forEach(([jixId, services]) => {
 			// Simple relative path calculation
 			let relativePath = jixId
@@ -111,37 +175,39 @@ export default {
 			} else if (jixId === currentDir) {
 				relativePath = '.'
 			}
-			console.log(`${relativePath}:`)
 
-			services.forEach(service => {
-				const serviceType = service.system ? 'system' : 'user'
-				const servicesBaseDir = service.system ? systemServicesDir(process.env.HOME || getCurrentUser()) : userServicesDir(process.env.HOME || getCurrentUser())
-				const serviceDetailsPath = `${servicesBaseDir}/${service.name}/details`
+			const userServices = services.filter(s => !s.system)
+			const systemServices = services.filter(s => s.system)
 
-				let status = 'stopped'
+			// Display user services
+			if (userServices.length > 0) {
+				console.log(`${relativePath} (user):`)
+				userServices.forEach(service => {
+					const status = getServiceStatus(service)
+					let spacing = ''
+					if (status.status === 'success') spacing = ''
+					else if (status.status === 'uptime' || status.status === 'running') spacing = ' '
+					else if (status.status === 'error') spacing = '  '
+					const timeText = status.time || ''
+					console.log(`  ${status.indicator} ${service.name.padEnd(38)} ${status.status}${spacing} ${timeText}`)
+				})
+				console.log()
+			}
 
-				// Check if service is actually running
-				try {
-					if (existsSync(serviceDetailsPath)) {
-						const detailsContent = readFileSync(serviceDetailsPath, 'utf8')
-						const stateMatch = detailsContent.match(/^state=(.+)$/m)
-						const pidMatch = detailsContent.match(/^pid=(.+)$/m)
-
-						if (stateMatch && stateMatch[1] === 'started' && pidMatch) {
-							const pid = pidMatch[1]
-							if (isProcessAlive(pid)) {
-								status = 'started'
-							}
-						}
-					}
-				} catch {
-					// Ignore errors checking service status
-				}
-
-				const statusIndicator = status === 'started' ? '●' : '○'
-				console.log(`  ${statusIndicator} ${service.name.padEnd(40)} ${serviceType}`)
-			})
-			console.log()
+			// Display system services
+			if (systemServices.length > 0) {
+				console.log(`${relativePath} (system):`)
+				systemServices.forEach(service => {
+					const status = getServiceStatus(service)
+					let spacing = ''
+					if (status.status === 'success') spacing = ''
+					else if (status.status === 'uptime' || status.status === 'running') spacing = ' '
+					else if (status.status === 'error') spacing = '  '
+					const timeText = status.time || ''
+					console.log(`  ${status.indicator} ${service.name.padEnd(38)} ${status.status}${spacing} ${timeText}`)
+				})
+				console.log()
+			}
 		})
 	},
 

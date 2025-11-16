@@ -17,6 +17,15 @@ const helloService = () => jix.service({
 	`,
 })
 
+const oneshotService = () => jix.service({
+	name: "hello-oneshot",
+	exec: jix.script`
+		#!/bin/sh
+		echo "Hello Oneshot and Done"
+		exit 0
+	`
+})
+
 export const run = {
 	default: jix.script`
 		# ${helloService} (adds helloService as a dependency)
@@ -26,5 +35,6 @@ export const run = {
 }
 
 export const install = () => {
+	oneshotService()
 	helloService()
 }
