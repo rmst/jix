@@ -1,5 +1,7 @@
-## Jix: Declarative System Configs in JS
+## Jix: Declarative Project and System Configs in JS
 (*alpha version – rough edges*)
+
+Use JavaScript to declaratively define your project environments or system/user configurations, with good editor and type-checking support.
 
 Jix is conceptually similar to [Nix](https://en.wikipedia.org/wiki/Nix_(package_manager)). In Jix, "effects" are a generalization of Nix' "derivations". [Effects](https://rmst.github.io/jix/api/Effect.md) can have install and uninstall actions which allows them to influence system state declaratively. Dependencies are tracked automatically.
 
