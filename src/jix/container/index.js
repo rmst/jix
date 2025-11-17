@@ -165,13 +165,14 @@ export const imageFromDockerfile = (templateStrings, ...values) => {
   @param {string} [options.name] - Container name
   @param {(string|EffectOrFn)[]} [options.args] - Additional docker run arguments
   @param {string|EffectOrFn} [options.image] - A docker image
+  @param {string|EffectOrFn} [options.exec] - Script (scring or jix.script) to execute
   @returns {Effect}
   @example
   jix.script`
     ${jix.container.run({workdir: "/wd", volumes: {wd: "$(pwd)"}})} myimage bash
   `
  */
-export const run = ({workdir=null, basedir="/", volumes={}, env={}, name=null, args=[], image=null}={}) => {
+export const run = ({workdir=null, basedir="/", volumes={}, env={}, name=null, args=[], image=null, exec=null}={}) => {
   // TODO: always killing an existing container, doesn't seem to be generally desirable
 
   let killExisting = name 
@@ -192,6 +193,12 @@ export const run = ({workdir=null, basedir="/", volumes={}, env={}, name=null, a
     return `-e "${k}=${v}"`
   })
 
+  let [execVolumeArgs, execArgs] = exec
+    ? typeof exec === "string"
+      ? [[], [`/bin/sh -c ${jix.util.shellEscape(exec)}`]]
+      : [[`-v ${exec}:/.jix-user-exec:ro`], [`/.jix-user-exec`]]
+    : [[], []]
+
   args = [
     '-i',  // "interactive" TODO: is this needed? document more
     '--log-driver=none',
@@ -202,9 +209,11 @@ export const run = ({workdir=null, basedir="/", volumes={}, env={}, name=null, a
     ...(workdir ? [`--workdir "${workdir}"`] : []),
     ...(name ? [`--name ${name}`] : []),
     ...volumeArgs,
+    ...execVolumeArgs,
     ...envArgs,
     ...args,
     ...(image ? [image] : []),
+    ...execArgs,
   ]
 
   return jix.script`

@@ -287,7 +287,6 @@ export const dirWith = (files) => {
 
 // ------
 
-
 let base = {
 
   script,
@@ -317,7 +316,13 @@ let base = {
 
   target: () => getTarget(),
 
+  /** @deprecated */
   dedent,
+
+  util: {
+    dedent,
+    shellEscape,
+  },
 
   effect,
 }
