@@ -29,7 +29,13 @@ function setupVSCodeTasks(wd) {
 				group: { kind: "build" }
 			},
 			{
-				label: 'jix run',
+				label: 'jix uninstall',
+				type: "shell",
+				command: 'jix install uninstall -f ${file}',
+				group: { kind: "build" }
+			},
+			{
+				label: '- jix run',  // the - will cause it to appear before install --dry-run (if we search for "run")
 				type: "shell",
 				command: 'jix run --find-manifest -f ${file}',
 				group: { kind: "build" }
