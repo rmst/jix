@@ -83,6 +83,9 @@ After running `jix install`, hellojix will be available as a shell command for y
 
 
 ### FAQ
+#### Why use Jix over Ansible or Nix?
+Like Ansible, Jix can modify arbitrary system state, but unlike Ansible it declaratively tracks these effects. E.g. if you comment out a jix.service definition in a `__jix__.js` and rerun jix install, Jix will remove this service for you. On Ansible you'd have to add a new task to uninstall the service (afaik). Also, if you like, you can only use pure Jix effects that behave like Nix derivations (i.e. only modify the Jix store ~/.jix/). So it's a generalization of Nix that gives you Ansible-like flexibility while remaining fully declarative.
+
 #### Why JavaScript?
 JavaScript was chosen for Jix because it has:
 - Great multiline string and string interpolation support to embed scripts and config files
