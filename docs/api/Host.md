@@ -5,12 +5,14 @@ nav_order: 21
 ---
 
 # Host
+{: #host }
 
 Source: [`src/jix/targets.js#L5-67`](https://github.com/rmst/jix/blob/c79ce89/src/jix/targets.js#L5-67)
 
 Class representing a target host machine.
 
 ## `new Host(address, users = {})`
+{: #newHost }
 
 **Parameters:**
 
@@ -20,6 +22,7 @@ Class representing a target host machine.
 Host information is automatically queried from the target machine.
 
 ## Properties
+{: #properties }
 
 - `address` (string) - The host address
 - `users` (Object) - User instances, always includes 'root'
@@ -33,6 +36,7 @@ Host information is automatically queried from the target machine.
 ---
 
 ## `install(fn)`
+{: #install }
 Source: [`src/jix/targets.js#L61-66`](https://github.com/rmst/jix/blob/c79ce89/src/jix/targets.js#L61-66)
 
 Execute a function with this host and root user as the target context.

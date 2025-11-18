@@ -7,6 +7,7 @@ has_children: true
 # Jix API Reference
 
 ## `script`
+{: #script }
 Source: [`src/jix/base.js#L190`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L190)
 
 Template tag function for creating executable script files.
@@ -20,6 +21,7 @@ Template tag function for creating executable script files.
 ---
 
 ## `textfile`
+{: #textfile }
 Source: [`src/jix/base.js#L181`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L181)
 
 Template tag function for creating text files.
@@ -33,6 +35,7 @@ Template tag function for creating text files.
 ---
 
 ## `importScript(origin)`
+{: #importScript }
 Source: [`src/jix/base.js#L240`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L240)
 
 Import an executable script file.
@@ -46,6 +49,7 @@ Import an executable script file.
 ---
 
 ## `importTextfile(origin)`
+{: #importTextfile }
 Source: [`src/jix/base.js#L227`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L227)
 
 Read a text file from the filesystem and create an effect containing its contents.
@@ -59,6 +63,7 @@ Read a text file from the filesystem and create an effect containing its content
 ---
 
 ## `copy(from, to)`
+{: #copy }
 Source: [`src/jix/base.js#L57`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L57)
 
 Copy a file to a destination path.
@@ -73,6 +78,7 @@ Copy a file to a destination path.
 ---
 
 ## `link(origin, path)`
+{: #link }
 Source: [`src/jix/base.js#L25`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L25)
 
 Create a hard link.
@@ -87,6 +93,7 @@ Create a hard link.
 ---
 
 ## `symlink(origin, path)`
+{: #symlink }
 Source: [`src/jix/base.js#L49`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L49)
 
 Create a symbolic link. Equivalent to `link(origin, path, true)`.
@@ -101,6 +108,7 @@ Create a symbolic link. Equivalent to `link(origin, path, true)`.
 ---
 
 ## `alias(mapping)`
+{: #alias }
 Source: [`src/jix/base.js#L68`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L68)
 
 Create command aliases in the jix bin directory.
@@ -114,6 +122,7 @@ Create command aliases in the jix bin directory.
 ---
 
 ## `dir(path, extraArgs={})`
+{: #dir }
 Source: [`src/jix/base.js#L127`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L127)
 
 Create a directory at the specified path using `mkdir -p`. Uninstall will only remove the directory if it is empty.
@@ -128,6 +137,7 @@ Create a directory at the specified path using `mkdir -p`. Uninstall will only r
 ---
 
 ## `customEffect({install, uninstall, dependencies, ...other})`
+{: #customEffect }
 Source: [`src/jix/base.js#L94`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L94)
 
 Create an effect with custom shell commands for install/uninstall.
@@ -144,6 +154,7 @@ Create an effect with custom shell commands for install/uninstall.
 ---
 
 ## `existingCommand(command, {errorMessage}={})`
+{: #existingCommand }
 Source: [`src/jix/base.js#L108`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L108)
 
 Create an effect that verifies a command exists on the system.
@@ -158,6 +169,7 @@ Create an effect that verifies a command exists on the system.
 ---
 
 ## `stateDir(id)`
+{: #stateDir }
 Source: [`src/jix/stateDir.js#L8`](https://github.com/rmst/jix/blob/c79ce89/src/jix/stateDir.js#L8)
 
 Create a state directory in `~/.jix/db/<id>` that persists across installs/uninstalls.
@@ -171,6 +183,7 @@ Create a state directory in `~/.jix/db/<id>` that persists across installs/unins
 ---
 
 ## `str`
+{: #str }
 Source: [`src/jix/base.js#L143`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L143)
 
 Template tag function for creating string effects with dependency tracking.
@@ -184,6 +197,7 @@ Template tag function for creating string effects with dependency tracking.
 ---
 
 ## `build`
+{: #build }
 Source: [`src/jix/base.js#L254`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L254)
 
 Template tag function for building artifacts from shell scripts. The build script is executed in a temporary directory, and the build result should be written to the path given by the `$out` environment variable.
@@ -197,6 +211,7 @@ Template tag function for building artifacts from shell scripts. The build scrip
 ---
 
 ## `dirWith(files)`
+{: #dirWith }
 Source: [`src/jix/base.js#L272`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L272)
 
 Create a directory containing specified files.
@@ -210,6 +225,7 @@ Create a directory containing specified files.
 ---
 
 ## `target()`
+{: #target }
 Source: [`src/jix/base.js#L318`](https://github.com/rmst/jix/blob/c79ce89/src/jix/base.js#L318)
 
 Get the current target context (host and user).
@@ -219,6 +235,7 @@ Get the current target context (host and user).
 ---
 
 ## `dedent`
+{: #dedent }
 Source: [`src/jix/dedent.js#L4`](https://github.com/rmst/jix/blob/c79ce89/src/jix/dedent.js#L4)
 
 Remove common leading whitespace from template strings.
@@ -233,6 +250,7 @@ Remove common leading whitespace from template strings.
 ---
 
 ## `effect(obj)`
+{: #effect }
 Source: [`src/jix/effect.js#L129`](https://github.com/rmst/jix/blob/c79ce89/src/jix/effect.js#L129)
 
 Create an effect from properties or dependencies.
@@ -252,6 +270,7 @@ Create an effect from properties or dependencies.
 ---
 
 ## `service({name, exec, system, runOnInstall, noUninstall, dependencies})`
+{: #service }
 Source: [`src/jix/service/index.js#L26`](https://github.com/rmst/jix/blob/c79ce89/src/jix/service/index.js#L26)
 
 Create a persistent background service.

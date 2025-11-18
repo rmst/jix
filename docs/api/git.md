@@ -11,6 +11,7 @@ Source: [`src/jix/git/index.js`](https://github.com/rmst/jix/blob/c79ce89/src/ji
 Git repository operations namespace.
 
 ## `git()`
+{: #git }
 Source: [`src/jix/git/index.js#L4`](https://github.com/rmst/jix/blob/c79ce89/src/jix/git/index.js#L4)
 
 Get a reference to the git command.
@@ -22,6 +23,7 @@ On NixOS, returns `nix.pkgs.git.git`. Otherwise, returns an effect for the exist
 ---
 
 ## `checkout({repo, commit})`
+{: #checkout }
 Source: [`src/jix/git/index.js#L15`](https://github.com/rmst/jix/blob/c79ce89/src/jix/git/index.js#L15)
 
 Clone a git repository and checkout a specific commit, including submodules.

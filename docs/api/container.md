@@ -11,6 +11,7 @@ Source: [`src/jix/container/index.js`](https://github.com/rmst/jix/blob/c79ce89/
 Container operations namespace for Docker and compatible runtimes (e.g., podman).
 
 ## `docker()`
+{: #docker }
 Source: [`src/jix/container/index.js#L38`](https://github.com/rmst/jix/blob/c79ce89/src/jix/container/index.js#L38)
 
 Get a reference to the Docker CLI or a compatible CLI (e.g., podman).
@@ -22,6 +23,7 @@ Can be configured via `jix.container.with({dockerCli: customPath})`. On NixOS, d
 ---
 
 ## `run({workdir, basedir, volumes, env, name, args, image}={})`
+{: #run }
 Source: [`src/jix/container/index.js#L174`](https://github.com/rmst/jix/blob/c79ce89/src/jix/container/index.js#L174)
 
 Create a script that runs a docker container with specified options.
@@ -49,6 +51,7 @@ jix.script`
 ---
 
 ## `tag(mapping)`
+{: #tag }
 Source: [`src/jix/container/index.js#L64`](https://github.com/rmst/jix/blob/c79ce89/src/jix/container/index.js#L64)
 
 Create image tags.
@@ -62,6 +65,7 @@ Create image tags.
 ---
 
 ## `imageFromDockerfile`
+{: #imageFromDockerfile }
 Source: [`src/jix/container/index.js#L98`](https://github.com/rmst/jix/blob/c79ce89/src/jix/container/index.js#L98)
 
 Template tag function for building Docker images from Dockerfile content. Referenced effects are automatically copied into the build context.
@@ -85,6 +89,7 @@ let myImage = jix.container.imageFromDockerfile`
 ---
 
 ## `network(name, args=[])`
+{: #network }
 Source: [`src/jix/container/index.js#L74`](https://github.com/rmst/jix/blob/c79ce89/src/jix/container/index.js#L74)
 
 Create a Docker network.
@@ -99,6 +104,7 @@ Create a Docker network.
 ---
 
 ## `volume(name)`
+{: #volume }
 Source: [`src/jix/container/index.js#L82`](https://github.com/rmst/jix/blob/c79ce89/src/jix/container/index.js#L82)
 
 Create a Docker volume.
@@ -112,6 +118,7 @@ Create a Docker volume.
 ---
 
 ## `with(options, fn)`
+{: #with }
 Source: [`src/jix/container/index.js#L23`](https://github.com/rmst/jix/blob/c79ce89/src/jix/container/index.js#L23)
 
 Context manager for setting container options.
@@ -127,6 +134,7 @@ Context manager for setting container options.
 ---
 
 ## `aptInstall`
+{: #aptInstall }
 Source: [`src/jix/container/util.js`](https://github.com/rmst/jix/blob/c79ce89/src/jix/container/util.js)
 
 Utility for installing apt packages in Dockerfiles.

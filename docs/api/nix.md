@@ -11,6 +11,7 @@ Source: [`src/jix/nix/index.js`](https://github.com/rmst/jix/blob/c79ce89/src/ji
 Nix package management namespace.
 
 ## `pkg({name, options})`
+{: #pkg }
 Source: [`src/jix/nix/index.js#L47`](https://github.com/rmst/jix/blob/c79ce89/src/jix/nix/index.js#L47)
 
 Build a Nix package using nix-build. Requires Nix to be installed.
@@ -27,6 +28,7 @@ Build a Nix package using nix-build. Requires Nix to be installed.
 ---
 
 ## `pkgs`
+{: #pkgs }
 Source: [`src/jix/nix/index.js#L83`](https://github.com/rmst/jix/blob/c79ce89/src/jix/nix/index.js#L83)
 
 Proxy object for accessing package binaries.
@@ -38,6 +40,7 @@ Returns a string effect pointing to the binary path.
 ---
 
 ## `with(options, fn)`
+{: #with }
 Source: [`src/jix/nix/index.js#L23`](https://github.com/rmst/jix/blob/c79ce89/src/jix/nix/index.js#L23)
 
 Context manager for setting Nix build options.

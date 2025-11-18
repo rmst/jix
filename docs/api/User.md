@@ -5,12 +5,14 @@ nav_order: 22
 ---
 
 # User
+{: #user }
 
 Source: [`src/jix/targets.js#L71-115`](https://github.com/rmst/jix/blob/c79ce89/src/jix/targets.js#L71-115)
 
 Class representing a user on a host.
 
 ## `new User(host, name, info)`
+{: #newUser }
 
 User instances are typically created automatically by Host constructor.
 
@@ -21,6 +23,7 @@ User instances are typically created automatically by Host constructor.
 - `info` (Object, required) - User information object
 
 ## Properties
+{: #properties }
 
 - `name` (string) - Username
 - `host` ([Host](./Host.md)) - The associated host
@@ -32,6 +35,7 @@ User instances are typically created automatically by Host constructor.
 ---
 
 ## `install(fn)`
+{: #install }
 Source: [`src/jix/targets.js#L109-114`](https://github.com/rmst/jix/blob/c79ce89/src/jix/targets.js#L109-114)
 
 Execute a function with this user as the target context.

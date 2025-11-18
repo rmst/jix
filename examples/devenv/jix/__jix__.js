@@ -67,7 +67,7 @@ let rc = jix.textfile`
 // We use bash with our rc file as our shell
 let shell = jix.script`
 	export BASH_ENV=${env}
-	exec ${pkgs.bash.bash} --rcfile ${rc} "$@"
+	exec ${pkgs.bashInteractive.bash} --rcfile ${rc} "$@"
 `
 
 /*
