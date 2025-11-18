@@ -1,8 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs'
 import process from 'node:process'
-import { dedent } from '../../jix/dedent.js'
 import { style } from '../prettyPrint.js'
-import { findServiceByName, getServicePaths, isProcessAlive } from './util.js'
+import { findServiceByName, getServicePaths, isProcessAlive, readServiceFile, readServiceFileTail } from './util.js'
 
 export default function status(args) {
 	if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
@@ -18,7 +16,6 @@ export default function status(args) {
 
 	const serviceName = args[0]
 	const currentDir = process.cwd()
-	const home = process.env.HOME || process.env.USER
 
 	const foundService = findServiceByName(serviceName, currentDir)
 
@@ -27,44 +24,46 @@ export default function status(args) {
 		return
 	}
 
-	const { detailsPath, logPath, statusPath } = getServicePaths(serviceName, foundService.system, home)
+	const { detailsPath, logPath, statusPath } = getServicePaths(foundService)
 
 	console.log(`${style.key('name')} ${serviceName}`)
 	console.log(`${style.key('system-service')} ${foundService.system}`)
+	console.log(`${style.key('target')} ${foundService.user}@${foundService.address}`)
 	console.log(`${style.key('id')} ${foundService.jixId}`)
 	console.log(``)
 	console.log(style.title('--- Status ---'))
 
 	// Check if service details file exists
-	if (!existsSync(detailsPath)) {
+	let detailsContent
+	try {
+		detailsContent = readServiceFile(foundService, detailsPath)
+	} catch (err) {
+		console.error(`Error reading service details: ${err.message}`)
+		return
+	}
+	if (detailsContent === null) {
 		console.log('Status: stopped (no details file)')
 		return
 	}
 
 	// Read and parse details file
 	let details = {}
-	try {
-		const detailsContent = readFileSync(detailsPath, 'utf8')
-		for (const line of detailsContent.split('\n')) {
-			const [key, ...valueParts] = line.split('=')
-			if (key && valueParts.length > 0) {
-				details[key] = valueParts.join('=')
-			}
+	for (const line of detailsContent.split('\n')) {
+		const [key, ...valueParts] = line.split('=')
+		if (key && valueParts.length > 0) {
+			details[key] = valueParts.join('=')
 		}
-	} catch (err) {
-		console.error(`Error reading service details: ${err.message}`)
-		return
 	}
 
 	// Display status information
 	let actualState = details.state || 'unknown'
 
 	// Verify process is actually running if state is 'started'
-	if (details.state === 'started' && details.pid) {
-		if (!isProcessAlive(details.pid)) {
-			actualState = 'stopped (stale pid)'
+		if (details.state === 'started' && details.pid) {
+			if (!isProcessAlive(foundService, details.pid)) {
+				actualState = 'stopped (stale pid)'
+			}
 		}
-	}
 
 	console.log(`${style.key('state')} ${actualState}`)
 
@@ -74,26 +73,26 @@ export default function status(args) {
 		console.log(`${style.key('exec')} ${details.exec || 'unknown'}`)
 
 		// Show recent log entries if log file exists
-		if (existsSync(logPath)) {
-			console.log(``)
-			console.log(style.title('--- Recent Log Entries ---'))
+			let logContent
 			try {
-				const logContent = readFileSync(logPath, 'utf8')
-				const logLines = logContent.split('\n')
-				const recentLines = logLines.slice(-10).filter(line => line.trim())
-
-				if (recentLines.length > 0) {
-					for (const line of recentLines) {
+				logContent = readServiceFileTail(foundService, logPath, 10)
+			} catch (err) {
+				console.log(`(error reading log: ${err.message})`)
+				logContent = null
+			}
+			if (logContent !== null) {
+				console.log(``)
+				console.log(style.title('--- Recent Log Entries ---'))
+				const lines = logContent.split('\n').filter(line => line.trim())
+				if (lines.length > 0) {
+					for (const line of lines) {
 						console.log(line)
 					}
 				} else {
 					console.log('(no recent entries)')
 				}
-			} catch (err) {
-				console.log(`(error reading log: ${err.message})`)
 			}
-		}
-	} else {
+		} else {
 		if (details.state === 'exited') {
 			console.log(`${style.key('exit-code')} ${details.exit_code || 'unknown'}`)
 			console.log(`${style.key('exit-time')} ${details.exit_time || 'unknown'}`)
@@ -101,11 +100,16 @@ export default function status(args) {
 	}
 
 	// Show entire status history if status file exists
-	if (existsSync(statusPath)) {
-		console.log(``)
-		console.log(style.title('--- Status History ---'))
+		let statusContent
 		try {
-			const statusContent = readFileSync(statusPath, 'utf8')
+			statusContent = readServiceFile(foundService, statusPath)
+		} catch (err) {
+			console.log(`(error reading status: ${err.message})`)
+			statusContent = null
+		}
+		if (statusContent !== null) {
+			console.log(``)
+			console.log(style.title('--- Status History ---'))
 			const statusLines = statusContent.split('\n').filter(line => line.trim())
 			const recentStatus = statusLines.slice(-5)
 
@@ -116,8 +120,5 @@ export default function status(args) {
 			} else {
 				console.log('(no status entries)')
 			}
-		} catch (err) {
-			console.log(`(error reading status: ${err.message})`)
 		}
 	}
-}

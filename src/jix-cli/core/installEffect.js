@@ -27,6 +27,8 @@ export const executeCmd = (command, address, user) => {
     return
 
   let options = (command.verbose && logger.isVerbose()) ? { stdout: 'inherit', stderr: 'inherit' } : {}
+  if (command.timeoutMs)
+    options.timeout = command.timeoutMs
   let { cmd, args } = command
 
   if(address !== "localhost") {

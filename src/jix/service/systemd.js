@@ -41,6 +41,7 @@ export default ({
 			file: serviceFile,
 			runOnInstall,
 			noUninstall,
+			info: { type: "jix.service", name, system },
 		})
 	}
 

@@ -74,9 +74,9 @@ export const enableSystemUnits = () => {
 
 
 /**
- * NOTE: this requires systemdGenerator to be installed by the host
- * @param {{name: string, file: Effect, runOnInstall?: boolean, noUninstall?: boolean, dependencies?: Array<Effect>}} param0
- * @returns {Effect}
+	NOTE: this requires systemdGenerator to be installed by the host
+	@param {{name: string, file: Effect, runOnInstall?: boolean, noUninstall?: boolean, dependencies?: Array<Effect>, info?: {type?: string, name?: string, system?: boolean}}} param0
+	@returns {Effect}
  */
 export const enableUnit = ({
 	name,
@@ -84,6 +84,7 @@ export const enableUnit = ({
 	runOnInstall=false,
 	noUninstall=false,
 	dependencies=[],
+	info,
 })=> {
 	if(!name)
 		throw Error(`name can't be be empty`)
@@ -102,7 +103,8 @@ export const enableUnit = ({
 			${runOnInstall ? `systemctl restart ${name}` : ""}
 		`,
 		uninstall: noUninstall ? null : `systemctl stop ${name} || true`,
-		dependencies: [ ...dependencies, file ]
+		dependencies: [ ...dependencies, file ],
+		info,
 	})
 
 	return install

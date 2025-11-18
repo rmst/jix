@@ -89,7 +89,7 @@ export const alias = (mapping) => {
 
 
 /**
-  @param {{install?: string, uninstall?: string, dependencies?: Array<EffectOrFn>, path?: string, str?: string}} obj
+  @param {{install?: string, uninstall?: string, dependencies?: Array<EffectOrFn>, path?: string, str?: string, info?: any}} obj
 */
 export const customEffect = ({install=null, uninstall=null, ...other}) => {
   return effect({

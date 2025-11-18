@@ -1,24 +1,40 @@
-import { existsSync, readFileSync } from 'node:fs'
 import process from 'node:process'
-import { dedent } from '../../jix/dedent.js'
-import { style } from '../prettyPrint.js'
-import { findServiceByName, getServicePaths } from './util.js'
+import { parseArgs } from '../parseArgs.js'
+import { findServiceByName, getServicePaths, readServiceFile, readServiceFileTail } from './util.js'
 
 export default function log(args) {
-	if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
-		console.log('Usage:\n  jix service log <service-name>')
-		console.log('\nShow the log for a specific service')
+	const { flags, positionals } = parseArgs(args, {
+		lines: 'value',
+		n: 'value',
+	})
+	const helpRequested = flags.h || flags.help
+
+	if (helpRequested || args.length === 0) {
+		console.log('Usage:\n  jix service log [--lines N|--all] <service-name>')
+		console.log('\nShow the log for a specific service (default: last 200 lines)')
 		return
 	}
 
-	if (args.length > 1) {
-		console.error('Too many arguments. Usage: jix service log <service-name>')
+	const showAll = Boolean(flags.all)
+	const linesFlag = flags.lines ?? flags.n
+	let lines = 200
+
+	if (linesFlag !== undefined) {
+		const parsed = Number.parseInt(linesFlag, 10)
+		if (!Number.isFinite(parsed) || parsed <= 0) {
+			console.error('Invalid --lines value. Use a positive integer.')
+			return
+		}
+		lines = parsed
+	}
+
+	if (positionals.length !== 1) {
+		console.error('Usage: jix service log [--lines N|--all] <service-name>')
 		return
 	}
 
-	const serviceName = args[0]
+	const serviceName = positionals[0]
 	const currentDir = process.cwd()
-	const home = process.env.HOME || process.env.USER
 
 	const foundService = findServiceByName(serviceName, currentDir)
 
@@ -27,22 +43,28 @@ export default function log(args) {
 		return
 	}
 
-	const { logPath } = getServicePaths(serviceName, foundService.system, home)
+	const { logPath } = getServicePaths(foundService)
 
-	if (!existsSync(logPath)) {
+	let logContent
+	try {
+		logContent = showAll
+			? readServiceFile(foundService, logPath)
+			: readServiceFileTail(foundService, logPath, lines)
+	} catch (err) {
+		console.error(`Error reading log: ${err.message}`)
+		process.exitCode = 1
+		return
+	}
+	if (logContent === null) {
 		console.error(`Error: No log file found for service '${serviceName}'`)
 		console.error(`Expected log file at: ${logPath}`)
 		process.exitCode = 1
 		return
 	}
 
-	try {
-		const logContent = readFileSync(logPath, 'utf8')
-		if (logContent.trim()) {
-			console.log(logContent)
-		}
-	} catch (err) {
-		console.error(`Error reading log: ${err.message}`)
-		process.exitCode = 1
+	if (logContent.trim()) {
+		console.log(logContent)
+	} else {
+		console.log('(log is empty)')
 	}
 }
