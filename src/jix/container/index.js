@@ -146,7 +146,7 @@ export const imageFromDockerfile = (templateStrings, ...values) => {
       export JIX_HASH=${HASH}
       "${script}"
     `],
-    uninstall: ["execShV1", `"${docker}" rmi jix:${HASH} || true`],
+    uninstall: ["execShV1", `"${docker}" rmi --no-prune jix:${HASH} || true`],
     str: `jix:${HASH}`,
   })
 }
