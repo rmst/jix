@@ -51,7 +51,7 @@ export default function log(args) {
 			? readServiceFile(foundService, logPath)
 			: readServiceFileTail(foundService, logPath, lines)
 	} catch (err) {
-		console.error(`Error reading log: ${err.message}`)
+		console.error(`Error reading log: ${err?.message ?? String(err)}`)
 		process.exitCode = 1
 		return
 	}

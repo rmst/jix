@@ -24,6 +24,7 @@ export default ({
 		[Service]
 		ExecStart=${exec}
 		Restart=no
+		TimeoutStopSec=15
 
 		[Install]
 		WantedBy=${system ? 'multi-user.target' : 'default.target'}
