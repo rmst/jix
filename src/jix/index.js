@@ -13,6 +13,7 @@ import { appendToFile } from './appendToFile.js'
 import shelltools from './shelltools'
 import { Host, User } from './targets.js'
 import container from './container'
+import importDir from './importDir.js'
 
 let jix = {
 
@@ -41,6 +42,8 @@ let jix = {
 
     appendToFile,
     scriptWithTempdir,
+
+    importDir,
 
     withTarget,
     getTarget,
