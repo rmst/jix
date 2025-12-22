@@ -61,7 +61,6 @@ export const buildV6 = (script, hash) => {
 
 	let extraLines = dedent`
 		set -e  # error script if single command fails
-		set -o pipefail  # error on piped command fails
 		set -u  # error on unset variables
 	`
 	script = extraLines + '\n' + script
