@@ -1,6 +1,6 @@
 import process from 'node:process'
 import { style } from '../prettyPrint.js'
-import { findServiceByName, getServicePaths, isProcessAlive, readServiceFile, readServiceFileTail } from './util.js'
+import { ServiceAccessError, findServiceByName, getServicePaths, isProcessAlive, readServiceFile, readServiceFileTail } from './util.js'
 
 export default function status(args) {
 	if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
@@ -30,6 +30,7 @@ export default function status(args) {
 	console.log(`${style.key('system-service')} ${foundService.system}`)
 	console.log(`${style.key('target')} ${foundService.user}@${foundService.address}`)
 	console.log(`${style.key('id')} ${foundService.jixId}`)
+	console.log(`${style.key('hash')} ${foundService.hash}`)
 	console.log(``)
 	console.log(style.title('--- Status ---'))
 
@@ -60,8 +61,16 @@ export default function status(args) {
 
 	// Verify process is actually running if state is 'started'
 		if (details.state === 'started' && details.pid) {
-			if (!isProcessAlive(foundService, details.pid)) {
-				actualState = 'stopped (stale pid)'
+			try {
+				if (!isProcessAlive(foundService, details.pid)) {
+					actualState = 'stopped (stale pid)'
+				}
+			} catch (error) {
+				if (error instanceof ServiceAccessError) {
+					actualState = 'unknown (host unreachable)'
+				} else {
+					throw error
+				}
 			}
 		}
 

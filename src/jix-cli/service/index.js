@@ -3,7 +3,7 @@ import { dedent } from '../../jix/dedent.js'
 import { style } from '../prettyPrint.js'
 import statusSubcommand from './status.js'
 import logSubcommand from './log.js'
-import { formatDuration, getServiceFiles, getServicePaths, isProcessAlive, readServiceFile, readServiceFileTail } from './util.js'
+import { ServiceAccessError, formatDuration, getServiceFiles, getServicePaths, isProcessAlive, readServiceFile, readServiceFileTail } from './util.js'
 
 export const userServicesDir = (home) => `${home}/.jix/db/jix.user-services`
 export const systemServicesDir = (home) => `${home}/.jix/db/jix.services`
@@ -61,29 +61,30 @@ export default {
 					return { indicator: '?', status: '', time: null }
 				const { detailsPath } = getServicePaths(service)
 
-			try {
-				const detailsContent = readServiceFile(service, detailsPath)
-				if (!detailsContent)
-					return { indicator: '○', status: 'error', time: null }
+				try {
+					const detailsContent = readServiceFile(service, detailsPath)
+					if (!detailsContent)
+						return { indicator: '○', status: 'error', time: null }
 
-				const stateMatch = detailsContent.match(/^state=(.+)$/m)
-				const pidMatch = detailsContent.match(/^pid=(.+)$/m)
-				const exitCodeMatch = detailsContent.match(/^exit_code=(.+)$/m)
-				const startTimeMatch = detailsContent.match(/^start_time=(.+)$/m)
-				const exitTimeMatch = detailsContent.match(/^exit_time=(.+)$/m)
+					const stateMatch = detailsContent.match(/^state=(.+)$/m)
+					const pidMatch = detailsContent.match(/^pid=(.+)$/m)
+					const exitCodeMatch = detailsContent.match(/^exit_code=(.+)$/m)
+					const startTimeMatch = detailsContent.match(/^start_time=(.+)$/m)
+					const exitTimeMatch = detailsContent.match(/^exit_time=(.+)$/m)
 
 					if (stateMatch && stateMatch[1] === 'started' && pidMatch) {
-					const pid = pidMatch[1]
-					if (isProcessAlive(service, pid)) {
-						// Calculate uptime
-						if (startTimeMatch) {
-							const startTime = new Date(startTimeMatch[1])
-							const now = new Date()
-							const uptimeSeconds = Math.floor((now - startTime) / 1000)
-							return { indicator: '●', status: 'uptime', time: formatDuration(uptimeSeconds) }
+						const pid = pidMatch[1]
+						if (isProcessAlive(service, pid)) {
+							// Calculate uptime
+							if (startTimeMatch) {
+								const startTime = new Date(startTimeMatch[1])
+								const now = new Date()
+								const uptimeSeconds = Math.floor((now - startTime) / 1000)
+								return { indicator: '●', status: 'uptime', time: formatDuration(uptimeSeconds) }
+							}
+							return { indicator: '●', status: 'running', time: null }
 						}
-						return { indicator: '●', status: 'running', time: null }
-					} else {
+
 						// Calculate time since start for error
 						if (startTimeMatch) {
 							const startTime = new Date(startTimeMatch[1])
@@ -93,18 +94,20 @@ export default {
 						}
 						return { indicator: '●', status: 'error', time: null }
 					}
-				} else if (stateMatch && stateMatch[1] === 'exited' && exitCodeMatch) {
-					const exitCode = exitCodeMatch[1]
-					if (exitCode === '0') {
-						// Calculate time since exit
-						if (exitTimeMatch) {
-							const exitTime = new Date(exitTimeMatch[1])
-							const now = new Date()
-							const elapsedSeconds = Math.floor((now - exitTime) / 1000)
-							return { indicator: '○', status: 'success', time: `${formatDuration(elapsedSeconds)} ago` }
+
+					if (stateMatch && stateMatch[1] === 'exited' && exitCodeMatch) {
+						const exitCode = exitCodeMatch[1]
+						if (exitCode === '0') {
+							// Calculate time since exit
+							if (exitTimeMatch) {
+								const exitTime = new Date(exitTimeMatch[1])
+								const now = new Date()
+								const elapsedSeconds = Math.floor((now - exitTime) / 1000)
+								return { indicator: '○', status: 'success', time: `${formatDuration(elapsedSeconds)} ago` }
+							}
+							return { indicator: '○', status: 'success', time: null }
 						}
-						return { indicator: '○', status: 'success', time: null }
-					} else {
+
 						// Calculate time since exit for error (cleanly exited with non-zero code)
 						if (exitTimeMatch) {
 							const exitTime = new Date(exitTimeMatch[1])
@@ -114,17 +117,14 @@ export default {
 						}
 						return { indicator: '○', status: 'error', time: null }
 					}
+				} catch (error) {
+					if (error instanceof ServiceAccessError)
+						return { indicator: '?', status: '', time: null }
+					// Ignore other errors checking service status
 				}
-			} catch {
-				if (service.accessible === false)
-					return { indicator: '?', status: '', time: null }
-				// Ignore other errors checking service status
-			}
 
-			if (service.accessible === false)
-				return { indicator: '?', status: '', time: null }
-			return { indicator: '○', status: 'error', time: null }
-		}
+				return { indicator: '○', status: 'error', time: null }
+			}
 
 		const servicesByJixId = Object.groupBy(serviceEffects, s => s.jixId)
 

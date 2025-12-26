@@ -9,6 +9,14 @@ import { shellEscape } from '../../jix/util.js'
 const LOCAL_ADDRESSES = new Set(['localhost', '127.0.0.1', '::1'])
 const REMOTE_SERVICE_TIMEOUT_MS = 2000
 
+export class ServiceAccessError extends Error {
+	constructor(message = 'Unable to reach service host', cause) {
+		super(message)
+		this.name = 'ServiceAccessError'
+		this.cause = cause
+	}
+}
+
 const buildServiceDescriptor = (jixId, hash, effectData, { includeAllLocalUsers = false } = {}) => {
 	if (!effectData.info || effectData.info.type !== 'jix.service')
 		return null
@@ -88,8 +96,7 @@ export const readServiceFile = (service, path) => {
 	} catch (error) {
 		if (isMissingFileError(error))
 			return null
-		service.accessible = false
-		throw error
+		throw new ServiceAccessError(undefined, error)
 	}
 }
 
@@ -103,8 +110,7 @@ export const readServiceFileTail = (service, path, lines = 10) => {
 	} catch (error) {
 		if (isMissingFileError(error))
 			return null
-		service.accessible = false
-		throw error
+		throw new ServiceAccessError(undefined, error)
 	}
 }
 
@@ -150,8 +156,7 @@ export function isProcessAlive(service, pid) {
 	} catch (error) {
 		if (isMissingFileError(error))
 			return false
-		service.accessible = false
-		return false
+		throw new ServiceAccessError(undefined, error)
 	}
 }
 
