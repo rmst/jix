@@ -14,11 +14,16 @@ import { shellEscape } from '../../jix/util.js'
 import * as logger from '../logger.js'
 import { getCurrentUser } from '../util.js'
 
+const SSH_MULTIPLEX_OPTIONS = [
+	'-o', 'ControlMaster=auto',
+	'-o', 'ControlPersist=3s',
+	'-o', 'ControlPath=/tmp/jix-ssh-master-%r@%h:%p'
+]
 
 /**
  * @param {*} command
  * @param {*} address
- * @param {*} user 
+ * @param {*} user
  * @returns {string} the stdout of the command
  */
 export const executeCmd = (command, address, user) => {
@@ -48,7 +53,7 @@ export const executeCmd = (command, address, user) => {
     args = args.map(s => `'` + s.replaceAll(`'`, `'"'"'`) + `'`)  // escape all args
 
     cmd = "ssh"
-    args = [`${user}@${address}`, "--", ...args]
+    args = [...SSH_MULTIPLEX_OPTIONS, `${user}@${address}`, "--", ...args]
   }
 
   else if ( user && user != getCurrentUser() ) {
