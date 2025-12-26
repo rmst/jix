@@ -1,8 +1,6 @@
 // This is the root of the jix API
 
 import { Effect, withTarget, getTarget } from './effect.js'
-
-import { HOME_PLACEHOLDER, JIX_DIR } from './context.js'
 import base, { HASH, scriptWithTempdir, dirWith, writeFile } from './base.js'
 import service from './service/index.js'
 
@@ -31,9 +29,6 @@ let jix = {
   Host,
   User,
 
-  /** @deprecated */
-  HOME: HOME_PLACEHOLDER,
-
   // NOTE: do not list this in docs
 
   experimental: {
@@ -51,7 +46,6 @@ let jix = {
 
   // NOTE: do not list this in docs
   _internal: {
-    JIX_PATH: HOME_PLACEHOLDER + "/" + JIX_DIR,  // TODO: this should be independent of the user home
     HASH,
     writeFile,
   },

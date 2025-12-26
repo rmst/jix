@@ -1,11 +1,10 @@
 import * as fs from 'node:fs'
 import { createHash } from 'node:crypto'
 
-import { JIX_DIR, HASH_PLACEHOLDER } from './context.js'
+import { JIX_DIR, BIN_DIR, HASH_PLACEHOLDER } from './context.js'
 import { parseEffectValues, effect, getTarget, Effect } from './effect.js'
 
 import { dedent } from './dedent.js'
-import context from './context.js'
 import { dirname, basename, shellEscape } from './util.js'
 
 import stateDir from './stateDir.js'
@@ -66,10 +65,10 @@ export const copy = (from, to) => effect({
   @returns {Effect}
  */
 export const alias = (mapping) => {
-  
+
   let target = jix.target()
 
-  let binDir = dir(context.BIN_PATH)
+  let binDir = dir(`${target.user.home}/${JIX_DIR}/${BIN_DIR}`)
 
   let checkPath = jix.script`
     #!${target.user.shell} -l

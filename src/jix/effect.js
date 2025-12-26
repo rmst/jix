@@ -1,4 +1,4 @@
-import { HOME_PLACEHOLDER, HASH_PLACEHOLDER, MAGIC_STRING } from './context.js'
+import { HASH_PLACEHOLDER, MAGIC_STRING } from './context.js'
 import { symlink, link, copy } from './base.js'
 import { JIX_DIR, LOCAL_USER } from './context.js'
 import { dedent } from './dedent.js'
@@ -250,11 +250,11 @@ export class Effect {
     let outPath = `${tgt.user.home}/${JIX_DIR}/out/${this.hash}`
 
     this.path = path
-      ? targetizeString(path.replaceAll(HASH_PLACEHOLDER, this.hash))
+      ? path.replaceAll(HASH_PLACEHOLDER, this.hash)
       : (this.build ? outPath : undefined)
 
     this.str = str
-      ? targetizeString(str.replaceAll(HASH_PLACEHOLDER, this.hash))
+      ? str.replaceAll(HASH_PLACEHOLDER, this.hash)
       : this.path
 
     this.serialize = () => {
@@ -324,20 +324,6 @@ const checkedStr = (e) => {
 }
 
 /**
- * @param {string} str
- * @returns {string}
- */
-const targetizeString = (str) => {
-  const tgt = getTarget()
-  if (!tgt.user.home)
-    throw Error(`Fatal: ${tgt.host} | ${tgt.user}`)
-
-  return str
-    .replaceAll(HOME_PLACEHOLDER, tgt.user.home)
-    // .replaceAll(USER_PLACEHOLDER, tgt.user)
-}
-
-/**
  * @param {any[]} values 
  * @returns {{values: any[], dependencies: Effect[]}}
  */
@@ -354,10 +340,6 @@ export const parseEffectValues = (values) => {
     if (typeof v === "string") {
       // parse regular strings for placeholders, so we can track the dependencies, etc
       // this way we can avoid using jix.str to construct strings while tracking dependencies
-
-      // replace simple constants
-      // TODO: this shouldn't be necessary but especially jix.HOME is used a lot
-      v = targetizeString(v)
 
       if(v.includes(MAGIC_STRING)) {
         // search for dependencies, this is not the most efficient way to do this, but it's okay for now
