@@ -23,7 +23,8 @@ Read `Makefile` before building.
 ### General Instructions
 - Use tabs instead of spaces for indentation
 - Omit end-of-line semicolons in js/jsx/ts/tsx
-- Prefer Array map over for-loops
+- When possible use pure functions and local immutable data over mutable, global data, e.g.:
+	- Prefer Array map over for-loops
 
 ### Code comments
 Never write comments describing what changed compared the previous version of the code. Comments should always describe the current situation. Change notes go in the commit message.
